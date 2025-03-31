@@ -1,0 +1,12 @@
+﻿@if (IsVisible)
+{
+@*     <div class="loader-main">
+        <span class="loader"></span>
+    </div> *@
+    <span class="loader"></span>
+}
+
+@code {
+    [Parameter]
+    public bool IsVisible { get; set; } 
+}

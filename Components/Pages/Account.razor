@@ -1,0 +1,93 @@
+﻿@page "/Account"
+
+<div class="accounts">
+    <p class="accounts-text">My accounts</p>
+    @if (PaymentAccounts.Count == 0)
+    {
+        <p>No accounts</p>
+    }
+    else
+    {
+        foreach(var account in PaymentAccounts)
+        {
+            <div class=@(account.PaymentMethod.Id == SelectedPaymentAccount?.PaymentMethod.Id ? "account active-account" : "account") @onclick="() => HandleAccountClick(account)">
+                <p>@PaymentMethodsHelper.PaymentMethodsDictionary[@account.PaymentMethod.Id]: </p>
+                <p>@account.AccountName</p>
+                <ion-icon name="close-circle-outline" @onclick="() => DeleteAccountAsync(account.Id)"></ion-icon>
+            </div>
+        }        
+    }
+</div>
+
+<div class="payment-methods-container">
+    <div>
+        <SearchableDropdown 
+            Placeholder="Select payment method" 
+            Items="@PaymentMethodStrings" 
+            Text="Create new account" 
+            OnSubmit="@((val) => SelectedPaymentMethodId = val)" />
+    </div>
+</div>
+
+@if (SelectedPaymentAccount is not null)
+{
+    <p class="account-info-text">Account info</p>
+
+    <InfoRow Label="Payment method" Value="@PaymentMethodsHelper.PaymentMethodsDictionary[SelectedPaymentAccount.PaymentMethod.Id]"></InfoRow>
+    <InfoRow Label="Username" Value="@SelectedPaymentAccount.AccountName"></InfoRow>
+
+    <div class="supported-currencies">
+        <InfoRow Label="Supported currencies" Value="@(string.Join(", ", SelectedPaymentAccount.TradeCurrencies.Select(x => x.Code)))"></InfoRow>
+    </div>
+}
+
+@if (PaymentAccountForm is not null)
+{
+    <EditForm EditContext="_editContext" class="input-fields" OnValidSubmit="CreatePaymentAccountAsync">
+        <DataAnnotationsValidator />
+        @foreach (var field in PaymentAccountForm.Fields)
+        {
+            switch (field.Id)
+            {
+                case Protobuf.PaymentAccountFormField.Types.FieldId.TradeCurrencies:
+                    <p class="supported-currencies-text">Supported currencies</p>
+                    <div class="supported-currencies">
+                        @foreach (var supportedCurrencyCode in SupportedCurrencyCodes)
+                        {
+                            <div class="checkbox-container">
+                                <InputCheckbox @bind-Value="@supportedCurrencyCode.IsSelected" />
+                                <label>@supportedCurrencyCode.Code</label>
+                            </div>
+                        }
+                    </div>
+                    break;
+                case Protobuf.PaymentAccountFormField.Types.FieldId.AccountName:
+                    <div class="field">
+                        <label>@field.Label</label>
+                        <InputText readonly="@(!CustomAccountNameEnabled)" @bind-Value="field.Value"></InputText>
+                        <div class="custom-account-name">
+                            <InputCheckbox @bind-Value="@CustomAccountNameEnabled" />
+                            <label>Use custom account name</label>
+                        </div>
+                        <ValidationMessage For="() => field.Label" />
+                    </div>
+                    break;
+                case Protobuf.PaymentAccountFormField.Types.FieldId.Salt:
+                    <div class="field">
+                        <label>@field.Label</label>
+                        <InputText readonly="true" @bind-Value="field.Value"></InputText>
+                        <ValidationMessage For="() => field.Label" />
+                    </div>
+                    break;
+                default:
+                    <div class="field">
+                        <label>@field.Label</label>
+                        <InputText placeholder="" @bind-Value="field.Value"></InputText>
+                        <ValidationMessage For="() => field.Label" />
+                    </div>
+                    break;
+            }
+        }
+        <button type="submit">Save new account</button>
+    </EditForm>
+}

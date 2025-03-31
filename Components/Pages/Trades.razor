@@ -1,0 +1,35 @@
+﻿@page "/trades"
+
+<Tabs TabNames="@(["Open trades", "History"])" @bind-SelectedTabIndex="@SelectedTabIndex"></Tabs>
+
+@if (FilteredTradeInfos.Count != 0)
+{
+    <ul class="trades-list">
+        @foreach (var tradeInfo in FilteredTradeInfos)
+        {
+            <li class="trade-card">
+                @* if this is a completed or canceled trade this should open a modal instead TODO *@
+                <a href=@($"trade?tradeId={tradeInfo.TradeId}&title=Trade%20{@tradeInfo.ShortId}")>
+                    <div class="trade-card-top">
+                        <p class="short-id">@tradeInfo.ShortId</p>
+                        <p>@(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(tradeInfo.Date).ToLocalTime().ToString("yyyy/MM/dd"))</p>
+                        @if (SelectedTabIndex == 1)
+                        {
+                            <p class="status">@(tradeInfo.IsCompleted ? "Completed" : "") </p>
+                        }
+                        <div class="icon-container">
+                            @* <ion-icon name="information-circle"></ion-icon> *@
+                            <a href=@($"/chat?tradeId={tradeInfo.TradeId}&title=Trade%20{tradeInfo.ShortId}%20chat&arbitrator={tradeInfo.ArbitratorNodeAddress.Split(".")[0]}&tradePeer={tradeInfo.TradePeerNodeAddress.Split(".")[0]}&myAddress={tradeInfo.Offer.OwnerNodeAddress.Split(".")[0]}")>
+                                <ion-icon name="chatbubble-ellipses-sharp"></ion-icon>
+                            </a>
+                        </div>
+                    </div>
+                </a>
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <p>No trades</p>
+}

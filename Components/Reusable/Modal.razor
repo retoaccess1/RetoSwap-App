@@ -1,0 +1,46 @@
+﻿@if (IsOpen)
+{
+    <div class="generic-modal" @onclick="@((e) => IsOpen = !IsOpen)">
+        <div class="verify-modal">
+            <div class="top">
+                <div class="top-icons">
+                    <i class="bi-exclamation-circle info"></i>
+                    <p class="verify-title">@Title</p>
+                    <i class="bi-x-lg close" @onclick:stopPropagation="true" @onclick:preventDefault="true" @onclick="@((e) => IsOpen = false)"></i>
+                </div>
+                @ChildContent
+            </div>
+
+            <div class="buttons">
+                <button class="verify-modal-button" @onclick:stopPropagation="true" @onclick:preventDefault="true"  @onclick="@(async (e) => { IsOpen = false; await OnOkPressed.InvokeAsync(); })">Ok</button>
+                <button class="verify-modal-button" @onclick:stopPropagation="true" @onclick:preventDefault="true" @onclick="@((e) => IsOpen = false)">Cancel</button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = string.Empty;
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+    [Parameter]
+    public EventCallback OnOkPressed { get; set; }
+
+    [Parameter]
+    public bool IsOpen
+    {
+        get;
+        set
+        {
+            if (field == value)
+                return;
+
+            field = value;
+            IsOpenChanged.InvokeAsync(value);
+        }
+    }
+
+    [Parameter]
+    public EventCallback<bool> IsOpenChanged { get; set; }
+}

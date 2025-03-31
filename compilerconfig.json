@@ -1,0 +1,90 @@
+﻿[
+  {
+    "outputFile": "wwwroot/css/app.css",
+    "inputFile": "wwwroot/css/app.scss"
+  },
+  {
+    "outputFile": "Components/Layout/MainLayout.razor.css",
+    "inputFile": "Components/Layout/MainLayout.razor.scss"
+  },
+  {
+    "outputFile": "Components/Layout/NavMenu.razor.css",
+    "inputFile": "Components/Layout/NavMenu.razor.scss"
+  },
+  {
+    "outputFile": "Components/Reusable/Spinner.razor.css",
+    "inputFile": "Components/Reusable/Spinner.razor.scss"
+  },
+  {
+    "outputFile": "Components/Pages/Account.razor.css",
+    "inputFile": "Components/Pages/Account.razor.scss"
+  },
+  {
+    "outputFile": "Components/Layout/Header.razor.css",
+    "inputFile": "Components/Layout/Header.razor.scss"
+  },
+  {
+    "outputFile": "Components/Reusable/InfoRow.razor.css",
+    "inputFile": "Components/Reusable/InfoRow.razor.scss"
+  },
+  {
+    "outputFile": "Components/Reusable/SearchableDropdown.razor.css",
+    "inputFile": "Components/Reusable/SearchableDropdown.razor.scss"
+  },
+  {
+    "outputFile": "Components/Pages/BuySell.razor.css",
+    "inputFile": "Components/Pages/BuySell.razor.scss"
+  },
+  {
+    "outputFile": "Components/Pages/Wallet.razor.css",
+    "inputFile": "Components/Pages/Wallet.razor.scss"
+  },
+  {
+    "outputFile": "Components/Reusable/Toggle.razor.css",
+    "inputFile": "Components/Reusable/Toggle.razor.scss"
+  },
+  {
+    "outputFile": "Components/Reusable/Modal.razor.css",
+    "inputFile": "Components/Reusable/Modal.razor.scss"
+  },
+  {
+    "outputFile": "Components/Reusable/ErrorCard.razor.css",
+    "inputFile": "Components/Reusable/ErrorCard.razor.scss"
+  },
+  {
+    "outputFile": "Components/Pages/Market.razor.css",
+    "inputFile": "Components/Pages/Market.razor.scss"
+  },
+  {
+    "outputFile": "Components/Pages/Settings.razor.css",
+    "inputFile": "Components/Pages/Settings.razor.scss"
+  },
+  {
+    "outputFile": "Components/Pages/Offer.razor.css",
+    "inputFile": "Components/Pages/Offer.razor.scss"
+  },
+  {
+    "outputFile": "Components/Pages/CreateOffer.razor.css",
+    "inputFile": "Components/Pages/CreateOffer.razor.scss"
+  },
+  {
+    "outputFile": "Components/Pages/Trades.razor.css",
+    "inputFile": "Components/Pages/Trades.razor.scss"
+  },
+  {
+    "outputFile": "Components/Reusable/Tabs.razor.css",
+    "inputFile": "Components/Reusable/Tabs.razor.scss"
+  },
+  {
+    "outputFile": "Components/Pages/Chat.razor.css",
+    "inputFile": "Components/Pages/Chat.razor.scss"
+  },
+  {
+    "outputFile": "Components/Pages/Trade.razor.css",
+    "inputFile": "Components/Pages/Trade.razor.scss"
+  },
+  {
+    "outputFile": "Components/Pages/MyOffers.razor.css",
+    "inputFile": "Components/Pages/MyOffers.razor.scss"
+  }
+]

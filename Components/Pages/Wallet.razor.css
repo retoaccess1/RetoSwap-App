@@ -1,0 +1,117 @@
+﻿.wallet .top .monero-card {
+  height: 200px;
+  max-width: 380px;
+  background-image: linear-gradient(to right bottom, #4d4d4d, #f26822);
+  border-radius: 20px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+.wallet .top .monero-card .monero-card-top {
+  display: flex;
+  align-items: center;
+}
+.wallet .top .monero-card .monero-card-top .logo {
+  background-image: url("../img/monero-logo-black.webp");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: contain;
+  filter: invert(100%);
+  height: 50px;
+  aspect-ratio: 1;
+}
+.wallet .top .monero-card .monero-card-top .wallet-title {
+  font-size: 22px;
+  font-weight: 600;
+  text-align: center;
+  margin-left: 20px;
+}
+.wallet .top .monero-card p {
+  color: #fff;
+}
+.wallet .top .monero-card .monero-card-bottom .monero-card-bottom-available {
+  /*display: flex;*/
+  align-items: flex-end;
+  margin: 10px 0 6px;
+}
+.wallet .top .monero-card .monero-card-bottom .monero-card-bottom-available .wallet-balance-fiat {
+  font-size: 32px;
+  line-height: 32px;
+  font-weight: 700;
+  margin-right: 10px;
+}
+.wallet .top .monero-card .monero-card-bottom .monero-card-bottom-available .wallet-pending-balance-fiat {
+  opacity: 0.8;
+  line-height: 20px;
+}
+.wallet .top .monero-card .monero-card-bottom .monero-card-bottom-pending .wallet-balance-crypto {
+  font-size: 22px;
+  font-weight: 400;
+  margin-right: 10px;
+  margin-top: 10px;
+  line-height: 22px;
+  /*white-space: nowrap;*/
+}
+.wallet .top .monero-card .monero-card-bottom .monero-card-bottom-pending .wallet-pending-balance-crypto {
+  opacity: 0.8;
+  display: inline-block;
+}
+.wallet .addresses-text {
+  margin-top: 10px;
+  font-weight: bold;
+}
+.wallet .tab-container {
+  margin-top: 10px;
+}
+.wallet ul {
+  margin-top: 10px;
+  /*        overflow-y: auto;
+          height: 100%;*/
+}
+.wallet ul li {
+  margin-bottom: 10px;
+}
+.wallet ul .transaction-card {
+  display: flex;
+  background-color: #d3d3d3;
+  padding: 10px;
+  border-radius: 8px;
+  position: relative;
+  color: #000;
+  align-items: center;
+}
+.wallet ul .transaction-card ion-icon {
+  margin-right: 8px;
+}
+.wallet ul .transaction-card .in {
+  /*color: #509944;*/
+}
+.wallet ul .transaction-card .out {
+  /*color: #e95454;*/
+}
+.wallet ul .transaction-card .transaction-amount {
+  margin-right: 10px;
+}
+
+.withdraw input {
+  margin-bottom: 10px;
+}
+.withdraw .amount-container {
+  display: flex;
+}
+.withdraw .amount-container input {
+  border-end-end-radius: 0;
+  border-start-end-radius: 0;
+}
+.withdraw .amount-container .send-all {
+  display: flex;
+  align-items: center;
+  background-color: #d3d3d3;
+  padding: 4px 8px 4px;
+  width: fit-content;
+  border-end-end-radius: 8px;
+  border-start-end-radius: 8px;
+  color: #000;
+  margin-bottom: 10px;
+  white-space: nowrap;
+}

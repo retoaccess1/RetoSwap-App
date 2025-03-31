@@ -1,0 +1,51 @@
+﻿.info-row {
+    margin-bottom: 10px;
+
+    .info-text {
+        font-weight: 500;
+    }
+
+    .inner-container {
+        display: flex;
+        background-color: #d3d3d3;
+        padding: 10px;
+        border-radius: 8px;
+        position: relative;
+        justify-content: space-between;
+        color: #000;
+
+        .copied {
+            position: absolute;
+            top: -24px;
+            right: 0px;
+            display: none;
+            color: #fff;
+        }
+
+        .display {
+            display: initial;
+        }
+
+        .data {
+            margin-right: 10px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        ion-icon {
+            height: 16px;
+            min-height: 16px;
+            width: 16px;
+            min-width: 16px;
+        }
+
+        .eye {
+            margin-right: 6px;
+        }
+
+        .expanded {
+            overflow: initial;
+            line-break: anywhere;
+        }
+    }
+}

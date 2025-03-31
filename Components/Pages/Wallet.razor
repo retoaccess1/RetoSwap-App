@@ -1,0 +1,112 @@
+﻿@page "/wallet"
+
+<Modal @bind-IsOpen="@IsOpen" Title="Verify withdrawal" OnOkPressed="WithdrawAsync">
+    <div class="modal-content">
+        <p>Sending @Amount XMR</p>
+        <p>To address: @WithdrawalAddress</p>
+        <p>Fee: @(ulong.Parse(Transaction?.Fee ?? "0").ToMonero()) XMR</p>
+    </div>
+</Modal>
+<div class="wallet">
+    <div class="top">
+        <div class="monero-card">
+            <div class="monero-card-top ">
+                <div class="logo"></div>
+                <p class="wallet-title">Monero Wallet</p>
+            </div>
+            <div class="monero-card-bottom">
+              <div class="monero-card-bottom-available">
+                    <p class="wallet-balance-fiat">@(AvailableFiat.ToString("C", PreferredCurrencyFormat))</p>
+                    <p class="wallet-pending-balance-fiat">@(PendingFiat.ToString("C", PreferredCurrencyFormat)) pending</p>
+                </div>
+                <div class="monero-card-bottom-pending">
+                    <p class="wallet-balance-crypto">XMR @(Balance?.AvailableXMRBalance.ToMonero()) </p>
+                    <p class="wallet-pending-balance-crypto">XMR @(Balance?.PendingXMRBalance.ToMonero()) pending</p>
+                </div>
+@*                 <div class="monero-card-bottom-reserved">
+                    <p class="wallet-balance-crypto">XMR @(((Balance?.ReservedTradeBalance ?? 0) + (Balance?.ReservedOfferBalance ?? 0)).ToMonero()) reserved</p>
+                </div> *@
+            </div>
+        </div>
+    </div>
+    <div class="tab-container">
+        <Tabs TabNames="@(["Addresses", "Withdraw", "Transactions"])" @bind-SelectedTabIndex="@SelectedTabIndex"/>
+    </div>
+    @switch (SelectedTabIndex)
+    {
+        case 0:
+            <ul>
+                @if (Addresses.Count == 0)
+                {
+                    <li>No addresses</li>
+                }
+                else
+                {
+                    foreach (var address in Addresses)
+                    {
+                        <li>
+                            <InfoRow IsExpandable="true" Value="@address"></InfoRow>
+                        </li>
+                    }
+                }
+            </ul>
+            break;
+        case 1:
+            <div class="withdraw">
+                @if (Balance is null)
+                {
+                    <p>Wallet not ready</p>
+                }
+                else
+                {
+                    <label for="withdrawalAddress">Withdrawal address</label>
+                    <input id="withdrawalAddress" name="withdrawalAddress" @bind="WithdrawalAddress" placeholder="Address" />
+                    <label for="amount">Amount</label>
+                    <div class="amount-container">
+                        <input id="amount" name="amount" @bind="Amount" />
+                        @* <p class="send-all" @onclick="() => _piconeroAmount = Balance.AvailableXMRBalance - Balance.ReservedOfferBalance - Balance.ReservedTradeBalance">Send all</p> *@
+                        <p class="send-all" @onclick="() => _piconeroAmount = checked(Balance.AvailableXMRBalance - Balance.ReservedTradeBalance)">Send all</p>
+                    </div>
+                    <label for="memo">Memo</label>
+                    <input id="memo" name="memo" @bind="Memo" placeholder="Optional" />
+                    <button @onclick="CreateTransaction" disabled="@(string.IsNullOrEmpty(WithdrawalAddress) || Amount == 0m || WithdrawalAddress.Length != 95)">Withdraw</button>                    
+                }
+            </div>
+            break;
+        case 2:
+            <ul>
+                @if (Addresses.Count == 0)
+                {
+                    <li>No Transactions</li>
+                }
+                else
+                {
+                    foreach (var transaction in Transactions.OrderByDescending(x => x.Timestamp))
+                    {
+                        <li class="transaction-card">
+                            @if (transaction.IncomingTransfers?.Count > 0)
+                            {
+                                <ion-icon name="arrow-forward-circle-outline" class="in"></ion-icon>
+                                <p class="transaction-amount">
+                                    XMR @transaction.IncomingTransfers.Aggregate(ulong.MinValue, (x, y) => x + ulong.Parse(y.Amount)).ToMonero().ToString("0.000")
+                                </p>
+                            }
+                            else
+                            {
+                                <ion-icon name="arrow-back-circle-outline" class="out"></ion-icon>
+                                <p class="transaction-amount">
+                                    XMR @ulong.Parse(transaction.OutgoingTransfer.Amount).ToMonero().ToString("0.000")
+                                </p>
+                            }
+                            <p>
+                                @(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddSeconds(transaction.Timestamp).ToLocalTime())
+                            </p>
+                        </li>
+                    }
+                }
+            </ul>
+            break;
+        default:
+            break;
+    }
+</div>

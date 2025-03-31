@@ -1,0 +1,38 @@
+﻿<div class="info-row">
+    <p class="info-text">@Label</p>
+    <div class="inner-container">
+        <p class=@(IsExpandable && _isExpanded ? "data expanded" : "data")>@Value</p>
+        @if (IsExpandable)
+        {
+            <ion-icon class="eye" @onclick="() => _isExpanded = !_isExpanded" name=@(_isExpanded ? "eye-sharp" : "eye-outline")></ion-icon>
+        }
+        <ion-icon @onclick="@OnCopy" name="copy-outline"></ion-icon>
+        <div class=@(_displayCopied ? "copied display" : "copied")>
+            <p>Copied!</p>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    private bool _displayCopied = false;
+    private bool _isExpanded = false;
+
+    [Parameter]
+    public string Label { get; set; } = string.Empty;
+    [Parameter]
+    public string Value { get; set; } = string.Empty;
+    [Parameter]
+    public bool IsExpandable { get; set; }
+
+    public async Task OnCopy()
+    {
+        await Clipboard.Default.SetTextAsync(Value);
+
+        _displayCopied = true;
+
+        await Task.Delay(2000);
+
+        _displayCopied = false;
+    }
+}

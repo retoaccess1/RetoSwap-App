@@ -1,0 +1,61 @@
+﻿@implements IDisposable
+
+<div class="header-main">
+    @* <ion-icon name="arrow-back-outline"></ion-icon> *@
+    <h3>@_headerTitle</h3>
+    <i @onclick="() => IsMenuOpen = !IsMenuOpen" class="bi bi-three-dots-vertical"></i>
+    @if (IsMenuOpen)
+    {
+        <div class="settings-menu-wrapper" @onclick="() => IsMenuOpen = false">
+            <div class="settings-menu">
+                <NavLink class="nav-link" href="settings">
+                    <ion-icon name="settings-outline" style="margin-right:0;"></ion-icon>
+                    <p>Settings</p>
+                </NavLink>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private string _headerTitle = "home";
+
+    [Inject]
+    public NavigationManager NavigationManager { get; set; } = default!;
+    public bool IsMenuOpen { get; set; }
+
+    protected override void OnInitialized()
+    {
+        NavigationManager.LocationChanged += HandleLocationChanged;
+    }
+
+    private void HandleHeaderChanged(string title)
+    {
+        _headerTitle = title;
+    }
+
+    private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        IsMenuOpen = false;
+
+        var queryParams = System.Web.HttpUtility.ParseQueryString(new Uri(NavigationManager.Uri).Query);
+        var title = queryParams["title"];
+        if (!string.IsNullOrEmpty(title))
+        {
+            _headerTitle = title;
+        }
+        else
+        {
+            _headerTitle = e.Location.Replace(NavigationManager.BaseUri, "");
+            if (string.IsNullOrEmpty(_headerTitle))
+                _headerTitle = "home";
+        }
+
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= HandleLocationChanged;
+    }
+}

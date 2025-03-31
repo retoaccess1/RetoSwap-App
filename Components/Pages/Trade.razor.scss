@@ -1,0 +1,45 @@
+﻿.trade-main {
+
+    .trade-main-top {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .role {
+        margin-bottom: 10px;
+    }
+
+    .process {
+
+        .process-step {
+            display: flex;
+            margin-bottom: 10px;
+
+            i {
+                margin-right: 10px;
+                /*position: relative;*/
+            }
+        }
+    }
+}
+
+
+.loader {
+    /*position: absolute;*/
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    display: inline-block;
+    border-top: 3px solid #FFF;
+    border-right: 3px solid transparent;
+    box-sizing: border-box;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+}
+
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}

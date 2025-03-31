@@ -1,0 +1,27 @@
+﻿@page "/"
+
+<p>Haveno version: @Version</p>
+
+<p>AvailableXMRBalance: @(Balance?.AvailableXMRBalance.ToMonero()) XMR</p>
+<p>XMRBalance: @(Balance?.XMRBalance.ToMonero()) XMR</p>
+<p>Pending: @(Balance?.PendingXMRBalance.ToMonero()) XMR</p>
+<p>ReservedOfferBalance: @(Balance?.ReservedOfferBalance.ToMonero()) XMR</p>
+<p>ReservedTradeBalance: @(Balance?.ReservedTradeBalance.ToMonero()) XMR</p>
+<p style="line-break:anywhere">Address: @Balance?.PrimaryAddress</p>
+
+<Modal IsOpen="IsModalOpen" Title="Would you like to install haveno?" OnOkPressed="HandleOkPress">
+    <p>In order to use the app the Haveno daemon needs to be installed inside Termux. 
+        
+In order to do this the app requires a few permissions, however it is possible to manually set this up and instructions are in the haveno-termux-install file on Github</p>
+</Modal>
+
+<Modal IsOpen="IsInstallingTermux || IsSettingUpTermux" Title="Installing Haveno" >
+    @if (IsInstallingTermux)
+    {
+        <p>Downloading Termux...</p>
+    }
+    @if (IsSettingUpTermux)
+    {
+        <p>Setting up Termux and Haveno daemon...</p>
+    }
+</Modal>

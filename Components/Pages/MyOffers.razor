@@ -1,0 +1,52 @@
+﻿@page "/myoffers"
+
+<ul class="offers">
+    @foreach (var offer in Offers)
+    {
+        @* should be a shared component  *@
+        <li class="offer">
+            <a class="offer-link" href=@($"offer?OfferId={offer.Id}&title=Offer")>
+                <div class="offer-top">
+                    <div class="offer-currency">
+                        @(offer.Direction == "SELL" ? offer.BaseCurrencyCode : offer.CounterCurrencyCode)
+                        <ion-icon name="arrow-forward-outline"></ion-icon>
+                        @(offer.Direction == "SELL" ? offer.CounterCurrencyCode : offer.BaseCurrencyCode)
+                        |
+                        @(Math.Round(double.Parse(offer.Price), 2))
+                        @offer.CounterCurrencyCode
+                        (@Math.Round(offer.MarketPriceMarginPct, 2).ToString("0.00")%)
+                        @* (@Math.Round(offer.Pct, 2).ToString("0.00")%) *@
+                    </div>
+                    <div class="card">
+                        @offer.PaymentMethodShortName
+                    </div>
+                </div>
+                <div>
+                    @{
+                        var minVolume = double.Parse(offer.MinVolume);
+                        var volume = double.Parse(offer.Volume);
+
+                        if (minVolume == volume)
+                        {
+                            @(Math.Round(volume, 2) + " ")
+                        }
+                        else
+                        {
+                            @($"{Math.Round(minVolume, 2)} - {Math.Round(volume, 2)} ")
+                        }
+                    }
+                    @offer.CounterCurrencyCode
+                </div>
+                @(offer.Amount == offer.MinAmount ? $"{offer.Amount.ToMonero()} XMR" : $"{offer.MinAmount.ToMonero()} - {offer.Amount.ToMonero()} XMR")
+            </a>
+            @if (offer.IsMyOffer)
+            {
+                <div class="buttons">
+                    @* go to create offer page with edit param *@
+                    <button @onclick="EditOffer">Edit</button>
+                    <button @onclick="() => CancelOfferAsync(offer.Id)">Remove</button>
+                </div>
+            }
+        </li>
+    }
+</ul>

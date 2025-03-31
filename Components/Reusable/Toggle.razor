@@ -1,0 +1,28 @@
+﻿<div class="toggle-main">
+    <div class="toggle-wrapper" @onclick="@(async (e) => { IsToggled = !IsToggled; })">
+        <div class=@(IsToggled ? "toggle active" : "toggle inactive")></div>
+    </div>
+    <p>@Text.ToLower()</p>
+</div>
+
+@code {
+    [Parameter]
+    public string Text { get; set; } = string.Empty;
+
+    [Parameter]
+    public bool IsToggled
+    {
+        get;
+        set
+        {
+            if (field == value)
+                return;
+
+            field = value;
+            IsToggledChanged.InvokeAsync(value);
+        }
+    }
+
+    [Parameter]
+    public EventCallback<bool> IsToggledChanged { get; set; }
+}

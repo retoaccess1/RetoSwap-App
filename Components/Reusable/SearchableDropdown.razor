@@ -1,0 +1,83 @@
+﻿<div class=@($"searchable-dropdown-main {(_isActive ? "rotate" : "")} {Class}")>
+    <p class="text">@Text</p>
+    <input type="text"
+    readonly="@Disabled"
+    placeholder="@Placeholder"
+    @onfocusout="() => _isActive = false"
+    @onfocusin="() => _isActive = true"
+    @bind="_searchTerm"
+    @oninput="OnSearchTermChange"
+    class=@(_visibleItems.Count == 0 || !_isActive ? "in-hidden" : "in-visible") />
+    <ul class=@(_visibleItems.Count == 0 || !_isActive ? "list hidden" : "list visible")>
+        @foreach (var item in _visibleItems)
+        {
+            <li @onclick="() => OnItemClick(item.Key)" class="item-li">
+                <p>@item.Value</p>
+            </li>
+        }
+    </ul>
+</div>
+
+@code {
+    private Dictionary<string, string> _visibleItems = [];
+    private string _searchTerm = string.Empty;
+    private bool _isActive;
+
+    [Parameter]
+    public bool Disabled { get; set; }
+
+    [Parameter]
+    public string? Class { get; set; }
+
+    [Parameter]
+    [EditorRequired]
+    public Dictionary<string, string> Items 
+    { 
+        get; 
+        set 
+        {
+            field = value;
+            _visibleItems = value; 
+
+            if (!string.IsNullOrEmpty(InitialValue))
+                _searchTerm = Items[InitialValue];
+        } 
+    } = [];
+
+    [EditorRequired]
+    [Parameter]
+    public string Text { get; set; } = string.Empty;
+
+    [EditorRequired]
+    [Parameter]
+    public string Placeholder { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<string> OnSubmit { get; set; }
+
+    [Parameter]
+    public string? InitialValue { get; set; }
+
+    public async Task OnSearchTermChange(ChangeEventArgs e)
+    {
+        if (string.IsNullOrEmpty((string)e.Value!))
+        {
+            _visibleItems = Items;
+            _searchTerm = string.Empty;
+            await OnSubmit.InvokeAsync(string.Empty);
+        }
+        else
+        {
+            _visibleItems = Items.Where(x => x.Key.ToLower().Contains(((string)e.Value).ToLower())).ToDictionary();
+        }
+
+        StateHasChanged();
+    }
+
+    public async Task OnItemClick(string key)
+    {
+        _searchTerm = Items[key];
+        await OnSubmit.InvokeAsync(key);
+        _visibleItems = Items.Where(x => x.Key.ToLower().Contains((key).ToLower())).ToDictionary();
+    }
+}

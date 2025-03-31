@@ -1,0 +1,91 @@
+﻿label {
+    font-weight: bold;
+}
+
+.accounts {
+
+    .account {
+        display: flex;
+        padding: 10px;
+        border: 1px solid #fff;
+        border-radius: 8px;
+        margin: 6px 0 6px;
+        align-items: center;
+
+        ion-icon {
+            margin-left: auto;
+        }
+    }
+
+    .active-account {
+        background-color: #808080;
+    }
+
+    .accounts-text {
+        margin-bottom: 10px;
+        font-weight: bold;
+        /*margin-left: 10px;*/
+        /*border-bottom: 1px solid #fff;*/
+    }
+}
+
+.account-info-text {
+    margin-bottom: 10px;
+    font-weight: bold;
+    /*margin-left: 10px;*/
+    /*border-bottom: 1px solid #fff;*/
+}
+
+.payment-methods-container {
+    display: flex;
+    flex-direction: column;
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.supported-currencies {
+    display: flex;
+    flex-direction: column;
+    max-height: 160px;
+    overflow-y: auto;
+    margin: 10px 0 10px;
+
+    .checkbox-container {
+        display: flex;
+        align-items: center;
+        margin-bottom: 6px;
+        height: 16px;
+
+        label {
+            margin-left: 6px;
+        }
+    }
+}
+
+.supported-currencies-text {
+    margin-top: 10px;
+}
+
+.input-fields {
+    display: flex;
+    flex-direction: column;
+
+    .field {
+        display: flex;
+        flex-direction: column;
+        margin-top: 10px;
+    }
+
+    button {
+        margin-top: 20px;
+    }
+}
+
+.custom-account-name {
+    display: flex;
+    margin-top: 6px;
+
+    label {
+        margin-left: 6px;
+    }
+}

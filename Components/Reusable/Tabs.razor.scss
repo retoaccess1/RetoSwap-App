@@ -1,0 +1,19 @@
+﻿.tabs-main {
+    display: flex;
+    width: 100%;
+    margin-bottom: 20px;
+    overflow: hidden;
+
+    button {
+        width: auto;
+        border: none;
+        border-radius: initial;
+        background-color: transparent;
+        color: #fff;
+    }
+
+    .active {
+        border-bottom: 2px solid #808080;
+        color: #808080;
+    }
+}

@@ -1,0 +1,15 @@
+﻿@page "/offer"
+
+<div class="offer-main">
+    <div class="dropdown">
+        <SearchableDropdown Disabled="true" InitialValue="@SelectedPaymentAccountId" Text="Trading account" Placeholder="Trading account" Items="@PaymentAccounts" OnSubmit="(val) => SelectedPaymentAccountId = val"></SearchableDropdown>
+    </div>
+    <label>Amount</label>
+    <input step="0.01" min="@OfferInfo?.MinAmount.ToMonero()" max="@OfferInfo?.Amount.ToMonero()" @bind="@Amount" type="number" />
+    <p class="range">MIN/MAX: @OfferInfo?.MinAmount.ToMonero() XMR - @OfferInfo?.Amount.ToMonero() XMR</p>
+    <label>Total in @OfferInfo?.CounterCurrencyCode:</label>
+    <input readonly @bind="@FiatAmount" type="number" step="0.01" />
+    <button @onclick="TakeOfferAsync">Take offer</button>
+    <button @onclick="Cancel">Cancel</button>
+</div>
+

@@ -1,0 +1,95 @@
+﻿@page "/trade"
+
+@if (TradeInfo is not null)
+{
+    <div class="trade-main">
+        <div class="trade-main-top">
+            <p>Trade ID - @TradeInfo.ShortId</p>
+            <a href=@($"/chat?tradeId={TradeInfo.TradeId}&title=Trade%20{TradeInfo.ShortId}%20chat&arbitrator={TradeInfo.ArbitratorNodeAddress.Split(".")[0]}&tradePeer={TradeInfo.TradePeerNodeAddress.Split(".")[0]}&myAddress={TradeInfo.Offer.OwnerNodeAddress.Split(".")[0]}")>
+                <ion-icon name="chatbubble-ellipses-sharp"></ion-icon>
+            </a>
+        </div>
+
+        <p class="role">Your role: @((IsBuyer ? "buyer" : "seller") + " as " + (TradeInfo.Offer.IsMyOffer ? "maker" : "taker"))</p>
+
+        @if (IsBuyer)
+        {
+            <ul class="process">
+                @for (int i = 0; i < BuyerSteps.Length; i++)
+                {
+                    <li class="process-step">
+                        @if (i + 1 < BuyerState)
+                        {
+                            <i class="bi bi-check-circle-fill"></i>
+                        }
+                        else
+                        {
+                            <i class=@($"bi bi-{i+1}-circle" + (i < BuyerState ? "-fill" : ""))></i>
+                        }
+                        <p>@BuyerSteps[i]</p>
+                        @if (i + 1 == BuyerState && i + 1 < BuyerSteps.Length)
+                        {
+                            <span class="loader"></span>
+                        }
+                    </li>
+                }
+            </ul>
+            @switch (BuyerState)
+            {
+                case 0: break;
+                case 1: 
+
+                break;
+                case 2:
+                    <button @onclick="() => ConfirmPaymentSentAsync(TradeInfo.TradeId)">Mark as payment sent</button>
+                break;
+                case 3: 
+
+                break;
+                case 4:
+                    <button @onclick="() => CompleteTradeAsync(TradeInfo.TradeId)">Close</button>
+                break;
+                default: break;
+            }
+        }
+        else
+        {
+            <ul class="process">
+                @for (int i = 0; i < SellerSteps.Length; i++)
+                {
+                    <li class="process-step">
+                        @if (i + 1 < SellerState)
+                        {
+                            <i class="bi bi-check-circle-fill"></i>
+                        }
+                        else
+                        {
+                            <i class=@($"bi bi-{i+1}-circle" + (i < SellerState ? "-fill" : ""))></i>
+                        }
+                        <p>@SellerSteps[i]</p>
+                        @if (i + 1 == SellerState && i + 1 < SellerSteps.Length)
+                        {
+                            <span class="loader"></span>
+                        }
+                    </li>
+                }
+            </ul>
+            @switch (SellerState)
+            {
+                case 0: break;
+                case 1:
+
+                    break;
+                case 2:
+                    break;
+                case 3:
+                    <button @onclick="() => ConfirmPaymentReceivedAsync(TradeInfo.TradeId)">Mark as payment received</button>
+                    break;
+                case 4:
+                    <button @onclick="() => CompleteTradeAsync(TradeInfo.TradeId)">Close</button>
+                    break;
+                default: break;
+            }
+        }
+    </div>
+}

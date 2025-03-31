@@ -1,0 +1,25 @@
+﻿@inject ISetupService SetupService
+@inherits LayoutComponentBase
+
+<div class="page">
+    <SwipeArea>
+        <ErrorHandler>
+            @* <Spinner IsVisible="IsFetching"/> *@
+            <Header/>
+            <main>
+                @Body
+            </main>
+            <NavMenu/>
+        </ErrorHandler>
+    </SwipeArea>
+</div>
+
+@code {
+    public bool IsFetching { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await SetupService.InitialSetupAsync();
+        await base.OnInitializedAsync();
+    } 
+}

@@ -1,0 +1,19 @@
+﻿@page "/settings"
+
+<div>
+    <div class="info-container">
+        <p class="bold-p">Build information</p>
+        <p>Version: @Version</p>
+        <p>Build: @Build</p>
+        <p>Haveno version: @HavenoVersion</p>
+        <p>Monero node: @(XMRNodeIsRunning ? "Running" : "Stopped")</p>
+    </div>
+    <div class="dropdown">
+        <SearchableDropdown InitialValue="@Countries.First().Key" Items="Countries" Disabled="true" Text="Language" Placeholder="Choose language"></SearchableDropdown>
+    </div>
+    <div class="dropdown">
+        <SearchableDropdown InitialValue="@PreferredCurrency" Items="Currencies" Text="Preferred currency" Placeholder="Choose currency" OnSubmit="HandlePreferredCurrencySubmit"></SearchableDropdown>
+    </div>
+    @* <SearchableDropdown Items="" Text="Country" Placeholder="Choose country"></SearchableDropdown> *@
+    <Toggle @bind-IsToggled="IsToggled" Text="Notifications" />
+</div>

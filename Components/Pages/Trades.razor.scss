@@ -1,0 +1,31 @@
+﻿.trades-list {
+
+    .trade-card {
+        border: 1px solid #fff;
+        margin-bottom: 10px;
+        padding: 10px;
+        border-radius: 10px;
+
+        .trade-card-top {
+            display: flex;
+            width: 100%;
+
+            .short-id {
+                width: 80px;
+            }
+
+            a {
+
+            }
+
+            .status {
+                margin-left: auto;
+                margin-right: auto;
+            }
+
+            .icon-container {
+                margin-left: auto;
+            }
+        }
+    }
+}

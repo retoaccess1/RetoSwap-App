@@ -1,0 +1,89 @@
+﻿@if (!_keyboardIsOpen)
+{
+    <nav class="tabs">
+        <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+            <ion-icon size="large" name="earth-outline"></ion-icon>
+        </NavLink>
+        <NavLink class="nav-link" href="buysell?title=Buy%20%26%20Sell">
+            <ion-icon size="large" name="cart-outline"></ion-icon>
+        </NavLink>
+        <NavLink class="nav-link" href="trades">
+            <ion-icon size="large" name="swap-vertical-outline"></ion-icon>
+        </NavLink>
+        <NavLink class="nav-link" href="wallet">
+            <ion-icon size="large" name="wallet-outline"></ion-icon>
+        </NavLink>
+        <NavLink class="nav-link" href="account">
+            <ion-icon size="large" name="person-outline"></ion-icon>
+        </NavLink>
+@*         <NavLink class="nav-link" href="settings">
+            <ion-icon size="large" name="settings-outline" style="margin-right:0;"></ion-icon>
+        </NavLink> *@
+    </nav>    
+}
+
+@code {
+    private static Action<bool>? OnKeyboardChanged;
+    private bool _keyboardIsOpen;
+    private int _currentRoute = 0;
+    // private List<string> _routes = [ "", "wallet", "buysell", "trades", "account", "settings" ];
+    private List<string> _routes = ["", "buysell", "trades", "wallet", "account"];
+
+    // When navigating without swiping, need to set the correct route - TODO
+    [Inject]
+    public NavigationManager NavigationManager { get; set; } = default!;
+
+    private void MoveNextRoute()
+    {
+        if (_currentRoute < _routes.Count)
+            _currentRoute++;
+        else
+            _currentRoute = 0;
+
+        NavigationManager.NavigateTo(_routes[_currentRoute]);
+    }
+
+    private void MovePrevRoute()
+    {
+        if (_currentRoute > 0)
+            _currentRoute--;
+        else
+            _currentRoute = _routes.Count;
+
+        NavigationManager.NavigateTo(_routes[_currentRoute]);
+    }
+
+    protected override Task OnInitializedAsync()
+    {
+        SwipeArea.OnSwipe += HandleSwipe;
+        OnKeyboardChanged += HandleKeyboardChanged;
+
+        return base.OnInitializedAsync();
+    }
+
+    private void HandleSwipe(SwipeDirection swipeDirection)
+    {
+        switch (swipeDirection)
+        {
+            case SwipeDirection.Left:
+                MoveNextRoute();
+                break;
+            case SwipeDirection.Right:
+                MovePrevRoute();
+                break;
+            default: break;
+        }
+    }
+
+    private void HandleKeyboardChanged(bool isOpen)
+    {
+        _keyboardIsOpen = isOpen;
+        StateHasChanged();
+    }
+
+    [JSInvokable]
+    public static void KeyboardChanged(bool isOpen)
+    {
+        OnKeyboardChanged?.Invoke(isOpen);
+    }
+}

@@ -1,0 +1,36 @@
+﻿@page "/chat"
+
+<div class="chat-main">
+    @if (Messages.Count == 0)
+    {
+        <p>No messages</p>
+    }
+    else
+    {
+        <ul>
+            @foreach (var message in Messages)
+            {
+                // This is fucking stupid
+                var isMyMessage = message.SenderNodeAddress.HostName.Split(".")[0] != TradePeer && message.SenderNodeAddress.HostName.Split(".")[0] != Arbitrator;
+
+                <li class="@(isMyMessage ? "right" : "left")">
+                    <p class="date">
+                        @(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(message.Date).ToLocalTime())
+                    </p>
+                    <p class="message">
+                        @message.Message
+                    </p>
+                </li>
+            }
+        </ul>
+    }
+
+    <div class="input-container">
+        <input @oninput="HandleMessageChanged" @bind="Message" type="text" placeholder="Type message" />
+        <button @onclick="SendMessageAsync" disabled="@(string.IsNullOrEmpty(Message))">
+            <ion-icon name="send-sharp"></ion-icon>
+        </button>
+    </div>
+</div>
+
+
