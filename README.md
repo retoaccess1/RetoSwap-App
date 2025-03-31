@@ -1,0 +1,1 @@
+﻿![alt text](https://github.com/atsamd21/Haveno-app/blob/master/App.png "Image of application")
