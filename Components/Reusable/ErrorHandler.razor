@@ -1,10 +1,9 @@
 ﻿@inherits ErrorBoundary
 
-@* @if (CurrentException is not null)
+@if (CurrentException is not null)
 {
-    <div class="error">
-        <p>@CurrentException.Message</p>
-        <div class="timer"></div>
-    </div>
-} *@
+    <Modal Title="Error" @bind-IsOpen="IsOpen" VisibleButtons="false">
+        <p>@Message</p>
+    </Modal>
+}
 @ChildContent

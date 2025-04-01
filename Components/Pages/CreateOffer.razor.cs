@@ -112,7 +112,7 @@ public partial class CreateOffer : ComponentBase
             using var channelHelper = new GrpcChannelHelper();
             var offersClient = new OffersClient(channelHelper.Channel);
 
-            var resonse = await offersClient.PostOfferAsync(new PostOfferRequest
+            var response = await offersClient.PostOfferAsync(new PostOfferRequest
             {
                 Amount = _piconeroAmount,
                 MinAmount = _piconeroMinimumAmount,
@@ -130,9 +130,11 @@ public partial class CreateOffer : ComponentBase
         }
         catch
         {
-
+            throw;
         }
-
-        IsFetching = false;
+        finally
+        {
+            IsFetching = false;
+        }
     }
 }

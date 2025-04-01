@@ -1,5 +1,9 @@
 ﻿<p class="bold-p">Create offer</p>
 
+<Modal Title="Creating offer" VisibleButtons="false" @bind-IsOpen="IsFetching">
+    <Spinner IsVisible="true"></Spinner>
+</Modal>
+
 @if (PaymentAccounts.Count == 0)
 {
     <p>You have no payment accounts</p>

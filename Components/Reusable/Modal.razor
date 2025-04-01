@@ -15,7 +15,7 @@
             {
                 <div class="buttons">
                     <button class="verify-modal-button" @onclick:stopPropagation="true" @onclick:preventDefault="true" @onclick="@(async (e) => { IsOpen = false; await OnOkPressed.InvokeAsync(); })">@OkButtonText</button>
-                    <button class="verify-modal-button" @onclick:stopPropagation="true" @onclick:preventDefault="true" @onclick="@((e) => {IsOpen = false; OnCancelPressed.InvokeAsync();})">Cancel</button>
+                    <button class="verify-modal-button" @onclick:stopPropagation="true" @onclick:preventDefault="true" @onclick="@((e) => {IsOpen = false; OnCancelPressed.InvokeAsync();})">@CancelButtonText</button>
                 </div>                
             }
         </div>
@@ -27,6 +27,8 @@
     public string Title { get; set; } = string.Empty;
     [Parameter]
     public string OkButtonText { get; set; } = "Ok";
+    [Parameter]
+    public string CancelButtonText { get; set; } = "Cancel";
     [Parameter]
     public bool VisibleButtons { get; set; } = true;
     [Parameter]

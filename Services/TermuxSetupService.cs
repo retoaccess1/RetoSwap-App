@@ -60,6 +60,7 @@ public static class TermuxPermissionHelper
 
         ActivityCompat.RequestPermissions(_activity, ["com.termux.permission.RUN_COMMAND"], 0);
 
+        // Increase
         return await _tcs.Task.WaitAsync(TimeSpan.FromSeconds(30));
     }
 

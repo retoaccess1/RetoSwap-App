@@ -66,6 +66,7 @@
   padding: 4px;
   border-radius: 4px;
   margin-bottom: 4px;
+  overflow-x: hidden;
 }
 .offers .offer .offer-link .offer-top .offer-currency ion-icon {
   margin: 0 4px 0;
