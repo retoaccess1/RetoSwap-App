@@ -1,6 +1,6 @@
 ﻿![alt text](https://github.com/atsamd21/Haveno-app/blob/master/App.png "Image of application")
 
-# WIP
+## WIP
 Currently only available for Android, however MAUI supports IOS and Windows so this could change
 
 ## Setup
@@ -14,7 +14,7 @@ There are two options for installing the Haveno daemon, both use Termux
 
 This is very much work in progress, you can make simple trades on the public stagenet network but I have not tested all payment types
 
-# Donate
+## Donate
 ```
 8AjnVUsDsLTAynhXLZSymreRdvySXmt8vcDU6osXPTGudmazMPvM71h4Y14x4Je2iYHqv6tRUq52zixb5nV9oFwp7Y1DVRU
 ```
