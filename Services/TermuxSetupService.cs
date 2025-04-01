@@ -9,7 +9,7 @@ using AndroidX.Core.App;
 using AndroidX.Core.Content;
 using Haveno.Proto.Grpc;
 using Manta.Helpers;
-
+using System.Text;
 using static Haveno.Proto.Grpc.GetVersion;
 
 namespace Manta.Services;
@@ -116,6 +116,15 @@ public class TermuxSetupService
 
         using var fs = new FileStream(stdout, FileMode.Open, FileAccess.ReadWrite, FileShare.ReadWrite);
         using var reader = new StreamReader(fs);
+
+        // Trim stdout file
+        var currentContent = await reader.ReadToEndAsync();
+        var linesToKeep = currentContent.Split('\n').TakeLast(100);
+        var newContent = string.Join("\n", linesToKeep);
+
+        fs.SetLength(0); 
+        await fs.WriteAsync(Encoding.UTF8.GetBytes(newContent));
+        await fs.FlushAsync();
 
         while (true)
         {
