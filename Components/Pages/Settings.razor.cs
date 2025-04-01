@@ -29,20 +29,17 @@ public partial class Settings : ComponentBase, IDisposable
 
     public bool IsToggled 
     { 
-        get; 
-        set 
-        { 
-            field = value;
-            //_ = GetNotificationPermission(value);
-        } 
+        get;
+        set;
     }
 
-    // Remove permission?
-    // TODO disable/enable in singleton
-    public async Task GetNotificationPermission(bool isToggled)
+    public async Task HandleToggle(bool isToggled)
     {
 #if ANDROID
-        IsToggled = await Permissions.RequestAsync<NotificationPermission>() == PermissionStatus.Granted;
+        if (isToggled)
+        {
+            var status = await Permissions.RequestAsync<NotificationPermission>() == PermissionStatus.Granted;
+        }
 #endif
     }
 
@@ -68,7 +65,6 @@ public partial class Settings : ComponentBase, IDisposable
 
     protected override async Task OnInitializedAsync()
     {
-
 #if ANDROID
         IsToggled = await Permissions.CheckStatusAsync<NotificationPermission>() == PermissionStatus.Granted;
 #endif
@@ -113,6 +109,6 @@ public partial class Settings : ComponentBase, IDisposable
 
     public void Dispose()
     {
-
+        DaemonInfoSingleton.OnDaemonInfoFetch -= HandleDaemonInfoFetch;
     }
 }

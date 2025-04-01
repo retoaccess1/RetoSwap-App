@@ -3,4 +3,5 @@
 public interface ISetupService
 {
     Task InitialSetupAsync();
+    Task<DaemonStatus> GetDaemonStatusAsync();
 }

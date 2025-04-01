@@ -1,7 +1,10 @@
 ﻿@page "/buysell"
 
 @* update this to enum or if there's an existing type *@
-<p class="direction-text ">@(Direction == "BUY" ? "Buy XMR with" : "Sell XMR for")</p>
+<div class="top">
+    <p class="bold-p">@(Direction == "BUY" ? "Buy XMR with" : "Sell XMR for")</p>
+    <p class="bold-p">XMR/@PreferredCurrency: @CurrentMarketPrice</p>
+</div>
 <div class="account-type">
     <button class="@(OfferPaymentType == 0 ? "active" : "")" @onclick="() => OfferPaymentType = 0">Fiat</button>
     <button class="@(OfferPaymentType == 1 ? "active" : "")" @onclick="() => OfferPaymentType = 1">Crypto</button>

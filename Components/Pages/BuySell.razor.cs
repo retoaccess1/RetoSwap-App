@@ -1,9 +1,10 @@
 ﻿using Blazored.LocalStorage;
 using Haveno.Proto.Grpc;
 using Manta.Helpers;
+using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-
+using System.Globalization;
 using static Haveno.Proto.Grpc.Offers;
 using static Haveno.Proto.Grpc.PaymentAccounts;
 
@@ -17,6 +18,8 @@ public partial class BuySell : ComponentBase, IDisposable
     public IJSRuntime JS { get; set; } = default!;
     [Inject]
     public NavigationManager NavigationManager { get; set; } = default!;
+    [Inject]
+    public BalanceSingleton BalanceSingleton { get; set; } = default!;
 
     public CancellationTokenSource CancellationTokenSource { get; set; } = new();
 
@@ -81,6 +84,10 @@ public partial class BuySell : ComponentBase, IDisposable
         }
     }
 
+    public string PreferredCurrency { get; set; } = string.Empty;
+    public string CurrentMarketPrice { get; set; } = string.Empty;
+    public NumberFormatInfo PreferredCurrencyFormat { get; set; } = default!;
+
     public void CloseCreateOffer()
     {
         IsCreatingOffer = false;
@@ -109,6 +116,11 @@ public partial class BuySell : ComponentBase, IDisposable
 
                 var paymentMethodsResponse = await paymentAccountsClient.GetPaymentMethodsAsync(new GetPaymentMethodsRequest());
                 PaymentMethods = paymentMethodsResponse.PaymentMethods.ToDictionary(x => x.Id, x => x.Id);
+
+                PreferredCurrency = await LocalStorage.GetItemAsStringAsync("preferredCurrency") ?? "USD";
+                PreferredCurrencyFormat = CurrencyCultureInfo.GetFormatForCurrency((Currency)Enum.Parse(typeof(Currency), PreferredCurrency));
+
+                CurrentMarketPrice = BalanceSingleton.MarketPriceInfoDictionary[PreferredCurrency].ToString("0.00");
 
                 break;
             }

@@ -16,9 +16,6 @@ public partial class Market : ComponentBase, IDisposable
     public string Version { get; set; } = string.Empty;
     public WalletInfo? Balance { get; set; }
     public bool IsFetching { get; set; }
-    public bool IsInstallingTermux { get; set; }
-    public bool IsSettingUpTermux { get; set; }
-    public bool IsModalOpen { get; set; }
 
     [Inject]
     public ILocalStorageService LocalStorage { get; set; } = default!;
@@ -27,60 +24,6 @@ public partial class Market : ComponentBase, IDisposable
     [Inject]
     public BalanceSingleton BalanceSingleton { get; set; } = default!;
 
-    public async Task HandleOkPress()
-    {
-#if ANDROID
-
-        if ((await LocalStorage.GetItemAsync<bool>("termux-installed")) is false)
-        {
-            try
-            {
-                IsInstallingTermux = true;
-                StateHasChanged();
-
-                // TODO prompt first to start this, then system will also have to prompt
-                await TermuxInstallService.InstallTermuxAsync();
-
-                await LocalStorage.SetItemAsync("termux-installed", true);
-            }
-            catch (Exception e)
-            {
-                // Tell user why install failed TODO
-            }
-
-            IsInstallingTermux = false;
-            StateHasChanged();
-        }
-
-        if ((await LocalStorage.GetItemAsync<bool>("termux-updated")) is false)
-        {
-            try
-            {
-                var accepted = await TermuxSetupService.RequestRequiredPermissions();
-                if (accepted)
-                {
-                    IsSettingUpTermux = true;
-                    StateHasChanged();
-
-                    await TermuxSetupService.UpdateTermux();
-                    await LocalStorage.SetItemAsync("termux-updated", true);
-                }
-            }
-            catch (Exception e)
-            {
-
-            }
-
-            IsSettingUpTermux = false;
-            IsModalOpen = false;
-            StateHasChanged();
-        }
-
-        _ = TermuxSetupService.StartHavenoDaemon();
-
-#endif
-    }
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -88,20 +31,11 @@ public partial class Market : ComponentBase, IDisposable
 
         }
 
-
         await base.OnAfterRenderAsync(firstRender);
     }
 
     protected override async Task OnInitializedAsync()
     {
-        IsModalOpen = !((await LocalStorage.GetItemAsync<bool>("termux-installed")) && (await LocalStorage.GetItemAsync<bool>("termux-updated")));
-        if (!IsModalOpen && TermuxSetupService.HavenoDaemonTask is null)
-        {
-#if ANDROID
-            _ = TermuxSetupService.StartHavenoDaemon();
-#endif
-        }
-
         while (true)
         {
             try
@@ -146,6 +80,6 @@ public partial class Market : ComponentBase, IDisposable
 
     public void Dispose()
     {
-
+        BalanceSingleton.OnBalanceFetch -= HandleBalanceFetch;
     }
 }

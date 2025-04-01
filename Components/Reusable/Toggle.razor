@@ -20,9 +20,13 @@
 
             field = value;
             IsToggledChanged.InvokeAsync(value);
+            OnToggledChanged.InvokeAsync(value);
         }
     }
 
     [Parameter]
     public EventCallback<bool> IsToggledChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OnToggledChanged { get; set; }
 }

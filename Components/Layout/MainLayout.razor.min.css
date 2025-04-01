@@ -1,1 +1,1 @@
-﻿.page{position:relative;display:flex;flex-direction:column;padding:0 20px 20px;}main{flex:1;}
+﻿.page{position:relative;display:flex;flex-direction:column;padding:0 20px 20px;}main{flex:1;}::deep .install-modal{word-break:keep-all;overflow-wrap:normal;white-space:nowrap;}::deep .install-modal p{white-space:nowrap;margin-bottom:10px;}

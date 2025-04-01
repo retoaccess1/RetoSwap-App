@@ -84,10 +84,29 @@ public class TermuxSetupService
     public static Task? HavenoDaemonTask { get; private set; }
     public static Task? StoutListenerTask { get; private set; }
 
+    public static TaskCompletionSource<bool> HavenoDaemonRunningTCS { get; private set; } = new();
+
     public static async Task RestartHavenoDaemon()
     {
+        throw new NotImplementedException();
+
+        await ExecuteCommandAsync("\"pkill -f tor\"", true, millisecondsTimeout: 200);
         await ExecuteCommandAsync("\"pkill -f haveno\"", true, millisecondsTimeout: 200);
         HavenoDaemonTask = Task.Run(() => ExecuteCommandAsync("\"cd haveno && make user1-daemon-stagenet\"", true));
+    }
+
+    public static async Task ToggleApps()
+    {
+        await ExecuteTermuxCommandAsync("am start -a android.intent.action.VIEW -d \"manta://termux_callback\"");
+
+        var intent = _context.PackageManager?.GetLaunchIntentForPackage("com.termux");
+        if (intent is not null)
+        {
+            intent.AddFlags(ActivityFlags.NewTask);
+            _context.StartActivity(intent);
+        }
+
+        await Task.Delay(1000);
     }
 
     private static async Task ListenStdout()
@@ -99,8 +118,7 @@ public class TermuxSetupService
 
         while (true)
         {
-            string? line;
-            line = await reader.ReadLineAsync();
+            var line = await reader.ReadLineAsync();
 
             if (line is not null)
             {
@@ -113,45 +131,79 @@ public class TermuxSetupService
         }
     }
 
-    public static async Task StartHavenoDaemon()
+    // TODO
+    // Handle daemon/termux crash. Restart, reconnect
+    // Or if termux gets closed etc 
+
+    public static async Task<bool> IsHavenoDaemonRunning()
+    {
+        for (int i = 0; i < 2; i++)
+        {
+            try
+            {
+                using var grpcChannelHelper = new GrpcChannelHelper();
+                var client = new GetVersionClient(grpcChannelHelper.Channel);
+
+                var response = await client.GetVersionAsync(new GetVersionRequest());
+
+                // Attach stdout listener, shared responsibility?
+                if (StoutListenerTask is null)
+                    StoutListenerTask = Task.Run(ListenStdout);
+
+                return true;
+            }
+            catch (Exception e)    // Catch correct exception TODO, ignore rate limit exception
+            {
+
+            }
+
+            await Task.Delay(1000);
+        }
+
+        return false;
+    }
+
+    public static async Task<bool> TryStartHavenoDaemon()
     {
         try
         {
-            // bc of rate limit
-            await Task.Delay(2000);
+            if (await IsHavenoDaemonRunning())
+            {
+                HavenoDaemonRunningTCS?.SetResult(true);
+                return true;
+            }
 
-            using var grpcChannelHelper = new GrpcChannelHelper();
-            var client = new GetVersionClient(grpcChannelHelper.Channel);
+            var intent = _context.PackageManager?.GetLaunchIntentForPackage("com.termux");
+            if (intent is not null)
+            {
+                intent.AddFlags(ActivityFlags.NewTask);
+                _context.StartActivity(intent);
+            }
 
-            var response = await client.GetVersionAsync(new GetVersionRequest());
+            await Task.Delay(1000);
 
-            if (StoutListenerTask is null)
-                StoutListenerTask = Task.Run(ListenStdout);
+            await ExecuteTermuxCommandAsync("am start -a android.intent.action.VIEW -d \"manta://termux_callback\"");
+            // TODO Don't run as root, everything on termux seems to run as root, set up user with less perms
+            await ExecuteCommandAsync("\"tor\"", true, exitOnContainsString: "100%");
+            // Also runs as root - fix. Limit directory access
+            // TODO error handling
+            HavenoDaemonTask = Task.Run(() => ExecuteCommandAsync("\"cd haveno && make user1-daemon-stagenet\"", true));
 
-            return;
+            // Could loop forever
+            while (!await IsHavenoDaemonRunning())
+            {
+                await Task.Delay(2000);
+            }
+
+            HavenoDaemonRunningTCS?.SetResult(true);
+            return true;
         }
-        catch (Exception ex)    // Catch correct exception TODO
+        catch (Exception e)
         {
+            Console.WriteLine(e);
 
+            return false;
         }
-
-        var intent = _context.PackageManager?.GetLaunchIntentForPackage("com.termux");
-        if (intent is not null)
-        {
-            intent.AddFlags(ActivityFlags.NewTask);
-            //intent.AddFlags(ActivityFlags.ExcludeFromRecents);
-            //intent.AddFlags(ActivityFlags.PreviousIsTop);
-
-            _context.StartActivity(intent);
-        }
-
-        await Task.Delay(1000);
-        
-        await ExecuteTermuxCommandAsync("am start -a android.intent.action.VIEW -d \"manta://termux_callback\"");
-
-        await ExecuteCommandAsync("\"tor\"", true, exitOnContainsString: "100%");
-        // Also runs as root - fix. Limit directory access
-        HavenoDaemonTask = Task.Run(() => ExecuteCommandAsync("\"cd haveno && make user1-daemon-stagenet\"", true));
     }
 
     public static async Task<bool> RequestRequiredPermissions()
@@ -177,6 +229,8 @@ public class TermuxSetupService
 
     public static async Task UpdateTermux()
     {
+        DeviceDisplay.KeepScreenOn = true;
+
         var intent = _context.PackageManager?.GetLaunchIntentForPackage("com.termux");
         if (intent is not null)
         {
@@ -189,35 +243,35 @@ public class TermuxSetupService
 
         await Task.Delay(1000);
 
-        try
-        {
-            // Pray that it does not take longer than 15s...
-            // Could maybe spin another polling thread? as this will probably time out for some users
-            await ExecuteTermuxCommandAsync("termux-wake-lock");
-            await ExecuteTermuxCommandAsync("termux-reload-settings");
-            await ExecuteTermuxCommandAsync("pkg install termux-am", 15_000);
-            //await ExecuteTermuxCommandAsync("am start --user 0 -a android.settings.action.MANAGE_OVERLAY_PERMISSION -d \"package:com.termux\"", 15_000);
-            await ExecuteTermuxCommandAsync("termux-setup-storage", 10_000);
-            await ExecuteTermuxCommandAsync("termux-reload-settings");
-            await ExecuteTermuxCommandAsync("am startservice -a com.termux.service_stop com.termux/.app.TermuxService");
-            await Task.Delay(500);
-        }
-        catch (Exception ex)
-        {
-
-        }
+        // Pray that it does not take longer than 15s...
+        // Could maybe spin another polling thread? as this will probably time out for some users
+        await ExecuteTermuxCommandAsync("termux-reload-settings");
+        await ExecuteTermuxCommandAsync("termux-wake-lock");
+        await ExecuteTermuxCommandAsync("termux-reload-settings");
+        await ExecuteTermuxCommandAsync("pkg install termux-am", 15_000);
+        //await ExecuteTermuxCommandAsync("am start --user 0 -a android.settings.action.MANAGE_OVERLAY_PERMISSION -d \"package:com.termux\"", 15_000);
+        await ExecuteTermuxCommandAsync("termux-setup-storage", 10_000);
+        await ExecuteTermuxCommandAsync("termux-reload-settings");
+        await ExecuteTermuxCommandAsync("am startservice -a com.termux.service_stop com.termux/.app.TermuxService");
+        await Task.Delay(500);
 
         var intent2 = _context.PackageManager?.GetLaunchIntentForPackage("com.termux");
         if (intent2 is not null)
         {
             intent2.AddFlags(ActivityFlags.NewTask);
-            //intent2.AddFlags(ActivityFlags.ExcludeFromRecents);
-            //intent2.AddFlags(ActivityFlags.PreviousIsTop);
-
             _context.StartActivity(intent2);
         }
 
-        await Task.Delay(500);
+        await Task.Delay(1000);
+
+        var intent3 = _context.PackageManager?.GetLaunchIntentForPackage("com.termux");
+        if (intent3 is not null)
+        {
+            intent3.AddFlags(ActivityFlags.NewTask);
+            _context.StartActivity(intent3);
+        }
+
+        await Task.Delay(1000);
 
         // After this we should go back to haveno app
         //await ExecuteTermuxCommandAsync("am start -a android.intent.action.VIEW -d \"manta://termux_callback\"");
@@ -238,6 +292,9 @@ public class TermuxSetupService
 
         await ExecuteCommandAsync("chmod +x /sdcard/output/ubuntu_exec.sh");
 
+        // Might help with stopping
+        await ToggleApps();
+
         // Now update Ubuntu
         await ExecuteCommandAsync("\"apt update && apt upgrade -y\"", true);
         await ExecuteCommandAsync("\"apt clean\"", true);
@@ -252,16 +309,18 @@ public class TermuxSetupService
         await ExecuteCommandAsync("\"rm -fv -r haveno\"", true);
         await ExecuteCommandAsync("\"git clone https://github.com/haveno-dex/haveno.git\"", true);
 
+        await ToggleApps();
+
         await ExecuteCommandAsync("\"cd haveno && make skip-tests\"", true);
 
         await ExecuteCommandAsync("\"apt install tor -y\"", true);
         await ExecuteCommandAsync("\"sed -i 's/#ControlPort/ControlPort/g' /etc/tor/torrc\"", true);
-        // TODO Don't run as root, everything on termux seems to run as root, set up user with less perms
-        await ExecuteCommandAsync("\"tor\"", true, exitOnContainsString: "100%");
         // Custom file with torcontrol ports
         await ExecuteCommandAsync("\"cd haveno && wget -O Makefile https://raw.githubusercontent.com/atsamd21/Makefile/refs/heads/main/Makefile\"", true);
 
         await ExecuteTermuxCommandAsync("am start -a android.intent.action.VIEW -d \"manta://termux_callback\"");
+
+        DeviceDisplay.KeepScreenOn = false;
     }
 
     public static async Task ExecuteTermuxCommandAsync(string command, int millisecondsTimeout = 200)

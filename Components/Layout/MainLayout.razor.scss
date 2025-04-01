@@ -16,3 +16,15 @@ main {
 @media (min-width: 641px) {
 
 }
+
+/*line breaks do not work*/
+::deep .install-modal {
+    word-break: keep-all;
+    overflow-wrap: normal; 
+    white-space: nowrap; 
+
+    p {
+        white-space: nowrap;
+        margin-bottom: 10px;
+    }
+}

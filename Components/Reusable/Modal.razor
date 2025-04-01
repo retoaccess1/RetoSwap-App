@@ -11,10 +11,13 @@
                 @ChildContent
             </div>
 
-            <div class="buttons">
-                <button class="verify-modal-button" @onclick:stopPropagation="true" @onclick:preventDefault="true"  @onclick="@(async (e) => { IsOpen = false; await OnOkPressed.InvokeAsync(); })">Ok</button>
-                <button class="verify-modal-button" @onclick:stopPropagation="true" @onclick:preventDefault="true" @onclick="@((e) => IsOpen = false)">Cancel</button>
-            </div>
+            @if (VisibleButtons)
+            {
+                <div class="buttons">
+                    <button class="verify-modal-button" @onclick:stopPropagation="true" @onclick:preventDefault="true" @onclick="@(async (e) => { IsOpen = false; await OnOkPressed.InvokeAsync(); })">@OkButtonText</button>
+                    <button class="verify-modal-button" @onclick:stopPropagation="true" @onclick:preventDefault="true" @onclick="@((e) => {IsOpen = false; OnCancelPressed.InvokeAsync();})">Cancel</button>
+                </div>                
+            }
         </div>
     </div>
 }
@@ -23,9 +26,15 @@
     [Parameter]
     public string Title { get; set; } = string.Empty;
     [Parameter]
+    public string OkButtonText { get; set; } = "Ok";
+    [Parameter]
+    public bool VisibleButtons { get; set; } = true;
+    [Parameter]
     public RenderFragment? ChildContent { get; set; }
     [Parameter]
     public EventCallback OnOkPressed { get; set; }
+    [Parameter]
+    public EventCallback OnCancelPressed { get; set; }
 
     [Parameter]
     public bool IsOpen

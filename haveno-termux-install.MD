@@ -44,6 +44,12 @@ makefile update user1-daemon-stagenet with options
 --torControlHost=127.0.0.1
 --torControlPort=9051
 
+# Other
+The allow-external-apps property must be set to true in ~/.termux/termux.properties in Termux app, regardless of if the executable path is inside or outside the ~/.termux/tasker/ directory. Check here for more info.
+termux-wake-lock ?
+
+
+
 
 
 # Misc things for if native works
@@ -58,7 +64,3 @@ configure(project(':daemon')) {
 #
 ~/.termux/termux.properties - allow-external-apps=true
 termux-reload-settings
-
-# Other
-The allow-external-apps property must be set to true in ~/.termux/termux.properties in Termux app, regardless of if the executable path is inside or outside the ~/.termux/tasker/ directory. Check here for more info.
-termux-wake-lock ?
