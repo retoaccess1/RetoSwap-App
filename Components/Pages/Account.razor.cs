@@ -101,9 +101,13 @@ public partial class Account : ComponentBase
                 PaymentAccounts = [.. paymentAccounts.PaymentAccounts];
 
                 var paymentMethodsResponse = await paymentAccountsClient.GetPaymentMethodsAsync(new GetPaymentMethodsRequest());
-                PaymentMethodStrings = paymentMethodsResponse.PaymentMethods
+
+                var filteredPaymentMethodIds = paymentMethodsResponse.PaymentMethods
                     .Where(x => !PaymentAccounts.Select(y => y.PaymentMethod.Id).Contains(x.Id))
-                    .ToDictionary(x => x.Id, x => x.Id);
+                    .Select(x => x.Id);
+
+                PaymentMethodStrings = PaymentMethodsHelper.PaymentMethodsDictionary
+                    .Where(x => filteredPaymentMethodIds.Contains(x.Key)).ToDictionary();
 
                 PaymentMethods = [.. paymentMethodsResponse.PaymentMethods];
 

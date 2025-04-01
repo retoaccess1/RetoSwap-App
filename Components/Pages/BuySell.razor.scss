@@ -74,9 +74,10 @@
                     border-radius: 4px;
                     margin-bottom: 4px;
                     overflow-x: hidden;
+                    white-space: nowrap;
 
                     ion-icon {
-                        margin: 0 4px 0;
+                        margin: 0 2px 0;
                     }
                 }
             }

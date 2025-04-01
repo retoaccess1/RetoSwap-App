@@ -48,7 +48,6 @@ else
                             @(Math.Round(double.Parse(offer.Price), 2))
                             @offer.CounterCurrencyCode
                             (@Math.Round(offer.MarketPriceMarginPct, 2).ToString("0.00")%)
-                            @* (@Math.Round(offer.Pct, 2).ToString("0.00")%) *@
                         </div>
                         @if (offer.IsMyOffer)
                         {

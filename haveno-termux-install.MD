@@ -1,8 +1,14 @@
 # Tested with emulated Pixel 6 - Android 14.0 - API 34
 # Tested with Samsung S21 - Android 14.0 - API 34
 
-# Get termux
-Download/install termux APK from f-droid
+# Get Termux
+Download/install Termux APK from f-droid
+
+# Setup Termux
+pkg install termux-am - Used to switch apps from Termux to Haveno, bring Haveno to foreground
+termux-setup-storage - Needed for communication between Termux and Haveno app
+allow-external-apps property must be set to true in ~/.termux/termux.properties - Used for RUN_COMMAND so we can send commands to Termux
+termux-reload-settings
 
 # Get ubuntu
 pkg update -y
@@ -17,7 +23,7 @@ apt upgrade -y
 apt install make wget git -y
 apt install openjdk-21-jdk -y  - have to run this twice?
 
-# Build haveno
+# Build haveno - this should not be needed in future with prebuilt daemon etc
 git clone https://github.com/haveno-dex/haveno.git
 cd haveno
 git checkout master
