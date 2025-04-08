@@ -4,14 +4,11 @@
 {
     <div class="trade-main">
         <div class="trade-main-top">
-            <p>Trade ID - @TradeInfo.ShortId</p>
+            <p class="role">Your role: @((IsBuyer ? "buyer" : "seller") + " as " + (TradeInfo.Offer.IsMyOffer ? "maker" : "taker"))</p>
             <a href=@($"/chat?tradeId={TradeInfo.TradeId}&title=Trade%20{TradeInfo.ShortId}%20chat&arbitrator={TradeInfo.ArbitratorNodeAddress.Split(".")[0]}&tradePeer={TradeInfo.TradePeerNodeAddress.Split(".")[0]}&myAddress={TradeInfo.Offer.OwnerNodeAddress.Split(".")[0]}")>
                 <ion-icon name="chatbubble-ellipses-sharp"></ion-icon>
             </a>
         </div>
-
-        <p class="role">Your role: @((IsBuyer ? "buyer" : "seller") + " as " + (TradeInfo.Offer.IsMyOffer ? "maker" : "taker"))</p>
-
         @if (IsBuyer)
         {
             <ul class="process">

@@ -14,7 +14,7 @@ html, body {
 }
 
 main {
-    margin-bottom: 58px;
+    /*margin-bottom: 58px;*/
 }
 
 a, .btn-link {
@@ -183,7 +183,7 @@ input[type=checkbox] {
     }
 }
 
-::-webkit-scrollbar {
+/*::-webkit-scrollbar {
     width: 8px;
     border-radius: 8px;
 }
@@ -200,7 +200,7 @@ input[type=checkbox] {
 
 ::-webkit-scrollbar-thumb:hover {
     background: #555;
-}
+}*/
 
 .loader-container {
     display: flex;

@@ -1,16 +1,14 @@
 ﻿.chat-main {
     display: flex;
     flex-direction: column;
-    height: 700px;
     overflow: hidden;
 
     ul {
         display: flex;
         flex-direction: column;
         width: 100%;
-        height: 700px;
-        overflow-y: auto;
-        /*flex-direction: column-reverse;*/
+        overflow-y: scroll;
+        height: calc(100dvh - 56px - 60px - 62px);
 
         li {
             width: fit-content;
@@ -31,7 +29,7 @@
         }
 
         .right {
-            background-color:cornflowerblue;
+            background-color: cornflowerblue;
             align-self: flex-end;
         }
     }

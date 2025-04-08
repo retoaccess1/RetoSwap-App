@@ -21,13 +21,48 @@
 @code {
     private Dictionary<string, string> _visibleItems = [];
     private string _searchTerm = string.Empty;
-    private bool _isActive;
+    private bool _shouldRender = true;
+
+    private bool _isActive 
+    {
+        get; 
+        set
+        {
+            if (field != value)
+            {
+                _shouldRender = true;
+            }
+            field = value;
+        }
+    }
 
     [Parameter]
-    public bool Disabled { get; set; }
+    public bool Disabled 
+    { 
+        get;
+        set
+        {
+            if (field != value)
+            {
+                _shouldRender = true;
+            }
+            field = value;
+        }
+    }
 
     [Parameter]
-    public string? Class { get; set; }
+    public string? Class
+    {
+        get; 
+        set
+        {
+            if (field != value)
+            {
+                _shouldRender = true;
+            }
+            field = value;
+        }
+    }
 
     [Parameter]
     [EditorRequired]
@@ -36,6 +71,11 @@
         get; 
         set 
         {
+            if (field != value)
+            {
+                _shouldRender = true;
+            }
+
             field = value;
             _visibleItems = value; 
 
@@ -46,11 +86,35 @@
 
     [EditorRequired]
     [Parameter]
-    public string Text { get; set; } = string.Empty;
+    public string Text 
+    { 
+        get; 
+        set
+        {
+            if (field != value)
+            {
+                _shouldRender = true;
+            }
+
+            field = value;
+        }
+    } = string.Empty;
 
     [EditorRequired]
     [Parameter]
-    public string Placeholder { get; set; } = string.Empty;
+    public string Placeholder 
+    { 
+        get; 
+        set
+        {
+            if (field != value)
+            {
+                _shouldRender = true;
+            }
+
+            field = value;
+        }
+    } = string.Empty;
 
     [Parameter]
     public EventCallback<string> OnSubmit { get; set; }
@@ -68,9 +132,10 @@
         }
         else
         {
-            _visibleItems = Items.Where(x => x.Key.ToLower().Contains(((string)e.Value).ToLower())).ToDictionary();
+            _visibleItems = Items.Where(x => x.Value.ToLower().Contains(((string)e.Value).ToLower())).ToDictionary();
         }
 
+        _shouldRender = true;
         StateHasChanged();
     }
 
@@ -78,6 +143,14 @@
     {
         _searchTerm = Items[key];
         await OnSubmit.InvokeAsync(key);
-        _visibleItems = Items.Where(x => x.Key.ToLower().Contains((key).ToLower())).ToDictionary();
+        _visibleItems = Items.Where(x => x.Value.ToLower().Contains((key).ToLower())).ToDictionary();
+        _shouldRender = true;
+    }
+
+    protected override bool ShouldRender()
+    {
+        var shouldRender = _shouldRender;
+        _shouldRender = false;
+        return shouldRender;
     }
 }

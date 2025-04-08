@@ -55,6 +55,8 @@ public partial class MyOffers : ComponentBase
             {
                 Id = id
             });
+
+            NavigationManager.NavigateTo("/buysell?title=Buy%20%26%20Sell");
         }
         catch
         {

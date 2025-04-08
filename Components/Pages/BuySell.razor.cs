@@ -5,6 +5,7 @@ using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System.Globalization;
+
 using static Haveno.Proto.Grpc.Offers;
 using static Haveno.Proto.Grpc.PaymentAccounts;
 
@@ -31,7 +32,6 @@ public partial class BuySell : ComponentBase, IDisposable
         set 
         { 
             field = value; 
-            Console.WriteLine(value);
 
             CancellationTokenSource.Cancel();
             CancellationTokenSource.Dispose();
@@ -47,7 +47,6 @@ public partial class BuySell : ComponentBase, IDisposable
         set
         {
             field = value;
-            Console.WriteLine(value);
 
             // This is stupid!
             CancellationTokenSource.Cancel();
@@ -59,7 +58,7 @@ public partial class BuySell : ComponentBase, IDisposable
     } = string.Empty;
 
     // Needs to be fetched from the users preferences
-    public Dictionary<string, string> CurrencyCodes { get; set; } = Enum.GetNames(typeof(Helpers.Currency)).ToDictionary(x => x, x => x);
+    public Dictionary<string, string> CurrencyCodes { get; set; } = CurrencyCultureInfo.GetCurrencyFullNamesAndCurrencyCodeDictionary().ToDictionary();
     public Dictionary<string, string> PaymentMethods { get; set; } = [];
 
     public bool IsCreatingOffer { get; set; }
@@ -110,12 +109,18 @@ public partial class BuySell : ComponentBase, IDisposable
             try
             {
                 OfferFetchTask = FetchOffersAsync();
+                //OfferFetchTask = Task.Run(FetchOffersAsync);
 
                 using var paymentAccountChannel = new GrpcChannelHelper();
                 var paymentAccountsClient = new PaymentAccountsClient(paymentAccountChannel.Channel);
 
                 var paymentMethodsResponse = await paymentAccountsClient.GetPaymentMethodsAsync(new GetPaymentMethodsRequest());
-                PaymentMethods = paymentMethodsResponse.PaymentMethods.ToDictionary(x => x.Id, x => x.Id);
+
+                var filteredPaymentMethodIds = paymentMethodsResponse.PaymentMethods
+                    .Select(x => x.Id);
+
+                PaymentMethods = PaymentMethodsHelper.PaymentMethodsDictionary
+                    .Where(x => filteredPaymentMethodIds.Contains(x.Key)).ToDictionary();
 
                 PreferredCurrency = await LocalStorage.GetItemAsStringAsync("preferredCurrency") ?? "USD";
                 PreferredCurrencyFormat = CurrencyCultureInfo.GetFormatForCurrency((Currency)Enum.Parse(typeof(Currency), PreferredCurrency));

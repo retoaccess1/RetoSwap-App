@@ -205,6 +205,11 @@ public class TermuxSetupService
                 await Task.Delay(2000);
             }
 
+            /*
+             [DOTNET] [39mApr-01 19:41:48.293 [XmrWalletService] INFO  haveno.core.xmr.wallet.XmrWalletService: Done opening RPC wallet haveno_XMR 
+             [DOTNET] [0;39m[39mApr-01 19:41:48.300 [XmrWalletService] INFO  haveno.core.xmr.wallet.XmrWalletService: Monero wallet path=haveno_XMR 
+            */
+
             HavenoDaemonRunningTCS?.SetResult(true);
             return true;
         }

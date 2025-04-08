@@ -35,9 +35,14 @@ public partial class Offer : ComponentBase, IDisposable
         } 
     }
 
+    public CancellationTokenSource CancelOfferCts { get; set; } = new();
+
     public decimal FiatAmount { get { return Math.Round(field, 0); } set { field = value; } }
     public string SelectedPaymentAccountId { get; set; } = string.Empty;
     public Dictionary<string, string> PaymentAccounts { get; set; } = [];
+
+    public bool IsTakingOffer { get; set; }
+    public bool UserDoesNotHaveAccount { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -65,7 +70,10 @@ public partial class Offer : ComponentBase, IDisposable
         PaymentAccounts = paymentAccountResponse.PaymentAccounts.ToDictionary(x => x.Id, x => x.AccountName);
 
         SelectedPaymentAccountId = PaymentAccounts.FirstOrDefault(x => x.Value == OfferInfo.PaymentMethodId).Key;
-        // If we don't have an account of this type we should prompt to make one - TODO
+        if (string.IsNullOrEmpty(SelectedPaymentAccountId))
+        {
+            UserDoesNotHaveAccount = true;
+        }
 
         Amount = OfferInfo.Amount.ToMonero();
 
@@ -74,19 +82,43 @@ public partial class Offer : ComponentBase, IDisposable
 
     public async Task TakeOfferAsync()
     {
-        using var grpcChannelHelper = new GrpcChannelHelper();
-        var tradesClient = new TradesClient(grpcChannelHelper.Channel);
+        IsTakingOffer = true;
 
-        var takeOfferRequest = new TakeOfferRequest
+        try
         {
-            OfferId = OfferInfo?.Id,
-            Amount = _piconeroAmount,
-            PaymentAccountId = SelectedPaymentAccountId,
-            Challenge = OfferInfo?.Challenge
-        };
+            using var grpcChannelHelper = new GrpcChannelHelper();
+            var tradesClient = new TradesClient(grpcChannelHelper.Channel);
 
-        var response = await tradesClient.TakeOfferAsync(takeOfferRequest);
-        var trade = response.Trade;
+            var takeOfferRequest = new TakeOfferRequest
+            {
+                OfferId = OfferInfo?.Id,
+                Amount = _piconeroAmount,
+                PaymentAccountId = SelectedPaymentAccountId,
+                Challenge = OfferInfo?.Challenge
+            };
+
+            var response = await tradesClient.TakeOfferAsync(takeOfferRequest, cancellationToken: CancelOfferCts.Token);
+            var trade = response.Trade;
+
+            NavigationManager.NavigateTo("Trades");
+        }
+        catch (OperationCanceledException e)
+        {
+            // Show user it was canceled
+        }
+        catch (Exception e)
+        {
+            throw;
+        }
+        finally
+        {
+            IsTakingOffer = false;
+        }
+    }
+
+    public void NavigateToAccount()
+    {
+        NavigationManager.NavigateTo("account");
     }
 
     public void Cancel()

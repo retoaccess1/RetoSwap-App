@@ -2,11 +2,13 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    padding: 0 20px 20px;
+    /*padding: 0 20px 20px;*/
+    padding: 0 20px 0;
 }
 
 main {
-    flex: 1;
+    /*flex: 1;*/
+    height: calc(100dvh - 62px - 58px);
 }
 
 @media (max-width: 640.98px) {

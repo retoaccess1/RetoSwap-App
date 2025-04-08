@@ -12,25 +12,77 @@ using static Haveno.Proto.Grpc.Trades;
 
 namespace Manta.Singletons;
 
-// Might need to move this to a background service 
 public class NotificationSingleton
 {
+    private DateTime _messagesLastUpdated = new();
     private readonly INotificationManagerService _notificationManagerService;
 
     public event Action<ChatMessage>? OnChatMessage;
     public event Action<TradeInfo>? OnTradeUpdate;
 
     public ConcurrentDictionary<string, TradeInfo> TradeInfos { get; private set; } = [];
-    public List<ChatMessage> ChatMessages { get; private set; } = [];
 
-    // Activated singleton?
+    public TaskCompletionSource<bool> InitializedTCS { get; private set; } = new();
+
     public NotificationSingleton(INotificationManagerService notificationManagerService)
     {
         _notificationManagerService = notificationManagerService;
         Task.Run(FetchInitial);
     }
 
-    private async Task FetchInitial()
+    public async Task BackgroundSync()
+    {
+        for (int i = 0; i < 2; i++)
+        {
+            try
+            {
+                using var grpcChannelHelper = new GrpcChannelHelper();
+                var tradesClient = new TradesClient(grpcChannelHelper.Channel);
+
+                var tradesResponse = await tradesClient.GetTradesAsync(new GetTradesRequest
+                {
+                    Category = Category.Open
+                });
+
+                List<TradeInfo> updatedTrades = [];
+                foreach (var trade in tradesResponse.Trades)
+                {
+                    TradeInfos.AddOrUpdate(trade.TradeId, trade, (key, old) => 
+                    { 
+                        updatedTrades.Add(trade); 
+                        return trade;  
+                    });
+                }
+
+                foreach (var trade in updatedTrades)
+                {
+                    var response = await tradesClient.GetChatMessagesAsync(new GetChatMessagesRequest { TradeId = trade.TradeId });
+
+                    // TODO also check its not our message
+                    foreach(var message in response.Message.Where(x => new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(x.Date) > _messagesLastUpdated))
+                    {
+                        //OnChatMessage?.Invoke(message);
+                        //_notificationManagerService.SendNotification($"New message for trade {new string(trade.TradeId.Split('-')[0].ToArray())}", message.Message);
+                    }
+                }
+
+                _messagesLastUpdated = DateTime.UtcNow;
+
+                break;
+            }
+            catch
+            {
+                if (i == 1)
+                {
+
+                }
+            }
+
+            await Task.Delay(5_000);
+        }
+    }
+
+    public async Task FetchInitial()
     {
         while (true)
         {
@@ -43,6 +95,8 @@ public class NotificationSingleton
                 {
                     Category = Category.Open // Does nothing but has to be set
                 });
+
+                _messagesLastUpdated = DateTime.UtcNow;
 
                 TradeInfos = new(tradesResponse.Trades.ToDictionary(x => x.TradeId, x => x));
 
@@ -72,8 +126,11 @@ public class NotificationSingleton
             try
             {
                 registerResponse = notificationClient.RegisterNotificationListener(new RegisterNotificationListenerRequest());
+                // Inital fetch has happened, and we have registered so we get updates.
+                // Consumers can now be sure that data is available
+                InitializedTCS.SetResult(true);
 
-                await registerResponse.ResponseHeadersAsync;
+                var metadata = await registerResponse.ResponseHeadersAsync;
                 break;
             }
             catch
@@ -95,7 +152,7 @@ public class NotificationSingleton
                     switch (response.Type) 
                     {
                         case NotificationType.ChatMessage:
-                            ChatMessages.Add(response.ChatMessage);
+                            _messagesLastUpdated = DateTime.UtcNow;
                             OnChatMessage?.Invoke(response.ChatMessage);
                             _notificationManagerService.SendNotification($"New message for trade {new string(response.ChatMessage.TradeId.Split('-')[0].ToArray())}", response.ChatMessage.Message);
                             break;

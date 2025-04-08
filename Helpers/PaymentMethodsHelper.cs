@@ -2,7 +2,7 @@
 
 public static class PaymentMethodsHelper
 {
-    public static Dictionary<string, string> PaymentMethodsDictionary  = new()
+    public static Dictionary<string, string> PaymentMethodsDictionary = new()
     {
         { "NATIONAL_BANK", "National bank transfer" },
         { "SAME_BANK", "Transfer with same bank" },

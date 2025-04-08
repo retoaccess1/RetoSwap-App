@@ -7,23 +7,24 @@
     }
     else
     {
-        <ul>
-            @foreach (var message in Messages)
-            {
-                // This is fucking stupid
-                var isMyMessage = message.SenderNodeAddress.HostName.Split(".")[0] != TradePeer && message.SenderNodeAddress.HostName.Split(".")[0] != Arbitrator;
+        <ul id="chat-list">
+        @for (int i = 0; i < Messages.Count; i++)
+        {
+            var message = Messages[i];
+            // This is fucking stupid
+            var isMyMessage = message.SenderNodeAddress.HostName.Split(".")[0] != TradePeer && message.SenderNodeAddress.HostName.Split(".")[0] != Arbitrator;
 
-                <li class="@(isMyMessage ? "right" : "left")">
-                    <p class="date">
-                        @(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(message.Date).ToLocalTime())
-                    </p>
-                    <p class="message">
-                        @message.Message
-                    </p>
-                </li>
-            }
-        </ul>
-    }
+            <li class="@(isMyMessage ? "right" : "left")" id="@(i == Messages.Count - 1 ? "last-message" : "")">
+                <p class="date">
+                    @(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(message.Date).ToLocalTime())
+                </p>
+                <p class="message">
+                    @message.Message
+                </p>
+            </li>
+        }
+    </ul>
+}
 
     <div class="input-container">
         <input @oninput="HandleMessageChanged" @bind="Message" type="text" placeholder="Type message" />

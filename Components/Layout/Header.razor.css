@@ -1,5 +1,4 @@
 ﻿.header-main {
-  /*margin: 20px 0 20px;*/
   padding: 20px 0 20px;
   display: flex;
   align-items: center;
@@ -7,7 +6,6 @@
   top: 0;
   background-color: #131313;
   z-index: 500;
-  /*position: relative;*/
 }
 .header-main ion-icon {
   margin-right: 16px;

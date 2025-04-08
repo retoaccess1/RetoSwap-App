@@ -1,24 +1,21 @@
 ﻿@if (!_keyboardIsOpen)
 {
     <nav class="tabs">
-        <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
+        <NavLink class="nav-link" href="market" Match="NavLinkMatch.Prefix">
             <ion-icon size="large" name="earth-outline"></ion-icon>
         </NavLink>
-        <NavLink class="nav-link" href="buysell?title=Buy%20%26%20Sell">
+        <NavLink class="nav-link" href="buysell?title=Buy%20%26%20Sell" Match="NavLinkMatch.Prefix">
             <ion-icon size="large" name="cart-outline"></ion-icon>
         </NavLink>
-        <NavLink class="nav-link" href="trades">
+        <NavLink class="nav-link" href="trades" Match="NavLinkMatch.Prefix">
             <ion-icon size="large" name="swap-vertical-outline"></ion-icon>
         </NavLink>
-        <NavLink class="nav-link" href="wallet">
+        <NavLink class="nav-link" href="wallet" Match="NavLinkMatch.Prefix">
             <ion-icon size="large" name="wallet-outline"></ion-icon>
         </NavLink>
-        <NavLink class="nav-link" href="account">
+        <NavLink class="nav-link" href="account" Match="NavLinkMatch.Prefix">
             <ion-icon size="large" name="person-outline"></ion-icon>
         </NavLink>
-@*         <NavLink class="nav-link" href="settings">
-            <ion-icon size="large" name="settings-outline" style="margin-right:0;"></ion-icon>
-        </NavLink> *@
     </nav>    
 }
 
@@ -26,8 +23,7 @@
     private static Action<bool>? OnKeyboardChanged;
     private bool _keyboardIsOpen;
     private int _currentRoute = 0;
-    // private List<string> _routes = [ "", "wallet", "buysell", "trades", "account", "settings" ];
-    private List<string> _routes = ["", "buysell", "trades", "wallet", "account"];
+    private List<string> _routes = ["market", "buysell", "trades", "wallet", "account"];
 
     // When navigating without swiping, need to set the correct route - TODO
     [Inject]

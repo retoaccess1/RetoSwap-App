@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-	<application android:allowBackup="true" android:icon="@mipmap/haveno_logo" android:supportsRtl="true" android:label="Haveno" android:requestLegacyExternalStorage="true">
+	<application android:allowBackup="true" android:icon="@mipmap/haveno_logo" android:supportsRtl="true" android:label="Haveno" android:requestLegacyExternalStorage="true" android:extractNativeLibs="true">
     android:networkSecurityConfig="@xml/net_sec_conf"
 		<provider
 				android:name="androidx.core.content.FileProvider"
@@ -28,6 +28,8 @@
   <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"/>
   <uses-permission android:name="android.permission.KILL_BACKGROUND_PROCESSES" />
 	<uses-permission android:name="android.permission.FORCE_STOP_PACKAGES" />
+	<uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+	<uses-permission android:name="android.permission.RUN_USER_INITIATED_JOBS" />
   <queries>
     <package android:name="com.termux" />
   </queries>

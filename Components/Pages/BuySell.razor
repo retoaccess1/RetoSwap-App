@@ -1,87 +1,87 @@
 ﻿@page "/buysell"
 
-@* update this to enum or if there's an existing type *@
-<div class="top">
-    <p class="bold-p">@(Direction == "BUY" ? "Buy XMR with" : "Sell XMR for")</p>
-    <p class="bold-p">XMR/@PreferredCurrency: @CurrentMarketPrice</p>
-</div>
-<div class="account-type">
-    <button class="@(OfferPaymentType == 0 ? "active" : "")" @onclick="() => OfferPaymentType = 0">Fiat</button>
-    <button class="@(OfferPaymentType == 1 ? "active" : "")" @onclick="() => OfferPaymentType = 1">Crypto</button>
-    <button class="@(OfferPaymentType == 2 ? "active" : "")" @onclick="() => OfferPaymentType = 2">Other</button>
-    <Toggle @bind-IsToggled="IsToggled" Text="@Direction" />
-</div>
-
-@if (IsCreatingOffer)
-{
-    <CreateOffer OnCloseCreateOffer="@CloseCreateOffer" Direction="@Direction"/>
-}
-else
-{
-    @* move to component probably *@
-    <button class="create-offer-button" @onclick="() => IsCreatingOffer = !IsCreatingOffer">@(Direction == "BUY" ? "Create offer to buy XMR" : "Create offer to sell XMR")</button>
-    <button @onclick="NavigateToMyOffers">View my offers</button>
-
-    <div>
-        <SearchableDropdown Class="dropdown" Placeholder="Show all" Items="@CurrencyCodes" Text="Currency" OnSubmit="@((val) => SelectedCurrencyCode = val)" />
+<div class="buysell-main">
+    @* update this to enum or if there's an existing type *@
+    <div class="top">
+        <p class="bold-p">@(Direction == "BUY" ? "Buy XMR with" : "Sell XMR for")</p>
+        <p class="bold-p">XMR/@PreferredCurrency: @CurrentMarketPrice</p>
     </div>
-    <div>
-        <SearchableDropdown Class="dropdown" Placeholder="Show all" Items="@PaymentMethods" Text="Choose payment method" OnSubmit="@((val) => SelectedPaymentMethod = val)" />
+    <div class="account-type">
+        <Tabs SelectedTabIndex="OfferPaymentType" TabNames="@(["Fiat", "Crypto", "Other"])"></Tabs>
+        <Toggle @bind-IsToggled="IsToggled" Text="@Direction" />
     </div>
 
-    @* <p class="offers-list-text"> @Offers.Count Offers to @(Direction == "BUY" ? "sell" : "buy") XMR</p> *@
-    <div class="offers-list-text-container">
-        <p class="offers-list-text">@(Direction == "BUY" ? "Buy XMR from" : "Sell XMR to")</p>
-        <p class="offers-list-text">@Offers.Count Offers</p>
-    </div>
-    <ul class="offers">
-        @foreach(var offer in Offers)
-        {
-            <li class="offer">
+    @if (IsCreatingOffer)
+    {
+        <CreateOffer OnCloseCreateOffer="@CloseCreateOffer" Direction="@Direction" />
+    }
+    else
+    {
+        <div class="inputs">
+            <div>
+                <SearchableDropdown Class="dropdown" Placeholder="Show all" Items="@CurrencyCodes" Text="Currency" OnSubmit="@((val) => SelectedCurrencyCode = val)" />
+            </div>
+            <div>
+                <SearchableDropdown Class="dropdown" Placeholder="Show all" Items="@PaymentMethods" Text="Choose payment method" OnSubmit="@((val) => SelectedPaymentMethod = val)" />
+            </div>
+            <div class="offers-list-text-container">
+                <p class="offers-list-text">@(Direction == "BUY" ? "Buy XMR from" : "Sell XMR to")</p>
+                <p class="offers-list-text">@Offers.Count Offers</p>
+            </div>
+        </div>
+        <ul class="offers">
+            @foreach (var offer in Offers)
+            {
+                <li class="offer">
                     <a class="offer-link" href=@($"offer?OfferId={offer.Id}&title=Offer")>
-                    <div class="offer-top">
-                        <div class="offer-currency">
-                            @(Direction == "SELL" ? offer.BaseCurrencyCode : offer.CounterCurrencyCode)
-                            <ion-icon name="arrow-forward-outline"></ion-icon>
-                            @(Direction == "SELL" ? offer.CounterCurrencyCode : offer.BaseCurrencyCode)
-                            |
-                            @(Math.Round(double.Parse(offer.Price), 2))
-                            @offer.CounterCurrencyCode
-                            (@Math.Round(offer.MarketPriceMarginPct, 2).ToString("0.00")%)
-                        </div>
-                        @if (offer.IsMyOffer)
-                        {
-                            <div>
-                                <p>Remove</p>
-                                <p>Edit</p>
+                        <div class="offer-top">
+                            <div class="offer-currency">
+                                @(Direction == "SELL" ? offer.BaseCurrencyCode : offer.CounterCurrencyCode)
+                                <ion-icon name="arrow-forward-outline"></ion-icon>
+                                @(Direction == "SELL" ? offer.CounterCurrencyCode : offer.BaseCurrencyCode)
+                                |
+                                @(Math.Round(double.Parse(offer.Price), 2))
+                                @offer.CounterCurrencyCode
+                                (@Math.Round(offer.MarketPriceMarginPct, 2).ToString("0.00")%)
                             </div>
-                        }
-                        else
-                        {
-                            <div class="card">
-                                @offer.PaymentMethodShortName
-                            </div>
-                        }
-                    </div>
-                    <div>
-                        @{
-                            var minVolume = double.Parse(offer.MinVolume);
-                            var volume = double.Parse(offer.Volume);
-
-                            if (minVolume == volume)
+                            @if (offer.IsMyOffer)
                             {
-                                @(Math.Round(volume, 2) + " ")
+                                <div>
+                                    <p>Remove</p>
+                                    <p>Edit</p>
+                                </div>
                             }
                             else
                             {
-                                @($"{Math.Round(minVolume, 2)} - {Math.Round(volume, 2)} ")
+                                <div class="card">
+                                    @offer.PaymentMethodShortName
+                                </div>
                             }
-                        }
-                        @offer.CounterCurrencyCode
-                    </div>
-                    @(offer.Amount == offer.MinAmount ? $"{offer.Amount.ToMonero()} XMR" : $"{offer.MinAmount.ToMonero()} - {offer.Amount.ToMonero()} XMR")
-                </a>
-            </li>
-        }
-    </ul>
-}
+                        </div>
+                        <div>
+                            @{
+                                var minVolume = double.Parse(offer.MinVolume);
+                                var volume = double.Parse(offer.Volume);
+
+                                if (minVolume == volume)
+                                {
+                                    @(Math.Round(volume, 2) + " ")
+                                }
+                                else
+                                {
+                                    @($"{Math.Round(minVolume, 2)} - {Math.Round(volume, 2)} ")
+                                }
+                            }
+                            @offer.CounterCurrencyCode
+                        </div>
+                        @(offer.Amount == offer.MinAmount ? $"{offer.Amount.ToMonero()} XMR" : $"{offer.MinAmount.ToMonero()} - {offer.Amount.ToMonero()} XMR")
+                    </a>
+                </li>
+            }
+        </ul>
+        <div class="buttons">
+            <button class="create-offer-button" @onclick="() => IsCreatingOffer = !IsCreatingOffer">@(Direction == "BUY" ? "Create offer to buy XMR" : "Create offer to sell XMR")</button>
+            <button @onclick="NavigateToMyOffers">View my offers</button>
+        </div>
+    }
+</div>

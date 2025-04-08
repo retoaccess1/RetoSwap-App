@@ -10,14 +10,16 @@
                 </div>
                 @ChildContent
             </div>
-
-            @if (VisibleButtons)
-            {
-                <div class="buttons">
+            <div class="buttons">
+                @if (ModalButtonOptions == ModalButtonOptions.OK || ModalButtonOptions == ModalButtonOptions.OK_CANCEL)
+                {
                     <button class="verify-modal-button" @onclick:stopPropagation="true" @onclick:preventDefault="true" @onclick="@(async (e) => { IsOpen = false; await OnOkPressed.InvokeAsync(); })">@OkButtonText</button>
-                    <button class="verify-modal-button" @onclick:stopPropagation="true" @onclick:preventDefault="true" @onclick="@((e) => {IsOpen = false; OnCancelPressed.InvokeAsync();})">@CancelButtonText</button>
-                </div>                
-            }
+                }
+                @if (ModalButtonOptions == ModalButtonOptions.CANCEL || ModalButtonOptions == ModalButtonOptions.OK_CANCEL)
+                {
+                    <button class="verify-modal-button" @onclick:stopPropagation="true" @onclick:preventDefault="true" @onclick="@((e) => { IsOpen = false; OnCancelPressed.InvokeAsync();})">@CancelButtonText</button>
+                }
+            </div>
         </div>
     </div>
 }
@@ -30,13 +32,13 @@
     [Parameter]
     public string CancelButtonText { get; set; } = "Cancel";
     [Parameter]
-    public bool VisibleButtons { get; set; } = true;
-    [Parameter]
     public RenderFragment? ChildContent { get; set; }
     [Parameter]
     public EventCallback OnOkPressed { get; set; }
     [Parameter]
     public EventCallback OnCancelPressed { get; set; }
+    [Parameter]
+    public ModalButtonOptions ModalButtonOptions { get; set; } = ModalButtonOptions.OK_CANCEL;
 
     [Parameter]
     public bool IsOpen

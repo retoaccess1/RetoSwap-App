@@ -1,6 +1,8 @@
 ﻿@page "/trades"
 
-<Tabs TabNames="@(["Open trades", "History"])" @bind-SelectedTabIndex="@SelectedTabIndex"></Tabs>
+<div class="tabs">
+    <Tabs TabNames="@(["Open trades", "History"])" @bind-SelectedTabIndex="@SelectedTabIndex"></Tabs>
+</div>
 
 @if (FilteredTradeInfos.Count != 0)
 {

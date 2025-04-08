@@ -38,7 +38,7 @@ public class SetupService : ISetupService
     // Should this try to start daemon?
     public async Task<DaemonStatus> GetDaemonStatusAsync()
     {
-        #if ANDROID
+#if ANDROID
 
         if (!await TermuxSetupService.IsHavenoDaemonRunning())
         {
@@ -64,7 +64,7 @@ public class SetupService : ISetupService
             return DaemonStatus.RUNNING;
         }
 
-        #endif
+#endif
         return DaemonStatus.NONE;
     }
 }

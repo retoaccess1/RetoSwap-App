@@ -1,7 +1,10 @@
 ﻿@implements IDisposable
 
 <div class="header-main">
-    @* <ion-icon name="arrow-back-outline"></ion-icon> *@
+@*     @if (true)
+    {
+        <ion-icon name="arrow-back-outline" @onclick="GoBack"></ion-icon>
+    } *@
     <h3>@_headerTitle</h3>
     <i @onclick="() => IsMenuOpen = !IsMenuOpen" class="bi bi-three-dots-vertical"></i>
     @if (IsMenuOpen)
@@ -22,6 +25,9 @@
 
     [Inject]
     public NavigationManager NavigationManager { get; set; } = default!;
+    [Inject]
+    public IJSRuntime JS { get; set; } = default!;
+
     public bool IsMenuOpen { get; set; }
 
     protected override void OnInitialized()
@@ -32,6 +38,11 @@
     private void HandleHeaderChanged(string title)
     {
         _headerTitle = title;
+    }
+
+    private async Task GoBack()
+    {
+        await JS.InvokeVoidAsync("history.back");
     }
 
     private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)

@@ -37,6 +37,13 @@ public partial class Trades : ComponentBase, IDisposable
 
     protected override async Task OnInitializedAsync()
     {
+        if (!NotificationSingleton.InitializedTCS.Task.IsCompleted)
+        {
+            // Timeout needed
+            await NotificationSingleton.InitializedTCS.Task;
+        }
+
+
         NotificationSingleton.OnChatMessage += HandleChatMessage;
         NotificationSingleton.OnTradeUpdate += HandleTradeUpdate;
 

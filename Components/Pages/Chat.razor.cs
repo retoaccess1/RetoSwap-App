@@ -2,6 +2,7 @@
 using Manta.Helpers;
 using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 using Protobuf;
 
 namespace Manta.Components.Pages;
@@ -13,6 +14,8 @@ public partial class Chat : ComponentBase, IDisposable
     public string TradeId { get; set; } = string.Empty;
     [Inject]
     public NotificationSingleton NotificationSingleton { get; set; } = default!;
+    [Inject]
+    public IJSRuntime JS { get; set; } = default!;
     public List<ChatMessage> Messages { get; set; } = [];
     public string Message { get; set; } = string.Empty;
 
@@ -32,6 +35,8 @@ public partial class Chat : ComponentBase, IDisposable
         {
 
         }
+
+        await JS.InvokeVoidAsync("ScrollToEnd", "last-message");
 
         await base.OnAfterRenderAsync(firstRender);
     }
@@ -53,7 +58,7 @@ public partial class Chat : ComponentBase, IDisposable
             // Might be worth caching these
             Messages = [.. messagesResponse.Message.Skip(1).OrderBy(x => x.Date)];
 
-            NotificationSingleton.OnChatMessage += HandleChatMessage;        
+            NotificationSingleton.OnChatMessage += HandleChatMessage;
         }
         catch
         {

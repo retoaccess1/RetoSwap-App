@@ -8,3 +8,4 @@
 # Also fix chat scroll
 # Ask for permissions one time and if not accepted, don't try to install
 # Need a way to sync app with desktop
+# Backup, both wallet and app data

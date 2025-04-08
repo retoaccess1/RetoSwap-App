@@ -6,10 +6,25 @@
     </div>
     <label>Amount</label>
     <input step="0.01" min="@OfferInfo?.MinAmount.ToMonero()" max="@OfferInfo?.Amount.ToMonero()" @bind="@Amount" type="number" />
-    <p class="range">MIN/MAX: @OfferInfo?.MinAmount.ToMonero() XMR - @OfferInfo?.Amount.ToMonero() XMR</p>
+    @if (OfferInfo?.MinAmount == OfferInfo?.Amount)
+    {
+        <p class="range">MIN/MAX: @OfferInfo?.MinAmount.ToMonero() XMR</p>
+    }
+    else
+    {
+        <p class="range">MIN/MAX: @OfferInfo?.MinAmount.ToMonero() XMR - @OfferInfo?.Amount.ToMonero() XMR</p>
+    }
     <label>Total in @OfferInfo?.CounterCurrencyCode:</label>
     <input readonly @bind="@FiatAmount" type="number" step="0.01" />
-    <button @onclick="TakeOfferAsync">Take offer</button>
+    <button disabled="@UserDoesNotHaveAccount" @onclick="TakeOfferAsync">Take offer</button>
     <button @onclick="Cancel">Cancel</button>
 </div>
 
+<Modal IsOpen="IsTakingOffer" Title="Taking offer" ModalButtonOptions="ModalButtonOptions.CANCEL" OnCancelPressed="() => CancelOfferCts.Cancel()">
+    <p>Taking offer...</p>
+    <span class="loader"></span>
+</Modal>
+<Modal Title="No payment account" IsOpen="UserDoesNotHaveAccount" ModalButtonOptions="ModalButtonOptions.OK" OkButtonText="Create account" OnOkPressed="@NavigateToAccount">
+    <p>You do not have an account of this type.</p>
+    <p>Please create one</p>
+</Modal>

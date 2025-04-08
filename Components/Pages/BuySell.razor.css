@@ -1,17 +1,25 @@
-﻿.account-type {
+﻿.buysell-main {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.account-type {
   display: flex;
   width: 100%;
-  margin-bottom: 20px;
-}
-.account-type button {
-  width: auto;
-  border: none;
-  border-radius: initial;
-  background-color: transparent;
-  color: #fff;
-}
-.account-type button:nth-child(3) {
-  margin-right: auto;
+  margin-bottom: 10px;
+  align-items: center;
+  /*    button {
+          width: auto;
+          border: none;
+          border-radius: initial;
+          background-color: transparent;  
+          color: #fff;
+
+          &:nth-child(3) {
+              margin-right: auto;
+          }
+      }*/
 }
 .account-type .active {
   border-bottom: 2px solid #808080;
@@ -40,7 +48,8 @@
 }
 
 .offers {
-  /*color: #000;*/
+  overflow: auto;
+  height: calc(100dvh - 62px - 18px - 40px - 176px);
 }
 .offers .offer {
   background-color: grey;
@@ -76,7 +85,6 @@
   display: flex;
   align-items: center;
   background-color: darkgray;
-  /*background-color: #4BB543;*/
   width: fit-content;
   padding: 4px;
   border-radius: 4px;
@@ -85,4 +93,9 @@
 
 .create-offer-button {
   margin-bottom: 10px;
+}
+
+.buttons {
+  background-color: #131313;
+  padding: 10px 0 10px;
 }

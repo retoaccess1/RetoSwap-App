@@ -15,16 +15,56 @@ public partial class Account : ComponentBase
     private EditContext? _editContext;
 
     public PaymentAccountForm? PaymentAccountForm { get; set; }
+    public CreateCryptoCurrencyPaymentAccountRequest? CreateCryptoCurrencyPaymentAccountRequest { get; set; }
     public PaymentAccount? SelectedPaymentAccount { get; set; }
 
-    public Dictionary<string, string> PaymentMethodStrings { get; set; } = [];
+    public Dictionary<string, string> TraditionalPaymentMethodStrings { get; set; } = [];
+    public Dictionary<string, string> CryptoPaymentMethodStrings { get; set; } = [];
+    public Dictionary<string, string> VisiblePaymentMethodStrings { get; set; } = [];
     public List<SelectedCurrency> SupportedCurrencyCodes { get; set; } = [];
     public List<PaymentAccount> PaymentAccounts { get; set; } = [];
-    public List<PaymentMethod> PaymentMethods { get; set; } = [];
+    public List<PaymentAccount> CryptoPaymentAccounts { get; set; } = [];
+    public List<PaymentMethod> TraditionalPaymentMethods { get; set; } = [];
+    public List<PaymentMethod> CryptoPaymentMethods { get; set; } = [];
 
     public bool CustomAccountNameEnabled { get; set; }
 
-    public string SelectedPaymentMethodId { get; 
+    public string? AccountToDelete { get; set; }
+    public bool ShowDeleteAccountModal 
+    { 
+        get; 
+        set 
+        { 
+            field = value;
+            if (!field)
+            {
+                AccountToDelete = null;
+            }
+        } 
+    }
+
+    public int SelectedTabIndex 
+    { 
+        get;
+        set
+        {
+            field = value;
+            switch (field)
+            {
+                case 0:
+                    VisiblePaymentMethodStrings = TraditionalPaymentMethodStrings;
+                    break;
+                case 1:
+                    VisiblePaymentMethodStrings = CryptoPaymentMethodStrings;
+                    break;
+                default: break;
+            }
+        }
+    }
+
+    public string SelectedPaymentMethodId 
+    { 
+        get; 
         set 
         { 
             field = value;
@@ -38,7 +78,12 @@ public partial class Account : ComponentBase
                 return;
             }
 
-            SupportedCurrencyCodes = PaymentMethods
+            if (field == "BLOCK_CHAINS")
+            {
+                CreateCryptoCurrencyPaymentAccountRequest = new();
+            }
+
+            SupportedCurrencyCodes = TraditionalPaymentMethods
                 .FirstOrDefault(x => x.Id == SelectedPaymentMethodId)!
                 .SupportedAssetCodes.Select(x => new SelectedCurrency { Code = x, IsSelected = false })
                 .ToList();
@@ -52,6 +97,7 @@ public partial class Account : ComponentBase
                 PaymentMethodId = SelectedPaymentMethodId
             });
 
+            // Add a default account name
             var accountName = getPaymentAccountFormReply.PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == PaymentAccountFormField.Types.FieldId.AccountName);
             if (accountName is not null)
             {
@@ -101,15 +147,15 @@ public partial class Account : ComponentBase
                 PaymentAccounts = [.. paymentAccounts.PaymentAccounts];
 
                 var paymentMethodsResponse = await paymentAccountsClient.GetPaymentMethodsAsync(new GetPaymentMethodsRequest());
+                TraditionalPaymentMethods = [.. paymentMethodsResponse.PaymentMethods];
 
                 var filteredPaymentMethodIds = paymentMethodsResponse.PaymentMethods
+                    //.Where(x => !PaymentAccounts.Select(y => y.PaymentMethod.Id).Contains(x.Id) && x.Id != "BLOCK_CHAINS")
                     .Where(x => !PaymentAccounts.Select(y => y.PaymentMethod.Id).Contains(x.Id))
                     .Select(x => x.Id);
 
-                PaymentMethodStrings = PaymentMethodsHelper.PaymentMethodsDictionary
+                TraditionalPaymentMethodStrings = PaymentMethodsHelper.PaymentMethodsDictionary
                     .Where(x => filteredPaymentMethodIds.Contains(x.Key)).ToDictionary();
-
-                PaymentMethods = [.. paymentMethodsResponse.PaymentMethods];
 
                 break;
             }
@@ -122,6 +168,27 @@ public partial class Account : ComponentBase
         }
 
         await base.OnInitializedAsync();
+    }
+
+    // Does not work to validate crypto addresses. Only max/mins
+    public async Task ValidateField(PaymentAccountFormField.Types.FieldId fieldId, string value)
+    {
+        try
+        {
+            using var payChannelHelper = new GrpcChannelHelper();
+            var paymentAccountsClient = new PaymentAccountsClient(payChannelHelper.Channel);
+
+            var response = await paymentAccountsClient.ValidateFormFieldAsync(new ValidateFormFieldRequest
+            { 
+                FieldId = PaymentAccountFormField.Types.FieldId.Address,
+                Form = PaymentAccountForm,
+                Value = value
+            });
+        }
+        catch (Exception e)
+        {
+
+        }
     }
 
     public void HandleAccountClick(PaymentAccount paymentAccount)
@@ -184,15 +251,10 @@ public partial class Account : ComponentBase
         using var payChannelHelper = new GrpcChannelHelper();
         var paymentAccountsClient = new PaymentAccountsClient(payChannelHelper.Channel);
 
-        var createCryptoCurrencyPaymentAccountRequest = new CreateCryptoCurrencyPaymentAccountRequest
-        {
-            CurrencyCode = "BTC",
-            AccountName = "My test BTC account",
-            Address = "1A1zP1eP5QGefi2DMPTfTL5SLmv7DivfNa",
-            TradeInstant = false
-        };
+        var response = await paymentAccountsClient.CreateCryptoCurrencyPaymentAccountAsync(CreateCryptoCurrencyPaymentAccountRequest);
+        PaymentAccounts = [.. PaymentAccounts, response.PaymentAccount];
 
-        var response = await paymentAccountsClient.CreateCryptoCurrencyPaymentAccountAsync(createCryptoCurrencyPaymentAccountRequest);
+        CreateCryptoCurrencyPaymentAccountRequest = null;
     }
 
     public async Task CreatePaymentAccountAsync()

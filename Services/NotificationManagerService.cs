@@ -27,12 +27,9 @@ public class NotificationManagerService : INotificationManagerService
 
     public NotificationManagerService()
     {
-        if (Instance is null)
-        {
-            CreateNotificationChannel();
-            _compatManager = NotificationManagerCompat.From(Platform.AppContext);
-            Instance = this;
-        }
+        CreateNotificationChannel();
+        _compatManager = NotificationManagerCompat.From(Platform.AppContext);
+        Instance = this;
 
         if (_compatManager is null)
             throw new Exception("_compatManager was null");

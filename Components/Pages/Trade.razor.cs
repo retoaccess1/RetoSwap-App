@@ -15,6 +15,8 @@ public partial class Trade : ComponentBase, IDisposable
     public TradeInfo TradeInfo { get; set; } = default!;
     [Inject]
     public NotificationSingleton NotificationSingleton { get; set; } = default!;
+    [Inject]
+    public NavigationManager NavigationManager { get; set; } = default!;
 
     public int SellerState { get; set; }
     public int BuyerState { get; set; }
@@ -163,6 +165,8 @@ public partial class Trade : ComponentBase, IDisposable
         {
             TradeId = tradeId
         });
+
+        NavigationManager.NavigateTo("Trades");
     }
 
     public void Dispose()

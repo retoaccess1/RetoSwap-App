@@ -14,7 +14,7 @@ html, body {
 }
 
 main {
-  margin-bottom: 58px;
+  /*margin-bottom: 58px;*/
 }
 
 a, .btn-link {
@@ -175,25 +175,24 @@ input[type=checkbox]:checked {
   background-color: #000;
 }
 
-::-webkit-scrollbar {
-  width: 8px;
-  border-radius: 8px;
+/*::-webkit-scrollbar {
+    width: 8px;
+    border-radius: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 8px;
+    background: #f1f1f1;
+    border-radius: 8px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 8px;
+    background: #888;
+    border-radius: 8px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
+    background: #555;
+}*/
 .loader-container {
   display: flex;
   justify-content: center;

@@ -1,6 +1,6 @@
 ﻿namespace Manta.Models;
 
-enum SwipeDirection
+public enum SwipeDirection
 {
     None,
     Right,

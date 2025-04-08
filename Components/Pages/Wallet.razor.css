@@ -1,4 +1,9 @@
-﻿.wallet .top .monero-card {
+﻿.wallet {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.wallet .top .monero-card {
   height: 200px;
   max-width: 380px;
   background-image: linear-gradient(to right bottom, #4d4d4d, #f26822);
@@ -62,11 +67,11 @@
 }
 .wallet .tab-container {
   margin-top: 10px;
+  margin-bottom: 20px;
 }
 .wallet ul {
   margin-top: 10px;
-  /*        overflow-y: auto;
-          height: 100%;*/
+  overflow-y: auto;
 }
 .wallet ul li {
   margin-bottom: 10px;

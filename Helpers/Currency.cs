@@ -26,6 +26,33 @@ public enum Currency
     ZAR
 }
 
+public enum CryptoCurrency
+{
+    BTC,
+    BCH,
+    ETH,
+    LTC,
+    DAI_ERC20,
+    USDT_ERC20,
+    USDT_TRC20,
+    USDC_ERC20
+}
+
+public static class CryptoCurrencyHelper
+{
+    public static Dictionary<string, string> CryptoCurrenciesDictionary = new()
+    {
+        { "BTC", "Bitcoin" },
+        { "BCH", "Bitcoin Cash" },
+        { "ETH", "Ether" },
+        { "LTC", "Litecoin" },
+        { "DAI-ERC20", "Dai Stablecoin (ERC20)" },
+        { "USDT-ERC20", "Tether USD (ERC20)" },
+        { "USDT-TRC20", "Tether USD (TRC20)" },
+        { "USDC-ERC20", "USD Coin (ERC20)" }
+    };
+}
+
 public static class CurrencyCultureInfo
 {
     public static CultureInfo GetCultureInfoForCurrency(Currency currency)

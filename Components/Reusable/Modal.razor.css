@@ -61,6 +61,9 @@
 .generic-modal .verify-modal .buttons button:first-child {
   margin-right: 6px;
 }
+.generic-modal .verify-modal .buttons button:last-child {
+  margin-right: 0;
+}
 .generic-modal .verify-modal .buttons .verify-modal-button {
   display: flex;
   justify-content: center;

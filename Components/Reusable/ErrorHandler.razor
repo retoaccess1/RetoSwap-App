@@ -2,7 +2,7 @@
 
 @if (CurrentException is not null)
 {
-    <Modal Title="Error" @bind-IsOpen="IsOpen" VisibleButtons="false">
+    <Modal Title="Error" @bind-IsOpen="IsOpen" ModalButtonOptions="ModalButtonOptions.NONE">
         <p>@Message</p>
     </Modal>
 }

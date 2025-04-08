@@ -1,10 +1,9 @@
 ﻿using Android.App;
-using Android.App.Job;
 using Android.Content;
 using Android.Content.PM;
 using Android.OS;
+using AndroidX.Work;
 using Manta.Services;
-using Microsoft.Maui.Controls;
 
 namespace Manta;
 [Activity(LaunchMode = LaunchMode.SingleTop, ScreenOrientation = ScreenOrientation.Portrait, Theme = "@style/Maui.SplashTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
@@ -16,11 +15,7 @@ public class MainActivity : MauiAppCompatActivity
 {
     public MainActivity()
     {
-        //var jobScheduler = (JobScheduler)GetSystemService(JobSchedulerService);
-        //var builder = new JobInfo.Builder(1, new ComponentName(this, Java.Lang.Class.FromType(typeof(MyBackgroundJob))));
-        //// Every 15 min
-        //builder.SetPeriodic(5 * 60 * 1000); 
-        //jobScheduler.Schedule(builder.Build());
+
     }
 
     protected override void OnActivityResult(int requestCode, Result resultCode, Intent? data)
@@ -37,6 +32,8 @@ public class MainActivity : MauiAppCompatActivity
         {
             Console.WriteLine("Returned from Termux!");
         }
+
+        // TODO Handle notification. if message, navigate to chat, if trade navigate to trade
     }
 
     protected override void OnCreate(Bundle? savedInstanceState)
@@ -52,6 +49,8 @@ public class MainActivity : MauiAppCompatActivity
             return;
 
         CreateNotificationFromIntent(Intent);
+
+        RegisterActivityLifecycleCallbacks(new AppLifecycleService());
     }
 
     protected override void OnNewIntent(Intent? intent)
@@ -87,6 +86,4 @@ public class MainActivity : MauiAppCompatActivity
         TermuxPermissionHelper.HandlePermissionResult(requestCode, permissions, grantResults);
         base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
     }
-
-
 }
