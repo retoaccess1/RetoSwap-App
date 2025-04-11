@@ -116,6 +116,7 @@
         }
     } = string.Empty;
 
+    // Switch to bind?
     [Parameter]
     public EventCallback<string> OnSubmit { get; set; }
 
@@ -152,5 +153,11 @@
         var shouldRender = _shouldRender;
         _shouldRender = false;
         return shouldRender;
+    }
+
+    public void Clear()
+    {
+        _searchTerm = string.Empty;
+        _shouldRender = true;
     }
 }

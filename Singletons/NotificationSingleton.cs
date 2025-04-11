@@ -160,7 +160,7 @@ public class NotificationSingleton
                             TradeInfos.AddOrUpdate(response.Trade.TradeId, response.Trade, (key, old) => response.Trade);
 
                             OnTradeUpdate?.Invoke(response.Trade);
-                            _notificationManagerService.SendNotification($"Trade {response.Trade.ShortId} updated", response.Trade.ShortId);
+                            _notificationManagerService.SendNotification($"Trade {response.Trade.ShortId} updated", response.Message);
                             break;
                         default: break;
                     }

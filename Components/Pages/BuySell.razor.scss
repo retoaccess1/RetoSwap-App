@@ -73,6 +73,7 @@
             .offer-top {
                 display: flex;
                 justify-content: space-between;
+                white-space: nowrap;
 
                 .offer-currency {
                     display: flex;

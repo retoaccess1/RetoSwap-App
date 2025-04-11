@@ -1,28 +1,28 @@
 ﻿@page "/chat"
 
 <div class="chat-main">
-    @if (Messages.Count == 0)
+@if (Messages.Count == 0)
+{
+    <p class="no-messages">No messages</p>
+}
+else
+{
+    <ul id="chat-list">
+    @for (int i = 0; i < Messages.Count; i++)
     {
-        <p>No messages</p>
-    }
-    else
-    {
-        <ul id="chat-list">
-        @for (int i = 0; i < Messages.Count; i++)
-        {
-            var message = Messages[i];
-            // This is fucking stupid
-            var isMyMessage = message.SenderNodeAddress.HostName.Split(".")[0] != TradePeer && message.SenderNodeAddress.HostName.Split(".")[0] != Arbitrator;
+        var message = Messages[i];
+        // This is fucking stupid
+        var isMyMessage = message.SenderNodeAddress.HostName.Split(".")[0] != TradePeer && message.SenderNodeAddress.HostName.Split(".")[0] != Arbitrator;
 
-            <li class="@(isMyMessage ? "right" : "left")" id="@(i == Messages.Count - 1 ? "last-message" : "")">
-                <p class="date">
-                    @(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(message.Date).ToLocalTime())
-                </p>
-                <p class="message">
-                    @message.Message
-                </p>
-            </li>
-        }
+        <li class="@(isMyMessage ? "right" : "left")" id="@(i == Messages.Count - 1 ? "last-message" : "")">
+            <p class="date">
+                @(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(message.Date).ToLocalTime())
+            </p>
+            <p class="message">
+                @message.Message
+            </p>
+        </li>
+    }
     </ul>
 }
 

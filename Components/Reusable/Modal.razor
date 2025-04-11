@@ -1,7 +1,7 @@
 ﻿@if (IsOpen)
 {
     <div class="generic-modal" @onclick="@((e) => IsOpen = !IsOpen)">
-        <div class="verify-modal">
+        <div class="verify-modal" @onclick:stopPropagation="true" @onclick:preventDefault="true">
             <div class="top">
                 <div class="top-icons">
                     <i class="bi-exclamation-circle info"></i>

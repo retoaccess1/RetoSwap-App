@@ -27,10 +27,12 @@
 
     <div class="payment-methods-container">
         <div>
-            <SearchableDropdown Placeholder="Select payment method"
-                                Items="@TraditionalPaymentMethodStrings"
-                                Text="Create new account"
-                                OnSubmit="@((val) => SelectedPaymentMethodId = val)" />
+            <SearchableDropdown 
+            Placeholder="Select payment method"
+            @ref="PaymentMethodSearchableDropdown"
+            Items="@TraditionalPaymentMethodStrings"
+            Text="Create new account"
+            OnSubmit="@((val) => SelectedPaymentMethodId = val)" />
         </div>
     </div>
 
@@ -39,7 +41,26 @@
         <p class="account-info-text">Account info</p>
 
         <InfoRow Label="Payment method" Value="@PaymentMethodsHelper.PaymentMethodsDictionary[SelectedPaymentAccount.PaymentMethod.Id]"></InfoRow>
-        <InfoRow Label="Username" Value="@SelectedPaymentAccount.AccountName"></InfoRow>
+
+        switch (SelectedPaymentAccount.PaymentMethod.Id)
+        {
+            case "NATIONAL_BANK":
+
+                break;
+            case "F2F":
+
+                break;
+            case "ZELLE":
+                <InfoRow Label="Account owner full name" Value="@SelectedPaymentAccount.PaymentAccountPayload.ZelleAccountPayload.HolderName"></InfoRow>
+                <InfoRow Label="Email or mobile no." Value="@SelectedPaymentAccount.PaymentAccountPayload.ZelleAccountPayload.EmailOrMobileNr"></InfoRow>
+                break;
+            case "REVOLUT":
+                <InfoRow Label="Username" Value="@SelectedPaymentAccount.PaymentAccountPayload.RevolutAccountPayload.Username"></InfoRow>
+                break;
+            default:
+                <InfoRow Label="Username" Value="@SelectedPaymentAccount.AccountName"></InfoRow>
+                break;
+        }
 
         <div class="supported-currencies">
             <InfoRow Label="Supported currencies" Value="@(string.Join(", ", SelectedPaymentAccount.TradeCurrencies.Select(x => x.Code)))"></InfoRow>
@@ -56,7 +77,7 @@
                 <InputText placeholder="" @bind-Value="CreateCryptoCurrencyPaymentAccountRequest.Address" @oninput="(e) => ValidateField(Protobuf.PaymentAccountFormField.Types.FieldId.Address, (string?)e.Value ?? string.Empty)"></InputText>
             </div>
             <div class="field">
-                <InfoRow Label="Limitations" Value="Limit"></InfoRow>
+                <InfoRow Label="Limitations" Value="@($"{MaxTradeLimit}, {MaxTradePeriod}")"></InfoRow>
             </div>
             <label>Account name</label>
             <InputText readonly="@(!CustomAccountNameEnabled)" @bind-Value="CreateCryptoCurrencyPaymentAccountRequest.AccountName"></InputText>
@@ -64,6 +85,7 @@
                 <InputCheckbox @bind-Value="@CustomAccountNameEnabled" />
                 <label>Use custom account name</label>
             </div>
+            <button @onclick="CreateCryptoPaymentAccountAsync">Save new account</button>
         </div>
     }
     else if (PaymentAccountForm is not null)
@@ -101,11 +123,44 @@
                         </div>
                         break;
                     case Protobuf.PaymentAccountFormField.Types.FieldId.Salt:
-                        <div class="field">
+@*                         <div class="field">
                             <label>@field.Label</label>
                             <InputText readonly="true" @bind-Value="field.Value"></InputText>
                             <ValidationMessage For="() => field.Label" />
+                        </div> *@
+                        break;
+                    case Protobuf.PaymentAccountFormField.Types.FieldId.Country:
+                        <div class="field">
+                            <SearchableDropdown OnSubmit="HandleCountryChanged" Placeholder="Select country" Text="@field.Label" Items="@(field.SupportedCountries.ToDictionary(x => x.Code, x => $"{x.Name} ({x.Code})"))"></SearchableDropdown>
                         </div>
+                        break;
+                    case Protobuf.PaymentAccountFormField.Types.FieldId.AcceptedCountryCodes:
+                        @if (AcceptedEUSEPACountries.Count != 0)  // Should probably be a component
+                        {
+                            <p class="supported-currencies-text">Accept trades from these EU countries</p>
+                            <div class="supported-currencies">
+                                @foreach (var acceptedCountry in AcceptedEUSEPACountries)
+                            {
+                                <div class="checkbox-container">
+                                    <InputCheckbox @bind-Value="@acceptedCountry.IsSelected" />
+                                    <label>@acceptedCountry.Code</label>
+                                </div>
+                            }
+                            </div>
+                        }
+                        @if (AcceptedNonEUSEPACountries.Count != 0)
+                        {
+                            <p class="supported-currencies-text">Accept trades from these non-EU countries</p>
+                            <div class="supported-currencies">
+                            @foreach (var acceptedCountry in AcceptedNonEUSEPACountries)
+                            {
+                                <div class="checkbox-container">
+                                    <InputCheckbox @bind-Value="@acceptedCountry.IsSelected" />
+                                    <label>@acceptedCountry.Code</label>
+                                </div>
+                            }
+                            </div>
+                        }
                         break;
                     default:
                         <div class="field">
@@ -116,6 +171,9 @@
                         break;
                 }
             }
+            <div class="field">
+                <InfoRow Label="Limitations" Value="@($"{MaxTradeLimit}, {MaxTradePeriod}")"></InfoRow>
+            </div>
             <button type="submit">Save new account</button>
         </EditForm>
     }

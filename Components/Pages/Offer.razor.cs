@@ -19,6 +19,8 @@ public partial class Offer : ComponentBase, IDisposable
     public NavigationManager NavigationManager { get; set; } = default!;
     [Inject]
     public BalanceSingleton BalanceSingleton { get; set; } = default!;
+    [Inject]
+    public NotificationSingleton NotificationSingleton { get; set; } = default!;
 
     public OfferInfo? OfferInfo { get; set; }
 
@@ -98,7 +100,8 @@ public partial class Offer : ComponentBase, IDisposable
             };
 
             var response = await tradesClient.TakeOfferAsync(takeOfferRequest, cancellationToken: CancelOfferCts.Token);
-            var trade = response.Trade;
+
+            NotificationSingleton.TradeInfos.TryAdd(response.Trade.TradeId, response.Trade);
 
             NavigationManager.NavigateTo("Trades");
         }

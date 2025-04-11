@@ -1,4 +1,7 @@
-﻿using Haveno.Proto.Grpc;
+﻿using Grpc.Core;
+using Haveno.Proto.Grpc;
+using Manta.Components.Reusable;
+using Manta.Extensions;
 using Manta.Helpers;
 using Manta.Models;
 using Microsoft.AspNetCore.Components;
@@ -22,10 +25,17 @@ public partial class Account : ComponentBase
     public Dictionary<string, string> CryptoPaymentMethodStrings { get; set; } = [];
     public Dictionary<string, string> VisiblePaymentMethodStrings { get; set; } = [];
     public List<SelectedCurrency> SupportedCurrencyCodes { get; set; } = [];
+    public List<SelectedAcceptedCountry> AcceptedNonEUSEPACountries { get; set; } = [];
+    public List<SelectedAcceptedCountry> AcceptedEUSEPACountries { get; set; } = [];
     public List<PaymentAccount> PaymentAccounts { get; set; } = [];
     public List<PaymentAccount> CryptoPaymentAccounts { get; set; } = [];
     public List<PaymentMethod> TraditionalPaymentMethods { get; set; } = [];
     public List<PaymentMethod> CryptoPaymentMethods { get; set; } = [];
+
+    public long MaxTradePeriod { get; set; }
+    public long MaxTradeLimit { get; set; }
+
+    public SearchableDropdown PaymentMethodSearchableDropdown { get; set; } = default!;
 
     public bool CustomAccountNameEnabled { get; set; }
 
@@ -74,6 +84,8 @@ public partial class Account : ComponentBase
             if (string.IsNullOrEmpty(value))
             {
                 SupportedCurrencyCodes = [];
+                AcceptedNonEUSEPACountries = [];
+                AcceptedEUSEPACountries = [];
                 PaymentAccountForm = default!;
                 return;
             }
@@ -82,38 +94,53 @@ public partial class Account : ComponentBase
             {
                 CreateCryptoCurrencyPaymentAccountRequest = new();
             }
+            else
+            {
+                CreateCryptoCurrencyPaymentAccountRequest = null;
+            }
 
-            SupportedCurrencyCodes = TraditionalPaymentMethods
-                .FirstOrDefault(x => x.Id == SelectedPaymentMethodId)!
+            var paymentMethod = TraditionalPaymentMethods
+                .FirstOrDefault(x => x.Id == SelectedPaymentMethodId);
+
+            if (paymentMethod is null)
+                throw new Exception("paymentMethod was null");
+
+            MaxTradePeriod = paymentMethod.MaxTradePeriod;
+            MaxTradeLimit = paymentMethod.MaxTradeLimit;
+
+            SupportedCurrencyCodes = paymentMethod
                 .SupportedAssetCodes.Select(x => new SelectedCurrency { Code = x, IsSelected = false })
                 .ToList();
 
             using var payChannelHelper = new GrpcChannelHelper();
             var paymentAccountsClient = new PaymentAccountsClient(payChannelHelper.Channel);
 
-            // Ehhh...
-            var getPaymentAccountFormReply = paymentAccountsClient.GetPaymentAccountForm(new GetPaymentAccountFormRequest
+            // This is a network call in a setter, should not do this 
+            var getPaymentAccountFormResponse = paymentAccountsClient.GetPaymentAccountForm(new GetPaymentAccountFormRequest
             {
                 PaymentMethodId = SelectedPaymentMethodId
             });
 
             // Add a default account name
-            var accountName = getPaymentAccountFormReply.PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == PaymentAccountFormField.Types.FieldId.AccountName);
-            if (accountName is not null)
+            var accountNameField = getPaymentAccountFormResponse.PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == PaymentAccountFormField.Types.FieldId.AccountName);
+            if (accountNameField is not null)
             {
-                getPaymentAccountFormReply.PaymentAccountForm.Fields.Remove(accountName);
-
-                var newAccountName = new PaymentAccountFormField
-                {
-                    Id = PaymentAccountFormField.Types.FieldId.AccountName,
-                    Label = accountName.Label,
-                    Value = SelectedPaymentMethodId
-                };
-
-                getPaymentAccountFormReply.PaymentAccountForm.Fields.Add(newAccountName);
+                accountNameField.Value = SelectedPaymentMethodId;
             }
 
-            PaymentAccountForm = getPaymentAccountFormReply.PaymentAccountForm;
+            PaymentAccountForm = getPaymentAccountFormResponse.PaymentAccountForm;
+
+            var acceptedCountriesField = PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == PaymentAccountFormField.Types.FieldId.AcceptedCountryCodes);
+            if (acceptedCountriesField is not null)
+            {
+                AcceptedEUSEPACountries = acceptedCountriesField.SupportedSepaEuroCountries
+                    .Select(x => new SelectedAcceptedCountry { Code = x.Code, IsSelected = true })
+                    .ToList();
+
+                AcceptedNonEUSEPACountries = acceptedCountriesField.SupportedSepaNonEuroCountries
+                    .Select(x => new SelectedAcceptedCountry { Code = x.Code, IsSelected = true })
+                    .ToList();
+            }
 
             _editContext = new EditContext(PaymentAccountForm);
             _messageStore = new ValidationMessageStore(_editContext);
@@ -150,7 +177,6 @@ public partial class Account : ComponentBase
                 TraditionalPaymentMethods = [.. paymentMethodsResponse.PaymentMethods];
 
                 var filteredPaymentMethodIds = paymentMethodsResponse.PaymentMethods
-                    //.Where(x => !PaymentAccounts.Select(y => y.PaymentMethod.Id).Contains(x.Id) && x.Id != "BLOCK_CHAINS")
                     .Where(x => !PaymentAccounts.Select(y => y.PaymentMethod.Id).Contains(x.Id))
                     .Select(x => x.Id);
 
@@ -168,6 +194,18 @@ public partial class Account : ComponentBase
         }
 
         await base.OnInitializedAsync();
+    }
+
+    public void HandleCountryChanged(string country)
+    {
+        if (PaymentAccountForm is null)
+            return;
+
+        var countryField = PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == PaymentAccountFormField.Types.FieldId.Country);
+        if (countryField is not null)
+        {
+            countryField.Value = country;
+        }
     }
 
     // Does not work to validate crypto addresses. Only max/mins
@@ -195,6 +233,7 @@ public partial class Account : ComponentBase
     {
         PaymentAccountForm = null;
         SelectedPaymentAccount = paymentAccount;
+        PaymentMethodSearchableDropdown.Clear();
     }
 
     public void ValidateModel(object? sender, FieldChangedEventArgs e)
@@ -207,19 +246,22 @@ public partial class Account : ComponentBase
         if (e.FieldIdentifier.Model is not PaymentAccountFormField field)
             return;
 
-        if (field.Value.Length > field.MaxLength && field.MaxLength != 0)
-        {
-            _messageStore.Add(() => field.Label, "Value cannot be greater than " + field.MaxLength);
-        }
-        else if (field.Value.Length < field.MinLength && field.MaxLength != 0)
-        {
-            _messageStore.Add(() => field.Label, "Value cannot be less than " + field.MinLength);
-        }
+        using var payChannelHelper = new GrpcChannelHelper();
+        var paymentAccountsClient = new PaymentAccountsClient(payChannelHelper.Channel);
 
-        if (field.Id == PaymentAccountFormField.Types.FieldId.Email)
+        try
         {
-            using var payChannelHelper = new GrpcChannelHelper();
-            var paymentAccountsClient = new PaymentAccountsClient(payChannelHelper.Channel);
+            // This blocks and is a network call, not great to do synchronously
+            var response = paymentAccountsClient.ValidateFormField(new ValidateFormFieldRequest
+            {
+                FieldId = field.Id,
+                Form = PaymentAccountForm,
+                Value = field.Value
+            });
+        }
+        catch (RpcException ex)
+        {
+            _messageStore.Add(() => field.Label, ex.GetErrorMessage());
         }
 
         _editContext.NotifyValidationStateChanged();
@@ -227,23 +269,16 @@ public partial class Account : ComponentBase
 
     public async Task DeleteAccountAsync(string paymentAccountId)
     {
-        try
-        {
-            using var payChannelHelper = new GrpcChannelHelper();
-            var paymentAccountsClient = new PaymentAccountsClient(payChannelHelper.Channel);
+        using var payChannelHelper = new GrpcChannelHelper();
+        var paymentAccountsClient = new PaymentAccountsClient(payChannelHelper.Channel);
 
-            var response = await paymentAccountsClient.DeletePaymentAccountAsync(new DeletePaymentAccountRequest
-            {
-                PaymentAccountId = paymentAccountId
-            });
-
-            PaymentAccounts = [..PaymentAccounts.Where(x => x.Id != paymentAccountId)];
-            SelectedPaymentAccount = null;
-        }
-        catch
+        var response = await paymentAccountsClient.DeletePaymentAccountAsync(new DeletePaymentAccountRequest
         {
-            // Set ErrorCard TODO
-        }
+            PaymentAccountId = paymentAccountId
+        });
+
+        PaymentAccounts = [.. PaymentAccounts.Where(x => x.Id != paymentAccountId)];
+        SelectedPaymentAccount = null;
     }
 
     public async Task CreateCryptoPaymentAccountAsync()
@@ -255,6 +290,8 @@ public partial class Account : ComponentBase
         PaymentAccounts = [.. PaymentAccounts, response.PaymentAccount];
 
         CreateCryptoCurrencyPaymentAccountRequest = null;
+        PaymentAccountForm = null;
+        PaymentMethodSearchableDropdown.Clear();
     }
 
     public async Task CreatePaymentAccountAsync()
@@ -274,24 +311,25 @@ public partial class Account : ComponentBase
                 PaymentAccountForm = PaymentAccountForm
             };
 
-            var currencies = request.PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == Protobuf.PaymentAccountFormField.Types.FieldId.TradeCurrencies);
-            if (currencies is not null)
+            var currenciesField = request.PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == PaymentAccountFormField.Types.FieldId.TradeCurrencies);
+            if (currenciesField is not null)
             {
-                request.PaymentAccountForm.Fields.Remove(currencies);
+                currenciesField.Value = string.Join(",", SupportedCurrencyCodes.Where(x => x.IsSelected).Select(x => x.Code));
+            }
 
-                var newCurrecies = new PaymentAccountFormField
-                {
-                    Id = PaymentAccountFormField.Types.FieldId.TradeCurrencies,
-                    Label = currencies.Label,
-                    Value = string.Join(",", SupportedCurrencyCodes.Where(x => x.IsSelected).Select(x => x.Code))
-                };
-
-                request.PaymentAccountForm.Fields.Add(newCurrecies);
+            var acceptedCountriesField = request.PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == PaymentAccountFormField.Types.FieldId.AcceptedCountryCodes);
+            if (acceptedCountriesField is not null)
+            {
+                acceptedCountriesField.Value = string.Join(",", [..AcceptedEUSEPACountries.Where(x => x.IsSelected).Select(x => x.Code), ..AcceptedNonEUSEPACountries.Where(x => x.IsSelected).Select(x => x.Code)]);
             }
 
             var response = await paymentAccountsClient.CreatePaymentAccountAsync(request);
             PaymentAccounts = [.. PaymentAccounts, response.PaymentAccount];
             SelectedPaymentAccount = null;
+            PaymentAccountForm = null;
+            CreateCryptoCurrencyPaymentAccountRequest = null;
+            SelectedPaymentMethodId = string.Empty;
+            PaymentMethodSearchableDropdown.Clear();
         }
         catch (Exception e)
         {

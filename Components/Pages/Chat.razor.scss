@@ -59,3 +59,7 @@
 ::-webkit-scrollbar {
     display: none;
 }
+
+.no-messages {
+    height: calc(100dvh - 56px - 60px - 62px);
+}

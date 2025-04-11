@@ -11,7 +11,8 @@ else
         {
             @* should be a shared component  *@
             <li class="offer">
-                <a class="offer-link" href=@($"offer?OfferId={offer.Id}&title=Offer")>
+                @* <a class="offer-link" href=@($"offer?OfferId={offer.Id}&title=Offer")> *@
+                <a class="offer-link">
                     <div class="offer-top">
                         <div class="offer-currency">
                             @(offer.Direction == "SELL" ? offer.BaseCurrencyCode : offer.CounterCurrencyCode)
@@ -49,7 +50,7 @@ else
                 {
                     <div class="buttons">
                         @* go to create offer page with edit param *@
-                        <button @onclick="EditOffer">Edit</button>
+                        <button disabled @onclick="EditOffer">Edit</button>
                         <button @onclick="() => CancelOfferAsync(offer.Id)">Remove</button>
                     </div>
                 }

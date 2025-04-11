@@ -1,11 +1,12 @@
 ﻿using Blazored.LocalStorage;
 using Haveno.Proto.Grpc;
+using Manta.Components.Reusable;
 using Manta.Helpers;
 using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System.Globalization;
-
+using System.Threading.Tasks;
 using static Haveno.Proto.Grpc.Offers;
 using static Haveno.Proto.Grpc.PaymentAccounts;
 
@@ -31,13 +32,8 @@ public partial class BuySell : ComponentBase, IDisposable
         get; 
         set 
         { 
-            field = value; 
-
-            CancellationTokenSource.Cancel();
-            CancellationTokenSource.Dispose();
-            CancellationTokenSource = new();
-
-            OfferFetchTask = FetchOffersAsync();
+            field = value;
+            ResetFetch();
         } 
     } = string.Empty;
 
@@ -47,22 +43,48 @@ public partial class BuySell : ComponentBase, IDisposable
         set
         {
             field = value;
-
-            // This is stupid!
-            CancellationTokenSource.Cancel();
-            CancellationTokenSource.Dispose();
-            CancellationTokenSource = new();
-
-            OfferFetchTask = FetchOffersAsync();
+            ResetFetch();
         }
     } = string.Empty;
 
     // Needs to be fetched from the users preferences
-    public Dictionary<string, string> CurrencyCodes { get; set; } = CurrencyCultureInfo.GetCurrencyFullNamesAndCurrencyCodeDictionary().ToDictionary();
-    public Dictionary<string, string> PaymentMethods { get; set; } = [];
+    public Dictionary<string, string> TraditionalCurrencyCodes { get; set; } = CurrencyCultureInfo.GetCurrencyFullNamesAndCurrencyCodeDictionary().ToDictionary();
+    public Dictionary<string, string> CryptoCurrencyCodes { get; set; } = CryptoCurrencyHelper.CryptoCurrenciesDictionary;
+    public Dictionary<string, string> VisibleCurrencyCodes { get; set; } = [];
+    public Dictionary<string, string> TraditionalPaymentMethods { get; set; } = [];
+    public Dictionary<string, string> CryptoPaymentMethods { get; set; } = [];
+    public Dictionary<string, string> VisiblePaymentMethods { get; set; } = [];
 
     public bool IsCreatingOffer { get; set; }
-    public int OfferPaymentType { get; set; }
+    public int OfferPaymentType 
+    { 
+        get; 
+        set 
+        {
+            field = value;
+            switch (field)
+            {
+                case 0:
+                    VisiblePaymentMethods = TraditionalPaymentMethods;
+                    VisibleCurrencyCodes = TraditionalCurrencyCodes;
+                    break;
+                case 1:
+                    VisiblePaymentMethods = CryptoPaymentMethods;
+                    VisibleCurrencyCodes = CryptoCurrencyCodes;
+                    break;
+                case 2:
+                    break;
+                default: break;
+            }
+
+            CurrencySearchableDropdown.Clear();
+            PaymentMethodSearchableDropdown.Clear();
+            SelectedCurrencyCode = string.Empty;
+            SelectedPaymentMethod = string.Empty;
+
+            ResetFetch();
+        } 
+    }
     public string Direction { get; set; } = "BUY";
 
     public Task? OfferFetchTask;
@@ -74,12 +96,7 @@ public partial class BuySell : ComponentBase, IDisposable
         {
             field = value;
             Direction = value ? "SELL" : "BUY";
-
-            CancellationTokenSource.Cancel();
-            CancellationTokenSource.Dispose();
-            CancellationTokenSource = new();
-
-            OfferFetchTask = FetchOffersAsync();
+            ResetFetch();
         }
     }
 
@@ -87,9 +104,35 @@ public partial class BuySell : ComponentBase, IDisposable
     public string CurrentMarketPrice { get; set; } = string.Empty;
     public NumberFormatInfo PreferredCurrencyFormat { get; set; } = default!;
 
+    public SearchableDropdown CurrencySearchableDropdown { get; set; } = default!;
+    public SearchableDropdown PaymentMethodSearchableDropdown { get; set; } = default!;
+
     public void CloseCreateOffer()
     {
         IsCreatingOffer = false;
+    }
+
+    public SemaphoreSlim ResetSemaphore { get; set; } = new(1);
+
+    public void ResetFetch()
+    {
+        if (ResetSemaphore.CurrentCount == 0)
+            return;
+
+        ResetSemaphore.Wait();
+
+        CancellationTokenSource.Cancel();
+        CancellationTokenSource.Dispose();
+        CancellationTokenSource = new();
+
+        Task.Run(async() => {
+            if (OfferFetchTask is not null)
+                await OfferFetchTask;
+
+            OfferFetchTask = FetchOffersAsync();
+            
+            ResetSemaphore.Release();
+        });
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -108,9 +151,6 @@ public partial class BuySell : ComponentBase, IDisposable
         {
             try
             {
-                OfferFetchTask = FetchOffersAsync();
-                //OfferFetchTask = Task.Run(FetchOffersAsync);
-
                 using var paymentAccountChannel = new GrpcChannelHelper();
                 var paymentAccountsClient = new PaymentAccountsClient(paymentAccountChannel.Channel);
 
@@ -119,13 +159,27 @@ public partial class BuySell : ComponentBase, IDisposable
                 var filteredPaymentMethodIds = paymentMethodsResponse.PaymentMethods
                     .Select(x => x.Id);
 
-                PaymentMethods = PaymentMethodsHelper.PaymentMethodsDictionary
+                TraditionalPaymentMethods = PaymentMethodsHelper.PaymentMethodsDictionary
                     .Where(x => filteredPaymentMethodIds.Contains(x.Key)).ToDictionary();
+
+                var cryptoPaymentMethodsResponse = await paymentAccountsClient.GetCryptoCurrencyPaymentMethodsAsync(new GetCryptoCurrencyPaymentMethodsRequest());
+
+                var filteredCryptoPaymentMethodIds = cryptoPaymentMethodsResponse.PaymentMethods
+                    .Select(x => x.Id);
+
+                CryptoPaymentMethods = PaymentMethodsHelper.PaymentMethodsDictionary
+                    .Where(x => filteredCryptoPaymentMethodIds.Contains(x.Key)).ToDictionary();
 
                 PreferredCurrency = await LocalStorage.GetItemAsStringAsync("preferredCurrency") ?? "USD";
                 PreferredCurrencyFormat = CurrencyCultureInfo.GetFormatForCurrency((Currency)Enum.Parse(typeof(Currency), PreferredCurrency));
 
                 CurrentMarketPrice = BalanceSingleton.MarketPriceInfoDictionary[PreferredCurrency].ToString("0.00");
+
+                VisiblePaymentMethods = TraditionalPaymentMethods;
+                VisibleCurrencyCodes = TraditionalCurrencyCodes;
+
+                OfferFetchTask = FetchOffersAsync();
+                //OfferFetchTask = Task.Run(FetchOffersAsync);
 
                 break;
             }
@@ -162,22 +216,42 @@ public partial class BuySell : ComponentBase, IDisposable
                 }
                 else
                 {
-                    Offers = [.. offers.Offers];
+                    switch (OfferPaymentType)
+                    {
+                        case 0:
+                            Offers = [.. offers.Offers.Where(x => TraditionalPaymentMethods.ContainsKey(x.PaymentMethodId)).Where(x => x.PaymentMethodId != "BLOCK_CHAINS")];
+                            break;
+                        case 1:
+                            Offers = [.. offers.Offers.Where(x => CryptoPaymentMethods.ContainsKey(x.PaymentMethodId))];
+                            break;
+                        default: 
+                            Offers = [.. offers.Offers];
+                            break;
+                    }
                 }
 
-                StateHasChanged();
+                await InvokeAsync(StateHasChanged);
                 Console.WriteLine($"Fetched {Offers.Count} offers");
+
+                await Task.Delay(5_000, CancellationTokenSource.Token);
             }
             catch (OperationCanceledException)
             {
-                throw;
+                return;
             }
             catch (Exception e)
             {
                 Console.WriteLine(e);
+
+                try
+                {
+                    await Task.Delay(5_000, CancellationTokenSource.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
             }
-            
-            await Task.Delay(5_000, CancellationTokenSource.Token);
         }
     }
 

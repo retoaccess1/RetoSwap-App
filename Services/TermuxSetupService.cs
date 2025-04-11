@@ -110,7 +110,8 @@ public class TermuxSetupService
         await Task.Delay(1000);
     }
 
-    private static async Task ListenStdout()
+    //private static async Task ListenStdout(string? fireEventOnString = null, Action? callback = null)
+    private static async Task ListenStdout(List<(string, Action)>? callbacks = null)
     {
         var stdout = Path.Combine(Android.OS.Environment.ExternalStorageDirectory?.AbsolutePath ?? throw new DirectoryNotFoundException("ExternalStorageDirectory"), "/storage/emulated/0/output", _fileName);
 
@@ -133,6 +134,19 @@ public class TermuxSetupService
             if (line is not null)
             {
                 Console.WriteLine(line);
+
+                if (callbacks is not null && callbacks.Count != 0)
+                {
+                    foreach (var callback in callbacks)
+                    {
+                        if (line.Contains(callback.Item1))
+                        {
+                            callback.Item2.Invoke();
+                            // Only match one once per line
+                            break;
+                        }
+                    }
+                }
             }
             else
             {
@@ -158,7 +172,7 @@ public class TermuxSetupService
 
                 // Attach stdout listener, shared responsibility?
                 if (StoutListenerTask is null)
-                    StoutListenerTask = Task.Run(ListenStdout);
+                    StoutListenerTask = Task.Run(() => ListenStdout([("All connections lost", () => Console.WriteLine("LOST CONNECTION")), ("Established a new connection", () => Console.WriteLine("RECONNECTED"))]));
 
                 return true;
             }

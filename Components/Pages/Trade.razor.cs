@@ -25,6 +25,9 @@ public partial class Trade : ComponentBase, IDisposable
     public string[] BuyerSteps { get; set; } = ["Wait for blockchain confirmations", "Start payment", "Wait until payment arrived", "Completed"];
     public string[] SellerSteps { get; set; } = ["Wait for blockchain confirmations", "Wait until payment has been sent", "Confirm payment received", "Completed"];
 
+    public CancellationTokenSource CancellationTokenSource = new();
+    public Task? FetchTradeTask;
+
     protected override async Task OnInitializedAsync()
     {
         while (true)
@@ -39,10 +42,11 @@ public partial class Trade : ComponentBase, IDisposable
 
                 TradeInfo = tradeInfo!;
 
-                UpdateState();
+                UpdateTradeState();
 
                 NotificationSingleton.OnTradeUpdate += HandleTradeUpdate;
-                
+
+                FetchTradeTask = FetchTradeAsync();
                 break;
             }
             catch
@@ -56,7 +60,7 @@ public partial class Trade : ComponentBase, IDisposable
         await base.OnInitializedAsync();
     }
 
-    private void UpdateState()
+    private void UpdateTradeState()
     {
         // Stupid hack but IsMyOffer is always false, will have to fix this
         if (TradeInfo.Offer.OwnerNodeAddress != TradeInfo.TradePeerNodeAddress)
@@ -106,16 +110,20 @@ public partial class Trade : ComponentBase, IDisposable
         }
     }
 
+    // Daemon does not send notif when seller has marked payment as received?
     public async void HandleTradeUpdate(TradeInfo tradeInfo)
     {
         await InvokeAsync(() => {
-            if (TradeInfo.TradeId == tradeInfo.TradeId)
+            try
             {
-                TradeInfo = tradeInfo;
+                TradeInfo = NotificationSingleton.TradeInfos[TradeId];
+                UpdateTradeState();
+                StateHasChanged();
             }
-            
-            UpdateState();
-            StateHasChanged();
+            catch (Exception e)
+            {
+
+            }
         });
     }
 
@@ -134,7 +142,7 @@ public partial class Trade : ComponentBase, IDisposable
         NotificationSingleton.TradeInfos.AddOrUpdate(tradeId, getTradeResponse.Trade, (key, old) => getTradeResponse.Trade);
         TradeInfo = getTradeResponse.Trade;
 
-        UpdateState();
+        UpdateTradeState();
     }
 
     public async Task ConfirmPaymentSentAsync(string tradeId)
@@ -146,14 +154,6 @@ public partial class Trade : ComponentBase, IDisposable
         {
             TradeId = tradeId
         });
-
-        // Daemon does not notify this update so we fetch again to re-sync - might be worth having the singleton fetch periodically
-        var getTradeResponse = await tradesClient.GetTradeAsync(new GetTradeRequest { TradeId = tradeId });
-
-        NotificationSingleton.TradeInfos.AddOrUpdate(tradeId, getTradeResponse.Trade, (key, old) => getTradeResponse.Trade);
-        TradeInfo = getTradeResponse.Trade;
-
-        UpdateState();
     }
 
     public async Task CompleteTradeAsync(string tradeId)
@@ -166,11 +166,53 @@ public partial class Trade : ComponentBase, IDisposable
             TradeId = tradeId
         });
 
+        var cloneTradeInfo = TradeInfo.Clone();
+        cloneTradeInfo.IsCompleted = true;
+
+        NotificationSingleton.TradeInfos.TryUpdate(TradeId, cloneTradeInfo, TradeInfo);
+
         NavigationManager.NavigateTo("Trades");
+    }
+
+    // Daemon does not notify for every change so we will need to poll for now
+    public async Task FetchTradeAsync()
+    {
+        while (true)
+        {
+            try
+            {
+                using var grpcChannelHelper = new GrpcChannelHelper();
+                var tradesClient = new TradesClient(grpcChannelHelper.Channel);
+
+                var getTradeResponse = await tradesClient.GetTradeAsync(new GetTradeRequest
+                {
+                    TradeId = TradeId
+                }, cancellationToken: CancellationTokenSource.Token);
+
+                if (NotificationSingleton.TradeInfos.TryUpdate(TradeId, getTradeResponse.Trade, TradeInfo))
+                {
+                    TradeInfo = getTradeResponse.Trade;
+                    UpdateTradeState();
+                    StateHasChanged();
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+            await Task.Delay(5_000, CancellationTokenSource.Token);
+        }
     }
 
     public void Dispose()
     {
         NotificationSingleton.OnTradeUpdate -= HandleTradeUpdate;
+        CancellationTokenSource.Cancel();
+        CancellationTokenSource.Dispose();
     }
 }

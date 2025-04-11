@@ -1,7 +1,7 @@
 ﻿![alt text](https://github.com/atsamd21/Haveno-app/blob/master/App.png "Image of application")
 
 ## WIP
-Currently only available for Android, however MAUI supports IOS and Windows so this could change
+Currently only available for Android, however MAUI supports iOS, macOS and Windows so this could change
 
 ## Setup
 The easiest way to run the project is by using Visual Studio 2022
