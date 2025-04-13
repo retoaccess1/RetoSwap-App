@@ -121,7 +121,20 @@
     public EventCallback<string> OnSubmit { get; set; }
 
     [Parameter]
-    public string? InitialValue { get; set; }
+    public string? InitialValue
+    {
+        get;
+        set
+        {
+            if (field != value)
+            {
+                _shouldRender = true;
+            }
+
+            field = value;
+        }
+    }
+
 
     public async Task OnSearchTermChange(ChangeEventArgs e)
     {

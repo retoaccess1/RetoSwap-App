@@ -11,6 +11,7 @@ using Haveno.Proto.Grpc;
 using Manta.Helpers;
 using System.Text;
 using static Haveno.Proto.Grpc.GetVersion;
+using static Haveno.Proto.Grpc.Wallets;
 
 namespace Manta.Services;
 
@@ -108,6 +109,8 @@ public class TermuxSetupService
         }
 
         await Task.Delay(1000);
+
+        await ExecuteTermuxCommandAsync("am start -a android.intent.action.VIEW -d \"manta://termux_callback\"");
     }
 
     //private static async Task ListenStdout(string? fireEventOnString = null, Action? callback = null)
@@ -166,9 +169,8 @@ public class TermuxSetupService
             try
             {
                 using var grpcChannelHelper = new GrpcChannelHelper();
-                var client = new GetVersionClient(grpcChannelHelper.Channel);
-
-                var response = await client.GetVersionAsync(new GetVersionRequest());
+                var client = new WalletsClient(grpcChannelHelper.Channel);
+                var response = await client.GetXmrPrimaryAddressAsync(new GetXmrPrimaryAddressRequest());
 
                 // Attach stdout listener, shared responsibility?
                 if (StoutListenerTask is null)
@@ -176,7 +178,7 @@ public class TermuxSetupService
 
                 return true;
             }
-            catch (Exception e)    // Catch correct exception TODO, ignore rate limit exception
+            catch (Exception e) // Catch correct exception TODO, ignore rate limit exception
             {
 
             }
@@ -219,11 +221,6 @@ public class TermuxSetupService
                 await Task.Delay(2000);
             }
 
-            /*
-             [DOTNET] [39mApr-01 19:41:48.293 [XmrWalletService] INFO  haveno.core.xmr.wallet.XmrWalletService: Done opening RPC wallet haveno_XMR 
-             [DOTNET] [0;39m[39mApr-01 19:41:48.300 [XmrWalletService] INFO  haveno.core.xmr.wallet.XmrWalletService: Monero wallet path=haveno_XMR 
-            */
-
             HavenoDaemonRunningTCS?.SetResult(true);
             return true;
         }
@@ -259,6 +256,8 @@ public class TermuxSetupService
     public static async Task UpdateTermux()
     {
         DeviceDisplay.KeepScreenOn = true;
+
+        InstallationStep?.Invoke(1);
 
         var intent = _context.PackageManager?.GetLaunchIntentForPackage("com.termux");
         if (intent is not null)
@@ -305,11 +304,17 @@ public class TermuxSetupService
         // After this we should go back to haveno app
         //await ExecuteTermuxCommandAsync("am start -a android.intent.action.VIEW -d \"manta://termux_callback\"");
 
+        InstallationStep?.Invoke(2);
+        await ToggleApps();
+
         // Update 
         await ExecuteCommandAsync("yes | pkg update -y");
         await ExecuteCommandAsync("yes | pkg upgrade -y");
         await ExecuteCommandAsync("pkg install proot-distro -y");
         await ExecuteCommandAsync("proot-distro add ubuntu", exitOnContainsString: "is already installed");
+
+        InstallationStep?.Invoke(3);
+        await ToggleApps();
 
         var path = Path.Combine(Android.OS.Environment.ExternalStorageDirectory?.AbsolutePath ?? throw new DirectoryNotFoundException("ExternalStorageDirectory"), "/storage/emulated/0/output", "ubuntu_exec.sh");
 
@@ -321,13 +326,16 @@ public class TermuxSetupService
 
         await ExecuteCommandAsync("chmod +x /sdcard/output/ubuntu_exec.sh");
 
-        // Might help with stopping
         await ToggleApps();
 
         // Now update Ubuntu
         await ExecuteCommandAsync("\"apt update && apt upgrade -y\"", true);
         await ExecuteCommandAsync("\"apt clean\"", true);
         await ExecuteCommandAsync("\"apt update\"", true);
+
+        InstallationStep?.Invoke(4);
+        await ToggleApps();
+
         // I don't know why but if you run this twice it works the second time
         await ExecuteCommandAsync("\"apt install openjdk-21-jdk -y\"", true, exitOnContainsString: "maybe run apt-get update or try with --fix-missing");
         await ExecuteCommandAsync("\"apt install openjdk-21-jdk -y\"", true);
@@ -335,12 +343,16 @@ public class TermuxSetupService
         await ExecuteCommandAsync("\"apt install wget -y\"", true);
         await ExecuteCommandAsync("\"apt install make -y\"", true);
 
+        InstallationStep?.Invoke(5);
+        await ToggleApps();
+
         await ExecuteCommandAsync("\"rm -fv -r haveno\"", true);
         await ExecuteCommandAsync("\"git clone https://github.com/haveno-dex/haveno.git\"", true);
 
-        await ToggleApps();
-
         await ExecuteCommandAsync("\"cd haveno && make skip-tests\"", true);
+
+        InstallationStep?.Invoke(6);
+        await ToggleApps();
 
         await ExecuteCommandAsync("\"apt install tor -y\"", true);
         await ExecuteCommandAsync("\"sed -i 's/#ControlPort/ControlPort/g' /etc/tor/torrc\"", true);

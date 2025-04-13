@@ -1,7 +1,7 @@
 ﻿@implements IDisposable
 
 <div class="header-main">
-@*     @if (true)
+    @*     @if (true)
     {
         <ion-icon name="arrow-back-outline" @onclick="GoBack"></ion-icon>
     } *@
@@ -21,7 +21,7 @@
 </div>
 
 @code {
-    private string _headerTitle = "home";
+    private string _headerTitle = "Market";
 
     [Inject]
     public NavigationManager NavigationManager { get; set; } = default!;
@@ -58,8 +58,6 @@
         else
         {
             _headerTitle = e.Location.Replace(NavigationManager.BaseUri, "");
-            if (string.IsNullOrEmpty(_headerTitle))
-                _headerTitle = "home";
         }
 
         StateHasChanged();

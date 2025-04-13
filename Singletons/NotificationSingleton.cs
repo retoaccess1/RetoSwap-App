@@ -1,5 +1,6 @@
 ﻿using Grpc.Core;
 using Haveno.Proto.Grpc;
+using Manta.Extensions;
 using Manta.Helpers;
 using Manta.Services;
 using Protobuf;
@@ -59,7 +60,7 @@ public class NotificationSingleton
                     var response = await tradesClient.GetChatMessagesAsync(new GetChatMessagesRequest { TradeId = trade.TradeId });
 
                     // TODO also check its not our message
-                    foreach(var message in response.Message.Where(x => new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(x.Date) > _messagesLastUpdated))
+                    foreach(var message in response.Message.Where(x => x.Date.ToDateTime() > _messagesLastUpdated))
                     {
                         //OnChatMessage?.Invoke(message);
                         //_notificationManagerService.SendNotification($"New message for trade {new string(trade.TradeId.Split('-')[0].ToArray())}", message.Message);

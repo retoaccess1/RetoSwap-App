@@ -7,9 +7,12 @@
             <ion-icon class="eye" @onclick="() => _isExpanded = !_isExpanded" name=@(_isExpanded ? "eye-sharp" : "eye-outline")></ion-icon>
         }
         <ion-icon @onclick="@OnCopy" name="copy-outline"></ion-icon>
-        <div class=@(_displayCopied ? "copied display" : "copied")>
-            <p>Copied!</p>
-        </div>
+        @if (_displayCopied)
+        {
+            <div class="copied">
+                Copied!
+            </div>
+        }
     </div>
 </div>
 

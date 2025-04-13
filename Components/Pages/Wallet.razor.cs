@@ -71,10 +71,10 @@ public partial class Wallet : ComponentBase, IDisposable
                 // TryParse ?
                 PreferredCurrencyFormat = CurrencyCultureInfo.GetFormatForCurrency((Currency)Enum.Parse(typeof(Currency), PreferredCurrency));
 
-                Balance = BalanceSingleton.LastBalance;
-                Addresses = [BalanceSingleton.LastBalance?.PrimaryAddress];
+                Balance = BalanceSingleton.WalletInfo;
+                Addresses = [BalanceSingleton.WalletInfo?.PrimaryAddress];
 
-                MarketPriceInfos = BalanceSingleton.LastMarketPriceInfos.ToDictionary(x => x.CurrencyCode, x => (decimal)x.Price);
+                MarketPriceInfos = BalanceSingleton.MarketPriceInfos.ToDictionary(x => x.CurrencyCode, x => (decimal)x.Price);
 
                 PendingFiat = BalanceSingleton.ConvertMoneroToFiat(Balance?.PendingXMRBalance.ToMonero() ?? 0m, PreferredCurrency);
                 AvailableFiat = BalanceSingleton.ConvertMoneroToFiat(Balance?.AvailableXMRBalance.ToMonero() ?? 0m, PreferredCurrency);
@@ -107,19 +107,18 @@ public partial class Wallet : ComponentBase, IDisposable
         Transactions = [.. xmrTxsResponse.Txs];
     }
 
-    // Also async void - fix
     private async void HandleBalanceFetch(bool isFetching)
     {
         await InvokeAsync(() => {
             IsFetching = isFetching;
 
-            Balance = BalanceSingleton.LastBalance;
+            Balance = BalanceSingleton.WalletInfo;
 
-            if (BalanceSingleton.LastBalance is not null)
-                Addresses = [BalanceSingleton.LastBalance.PrimaryAddress];
+            if (BalanceSingleton.WalletInfo is not null)
+                Addresses = [BalanceSingleton.WalletInfo.PrimaryAddress];
 
             // Not sure we need all these
-            MarketPriceInfos = BalanceSingleton.LastMarketPriceInfos.ToDictionary(x => x.CurrencyCode, x => (decimal)x.Price);
+            MarketPriceInfos = BalanceSingleton.MarketPriceInfos.ToDictionary(x => x.CurrencyCode, x => (decimal)x.Price);
             //
             PendingFiat = BalanceSingleton.ConvertMoneroToFiat(Balance?.PendingXMRBalance.ToMonero() ?? 0m, PreferredCurrency);
             AvailableFiat = BalanceSingleton.ConvertMoneroToFiat(Balance?.AvailableXMRBalance.ToMonero() ?? 0m, PreferredCurrency);

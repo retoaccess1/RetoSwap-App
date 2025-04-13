@@ -9,6 +9,8 @@ label {
 }
 
 .accounts {
+    max-height: 170px;
+    overflow: auto;
 
     .account {
         display: flex;

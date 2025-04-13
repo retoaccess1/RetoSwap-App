@@ -17,11 +17,7 @@
   position: absolute;
   top: -24px;
   right: 0px;
-  display: none;
   color: #fff;
-}
-.info-row .inner-container .display {
-  display: initial;
 }
 .info-row .inner-container .data {
   margin-right: 10px;

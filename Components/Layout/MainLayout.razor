@@ -1,141 +1,38 @@
-﻿@inject ISetupService SetupService
-@inject ILocalStorageService LocalStorage
+﻿@inject NavigationManager NavigationManager
 @inherits LayoutComponentBase
 
 <div class="page">
-    <SwipeArea>
-        <ErrorHandler>
-            @* <Spinner IsVisible="IsFetching"/> *@
-            <Header/>
-            <main>
-                @Body
-            </main>
-            <NavMenu/>
-        </ErrorHandler>
-    </SwipeArea>
-    <Modal IsOpen="IsModalOpen && !(IsInstallingTermux || IsSettingUpTermux)" Title="Would you like to install haveno?" OnOkPressed="HandleOkPress" OnCancelPressed="HandleCancelPress">
-        <div class="install-modal">
-            <p>In order to use the app the Haveno daemon needs to be installed inside Termux.</p>
-
-            <p>In order to do this the app requires a few permissions, however it is possible to manually set this up and instructions are in the haveno-termux-install file on Github.</p>
-
-            <p>Press cancel if you would like to install manually.</p>
-        </div>
-    </Modal>
-    <Modal IsOpen="IsInstallingTermux || IsSettingUpTermux || IsFinished" Title="Installing Haveno" >
-        @if (IsInstallingTermux)
-        {
-            <p>Downloading Termux...</p>
-        }
-        @if (IsSettingUpTermux)
-        {
-            <p>Setting up Termux and Haveno daemon...</p>
-        }
-        @if (IsFinished)
-        {
-            <p>Finished setting up Haveno daemon.</p>
-        }
-    </Modal>
+    @if (IsIndex)
+    {
+        <main>
+            @Body
+        </main>
+    }
+    else
+    {
+        <SwipeArea>
+            <ErrorHandler>
+                <Header />
+                <main>
+                    @Body
+                </main>
+                <NavMenu />
+            </ErrorHandler>
+        </SwipeArea>
+    }
 </div>
 
-@* move to own file *@
 @code {
-    public bool IsFetching { get; set; }
-    // Fix this mess, use index instead and signal updates from service, show strings from array
-    public bool IsInstallingTermux { get; set; }
-    public bool IsSettingUpTermux { get; set; }
-    public bool IsFinished { get; set; }
-    public bool IsModalOpen { get; set; }
+    public bool IsIndex { get; set; } = true;
 
-    public async Task HandleCancelPress()
+    protected override void OnInitialized()
     {
-        await LocalStorage.SetItemAsync<bool>("daemon-manual-installation", true);
+        NavigationManager.LocationChanged += HandleLocationChanged;
     }
 
-    public async Task HandleOkPress()
+    private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
     {
-#if ANDROID
-
-        if ((await LocalStorage.GetItemAsync<bool>("termux-installed")) is false)
-        {
-            try
-            {
-                IsInstallingTermux = true;
-                StateHasChanged();
-
-                // TODO prompt first to start this, then system will also have to prompt
-                await TermuxInstallService.InstallTermuxAsync();
-
-                await LocalStorage.SetItemAsync("termux-installed", true);
-            }
-            catch (Exception e)
-            {
-                // Tell user why install failed TODO
-            }
-
-            IsInstallingTermux = false;
-            StateHasChanged();
-        }
-
-        if ((await LocalStorage.GetItemAsync<bool>("termux-updated")) is false)
-        {
-            try
-            {
-                var accepted = await TermuxSetupService.RequestRequiredPermissions();
-                if (accepted)
-                {
-                    IsSettingUpTermux = true;
-                    StateHasChanged();
-
-                    await TermuxSetupService.UpdateTermux();
-                    await LocalStorage.SetItemAsync("termux-updated", true);
-                }
-            }
-            catch (Exception e)
-            {
-
-            }
-
-            IsSettingUpTermux = false;
-            IsModalOpen = false;
-            IsFinished = true;
-            StateHasChanged();
-        }
-
-        var successfullyStarted = await TermuxSetupService.TryStartHavenoDaemon();
-        if (successfullyStarted)
-        {
-            
-        }
-        else 
-        {
-
-        }
-
-#endif
+        IsIndex = string.IsNullOrEmpty(e.Location.Replace(NavigationManager.BaseUri, ""));
+        StateHasChanged();
     }
-
-    protected override async Task OnInitializedAsync()
-    {
-        await SetupService.InitialSetupAsync();
-
-        switch (await SetupService.GetDaemonStatusAsync())
-        {
-            case DaemonStatus.NOT_INSTALLED:
-                // Does user want to manually install?
-                var userWantsToInstallManually = await LocalStorage.GetItemAsync<bool>("daemon-manual-installation");
-                if (!userWantsToInstallManually)
-                {
-                    IsModalOpen = true;
-                }
-                break;
-            case DaemonStatus.RUNNING:
-                break;
-            case DaemonStatus.INSTALLED_COULD_NOT_START:
-                break;
-            default: break;
-        }
-
-        await base.OnInitializedAsync();
-    } 
 }

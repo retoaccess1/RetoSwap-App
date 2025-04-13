@@ -9,9 +9,8 @@ namespace Manta.Singletons;
 
 public class BalanceSingleton
 {
-    public WalletInfo? LastBalance { get; private set; }
-    // Concurrent list?
-    public List<MarketPriceInfo> LastMarketPriceInfos { get; private set; } = [];
+    public WalletInfo? WalletInfo { get; private set; }
+    public List<MarketPriceInfo> MarketPriceInfos { get; private set; } = [];
     public Dictionary<string, decimal> MarketPriceInfoDictionary { get; set; } = [];
 
     public event Action<bool>? OnBalanceFetch;
@@ -42,16 +41,13 @@ public class BalanceSingleton
             {
                 OnBalanceFetch?.Invoke(true);
 
-                // Artificial delay
-                await Task.Delay(1000);
-
                 using var grpcChannelHelper = new GrpcChannelHelper();
 
                 var walletClient = new WalletsClient(grpcChannelHelper.Channel);
                 var balanceResponse = await walletClient.GetBalancesAsync(new GetBalancesRequest());
                 var primaryAddressResponse = await walletClient.GetXmrPrimaryAddressAsync(new GetXmrPrimaryAddressRequest());
 
-                LastBalance = new WalletInfo
+                WalletInfo = new WalletInfo
                 {
                     AvailableXMRBalance = balanceResponse.Balances.Xmr.AvailableBalance,
                     XMRBalance = balanceResponse.Balances.Xmr.Balance,
@@ -66,14 +62,14 @@ public class BalanceSingleton
                 var priceClient = new PriceClient(grpcChannelHelper.Channel);
                 var getPricesResponse = await priceClient.GetMarketPricesAsync(new MarketPricesRequest());
                 
-                LastMarketPriceInfos = [.. getPricesResponse.MarketPrice];
-                MarketPriceInfoDictionary = LastMarketPriceInfos.ToDictionary(x => x.CurrencyCode, x => (decimal)x.Price);
+                MarketPriceInfos = [.. getPricesResponse.MarketPrice];
+                MarketPriceInfoDictionary = MarketPriceInfos.ToDictionary(x => x.CurrencyCode, x => (decimal)x.Price);
 
                 Console.WriteLine("Finished fetching prices");
             }
             catch (Exception e)
             {
-                //Console.WriteLine(e);
+                Console.WriteLine(e);
             }
             finally
             {

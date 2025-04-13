@@ -6,6 +6,7 @@
   top: 0;
   background-color: #131313;
   z-index: 500;
+  justify-content: space-between;
 }
 .header-main ion-icon {
   margin-right: 16px;
@@ -22,7 +23,7 @@
   top: 0;
   left: 0;
   width: 100%;
-  height: calc(100% - 60px);
+  height: calc(100% - 58px);
   /*background-color: #808080;*/
 }
 .header-main .settings-menu-wrapper .settings-menu {

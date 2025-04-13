@@ -1,12 +1,20 @@
 ﻿@if (IsVisible)
 {
-@*     <div class="loader-main">
+    @if (IsFullscreen)
+    {
+        <div class="loader-main">
+            <span class="loader"></span>
+        </div>
+    }
+    else
+    {
         <span class="loader"></span>
-    </div> *@
-    <span class="loader"></span>
+    }
 }
 
 @code {
     [Parameter]
     public bool IsVisible { get; set; } 
+    [Parameter]
+    public bool IsFullscreen { get; set; }
 }

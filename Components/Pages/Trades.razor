@@ -14,7 +14,7 @@
                 <a href=@($"trade?tradeId={tradeInfo.TradeId}&title=Trade%20{@tradeInfo.ShortId}")>
                     <div class="trade-card-top">
                         <p class="short-id">#@tradeInfo.ShortId</p>
-                        <p>@(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(tradeInfo.Date).ToLocalTime().ToString("yyyy/MM/dd"))</p>
+                        <p>@(tradeInfo.Date.ToDateTime().ToLocalTime().ToString("yyyy/MM/dd"))</p>
                         @if (SelectedTabIndex == 1)
                         {
                             <p class="status">@(tradeInfo.IsCompleted ? "Completed" : "") </p>

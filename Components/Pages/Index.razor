@@ -1,18 +1,34 @@
 ﻿@page "/"
 
-<h3>Index</h3>
+<Spinner IsFullscreen="true" IsVisible="IsInitializing"/>
 
-@code {
-    [Inject]
-    public NavigationManager NavigationManager { get; set; } = default!;
+<Modal 
+    IsOpen="IsModalOpen"
+    Title="Initial setup"
+    OnOkPressed="HandleOkPress" 
+    OnCancelPressed="HandleCancelPress"
+    OkButtonText="Install">
+    <div class="install-modal">
+        <p>In order to use the app the Haveno daemon needs to be installed inside Termux.</p>
 
-    protected override Task OnAfterRenderAsync(bool firstRender)
+        <p>In order to do this the app requires a few permissions, however it is possible to manually set this up and instructions are in the <a href="https://github.com/atsamd21/Haveno-app/blob/master/haveno-termux-install.MD">haveno-termux-install</a> file on GitHub.</p>
+
+        <p>Press cancel if you would like to install manually.</p>
+    </div>
+</Modal>
+<Modal IsOpen="TermuxSetupState != TermuxSetupState.Initial" Title="Haveno setup">
+    @switch (TermuxSetupState)
     {
-        if (firstRender)
-        {
-            NavigationManager.NavigateTo("/Market");
-        }
-
-        return base.OnAfterRenderAsync(firstRender);
+        case TermuxSetupState.InstallingTermux:
+            <p>Downloading Termux...</p>
+            break;
+        case TermuxSetupState.SettingUpTermux:
+            <p>Setting up Termux and Haveno daemon...</p>
+            <p>Step @InstallationStep/6</p>
+            break;
+        case TermuxSetupState.Finished:
+            <p>Finished setting up Haveno.</p>
+            break;
+         default: break;
     }
-}
+</Modal>

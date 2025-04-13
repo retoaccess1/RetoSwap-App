@@ -8,6 +8,10 @@ label {
   font-weight: bold;
 }
 
+.accounts {
+  max-height: 170px;
+  overflow: auto;
+}
 .accounts .account {
   display: flex;
   padding: 10px;

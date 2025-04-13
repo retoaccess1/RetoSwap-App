@@ -2,7 +2,6 @@
 using Haveno.Proto.Grpc;
 using Manta.Helpers;
 using Manta.Models;
-using Manta.Services;
 using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -13,9 +12,10 @@ namespace Manta.Components.Pages;
 
 public partial class Market : ComponentBase, IDisposable
 {
+    public bool IsFetching { get; set; }
     public string Version { get; set; } = string.Empty;
     public WalletInfo? Balance { get; set; }
-    public bool IsFetching { get; set; }
+    public List<TradeStatistic> TradeStatistics { get; private set; } = [];
 
     [Inject]
     public ILocalStorageService LocalStorage { get; set; } = default!;
@@ -23,6 +23,8 @@ public partial class Market : ComponentBase, IDisposable
     public IJSRuntime JS { get; set; } = default!;
     [Inject]
     public BalanceSingleton BalanceSingleton { get; set; } = default!;
+    [Inject]
+    public TradeStatisticsSingleton TradeStatisticsSingleton { get; set; } = default!;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -51,29 +53,36 @@ public partial class Market : ComponentBase, IDisposable
 
                 break;
             }
-            catch
+            catch (Exception e)
             {
-
+                Console.WriteLine(e);
             }
 
             await Task.Delay(5_000);
         }
 
-        Balance = BalanceSingleton.LastBalance;
+        TradeStatistics = TradeStatisticsSingleton.TradeStatistics;
+        Balance = BalanceSingleton.WalletInfo;
         IsFetching = false;
 
-        StateHasChanged();
-
         BalanceSingleton.OnBalanceFetch += HandleBalanceFetch;
+        TradeStatisticsSingleton.OnTradeStatisticsFetch += HandleTradeStatisticsFetch;
 
         await base.OnInitializedAsync();
     }
 
-    // ASYNC VOID!
     private async void HandleBalanceFetch(bool isFetching)
     {
         await InvokeAsync(() => {
-            Balance = BalanceSingleton.LastBalance;
+            Balance = BalanceSingleton.WalletInfo;
+            StateHasChanged();
+        });
+    }
+
+    private async void HandleTradeStatisticsFetch(bool isFetching)
+    {
+        await InvokeAsync(() => {
+            TradeStatistics = TradeStatisticsSingleton.TradeStatistics;
             StateHasChanged();
         });
     }
@@ -81,5 +90,6 @@ public partial class Market : ComponentBase, IDisposable
     public void Dispose()
     {
         BalanceSingleton.OnBalanceFetch -= HandleBalanceFetch;
+        TradeStatisticsSingleton.OnTradeStatisticsFetch -= HandleTradeStatisticsFetch;
     }
 }

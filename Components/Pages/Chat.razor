@@ -16,7 +16,7 @@ else
 
         <li class="@(isMyMessage ? "right" : "left")" id="@(i == Messages.Count - 1 ? "last-message" : "")">
             <p class="date">
-                @(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(message.Date).ToLocalTime())
+                @(message.Date.ToDateTime().ToLocalTime())
             </p>
             <p class="message">
                 @message.Message

@@ -30,6 +30,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<DaemonInfoSingleton>();
         builder.Services.AddSingleton<BalanceSingleton>();
         builder.Services.AddSingleton<NotificationSingleton>();
+        builder.Services.AddSingleton<TradeStatisticsSingleton>();
 
         builder.Services.AddScoped<ISetupService, SetupService>();
 
