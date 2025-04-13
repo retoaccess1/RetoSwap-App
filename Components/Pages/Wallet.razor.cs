@@ -28,7 +28,8 @@ public partial class Wallet : ComponentBase, IDisposable
     public string Memo { get; set; } = string.Empty;
     public string WithdrawalAddress { get; set; } = string.Empty;
 
-    public bool IsOpen { get; set; }
+    public bool VerifyModalIsOpen { get; set; }
+    public bool CreatingTxModalIsOpen { get; set; }
 
     public XmrTx? Transaction { get; set; }
 
@@ -129,20 +130,38 @@ public partial class Wallet : ComponentBase, IDisposable
 
     public async Task CreateTransaction()
     {
+        if (Balance is null)
+            return;
+
         using var grpcChannelHelper = new GrpcChannelHelper();
         var walletsClient = new WalletsClient(grpcChannelHelper.Channel);
 
-        var request = new CreateXmrTxRequest();
-        request.Destinations.Add(new XmrDestination
+        try
         {
-            Address = WithdrawalAddress,
-            Amount = _piconeroAmount.ToString()
-        });
+            CreatingTxModalIsOpen = true;
 
-        var response = await walletsClient.CreateXmrTxAsync(request);
-        Transaction = response.Tx;
+            var request = new CreateXmrTxRequest();
+            request.Destinations.Add(new XmrDestination
+            {
+                Address = WithdrawalAddress,
+                // Apparently "1" means max amount
+                Amount = _piconeroAmount == Balance.AvailableXMRBalance ? "1" : _piconeroAmount.ToString()
+            });
 
-        IsOpen = true;
+            var response = await walletsClient.CreateXmrTxAsync(request);
+            Transaction = response.Tx;
+
+            CreatingTxModalIsOpen = false;
+            VerifyModalIsOpen = true;
+        }
+        catch
+        {
+            throw;
+        }
+        finally
+        {
+
+        }
     }
 
     public async Task WithdrawAsync()

@@ -1,11 +1,15 @@
 ﻿@page "/wallet"
 
-<Modal @bind-IsOpen="@IsOpen" Title="Verify withdrawal" OnOkPressed="WithdrawAsync">
+<Modal @bind-IsOpen="@VerifyModalIsOpen" Title="Verify withdrawal" OnOkPressed="WithdrawAsync" OkButtonText="Withdraw">
     <div class="modal-content">
         <p>Sending @Amount XMR</p>
-        <p>To address: @WithdrawalAddress</p>
+        <p class="withdrawal-address">To address: @WithdrawalAddress</p>
         <p>Fee: @(ulong.Parse(Transaction?.Fee ?? "0").ToMonero()) XMR</p>
     </div>
+</Modal>
+<Modal @bind-IsOpen="@CreatingTxModalIsOpen" Title="Creating transaction" OnOkPressed="WithdrawAsync">
+    <Spinner IsFullscreen="false"></Spinner>
+    <p>Please wait</p>
 </Modal>
 <div class="wallet">
     <div class="top">
@@ -63,9 +67,8 @@
                     <input id="withdrawalAddress" name="withdrawalAddress" @bind="WithdrawalAddress" placeholder="Address" />
                     <label for="amount">Amount</label>
                     <div class="amount-container">
-                        <input id="amount" name="amount" @bind="Amount" />
-                        @* <p class="send-all" @onclick="() => _piconeroAmount = Balance.AvailableXMRBalance - Balance.ReservedOfferBalance - Balance.ReservedTradeBalance">Send all</p> *@
-                        <p class="send-all" @onclick="() => _piconeroAmount = checked(Balance.AvailableXMRBalance - Balance.ReservedTradeBalance)">Send all</p>
+                        <input id="amount" name="amount" type="number" @bind="Amount" />
+                        <p class="send-all" @onclick="() => _piconeroAmount = Balance.AvailableXMRBalance">Send all</p>
                     </div>
                     <label for="memo">Memo</label>
                     <input id="memo" name="memo" @bind="Memo" placeholder="Optional" />

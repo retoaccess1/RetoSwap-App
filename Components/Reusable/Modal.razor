@@ -1,6 +1,6 @@
 ﻿@if (IsOpen)
 {
-    <div class="generic-modal" @onclick="@((e) => IsOpen = !IsOpen)">
+    <div class=@(IsCloseable ? "generic-modal closeable" : "generic-modal") @onclick="@((e) => { if (IsCloseable) { IsOpen = !IsOpen; }; })">
         <div class="verify-modal" @onclick:stopPropagation="true" @onclick:preventDefault="true">
             <div class="top">
                 <div class="top-icons">
@@ -13,7 +13,7 @@
             <div class="buttons">
                 @if (ModalButtonOptions == ModalButtonOptions.OK || ModalButtonOptions == ModalButtonOptions.OK_CANCEL)
                 {
-                    <button class="verify-modal-button" @onclick:stopPropagation="true" @onclick:preventDefault="true" @onclick="@(async (e) => { IsOpen = false; await OnOkPressed.InvokeAsync(); })">@OkButtonText</button>
+                    <button class="verify-modal-button ok-button" @onclick:stopPropagation="true" @onclick:preventDefault="true" @onclick="@(async (e) => { IsOpen = false; await OnOkPressed.InvokeAsync(); })">@OkButtonText</button>
                 }
                 @if (ModalButtonOptions == ModalButtonOptions.CANCEL || ModalButtonOptions == ModalButtonOptions.OK_CANCEL)
                 {
@@ -56,4 +56,6 @@
 
     [Parameter]
     public EventCallback<bool> IsOpenChanged { get; set; }
+    [Parameter]
+    public bool IsCloseable { get; set; } = true;
 }

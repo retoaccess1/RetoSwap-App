@@ -16,7 +16,7 @@
         <p>Press cancel if you would like to install manually.</p>
     </div>
 </Modal>
-<Modal IsOpen="TermuxSetupState != TermuxSetupState.Initial" Title="Haveno setup">
+<Modal IsOpen="TermuxSetupState != TermuxSetupState.Initial" Title="Haveno setup" ModalButtonOptions="ModalButtonOptions.NONE" IsCloseable="false">
     @switch (TermuxSetupState)
     {
         case TermuxSetupState.InstallingTermux:

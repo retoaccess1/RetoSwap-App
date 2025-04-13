@@ -9,21 +9,24 @@
   width: 100%;
   margin-bottom: 10px;
   align-items: center;
-  /*    button {
-          width: auto;
-          border: none;
-          border-radius: initial;
-          background-color: transparent;  
-          color: #fff;
-
-          &:nth-child(3) {
-              margin-right: auto;
-          }
-      }*/
 }
 .account-type .active {
   border-bottom: 2px solid #808080;
   color: #808080;
+}
+.account-type .collapse {
+  background-color: #808080;
+  border-radius: 100px;
+  height: 28px;
+  width: 28px;
+  min-width: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 10px;
+}
+.account-type .collapse ion-icon {
+  font-size: 22px;
 }
 
 .top {

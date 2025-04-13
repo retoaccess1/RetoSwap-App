@@ -6,7 +6,7 @@ using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System.Globalization;
-using System.Threading.Tasks;
+
 using static Haveno.Proto.Grpc.Offers;
 using static Haveno.Proto.Grpc.PaymentAccounts;
 
@@ -77,6 +77,7 @@ public partial class BuySell : ComponentBase, IDisposable
                 default: break;
             }
 
+            // Revisit, is this wanted?
             CurrencySearchableDropdown.Clear();
             PaymentMethodSearchableDropdown.Clear();
             SelectedCurrencyCode = string.Empty;
@@ -106,6 +107,8 @@ public partial class BuySell : ComponentBase, IDisposable
 
     public SearchableDropdown CurrencySearchableDropdown { get; set; } = default!;
     public SearchableDropdown PaymentMethodSearchableDropdown { get; set; } = default!;
+
+    public bool IsCollapsed { get; set; }
 
     public void CloseCreateOffer()
     {
@@ -223,6 +226,9 @@ public partial class BuySell : ComponentBase, IDisposable
                             break;
                         case 1:
                             Offers = [.. offers.Offers.Where(x => CryptoPaymentMethods.ContainsKey(x.PaymentMethodId))];
+                            break;
+                        case 2:
+                            Offers = [.. offers.Offers.Where(x => !TraditionalPaymentMethods.ContainsKey(x.PaymentMethodId)).Where(x => x.PaymentMethodId != "BLOCK_CHAINS")];
                             break;
                         default: 
                             Offers = [.. offers.Offers];

@@ -8,6 +8,9 @@
     <div class="account-type">
         <Tabs @bind-SelectedTabIndex="OfferPaymentType" TabNames="@(["Fiat", "Crypto", "Other"])"></Tabs>
         <Toggle @bind-IsToggled="IsToggled" Text="@Direction" />
+        <div class="collapse">
+            <ion-icon @onclick="() => IsCollapsed = !IsCollapsed" name=@(IsCollapsed ? "chevron-down-outline" : "chevron-up-outline")></ion-icon>
+        </div>
     </div>
 
     @if (IsCreatingOffer)
@@ -17,12 +20,15 @@
     else
     {
         <div class="inputs">
-            <div>
-                <SearchableDropdown @ref="CurrencySearchableDropdown" Class="dropdown" Placeholder="Show all" Items="@VisibleCurrencyCodes" Text="Currency" OnSubmit="@((val) => SelectedCurrencyCode = val)" />
-            </div>
-            <div>
-                <SearchableDropdown @ref="PaymentMethodSearchableDropdown" Class="dropdown" Placeholder="Show all" Items="@VisiblePaymentMethods" Text="Payment method" OnSubmit="@((val) => SelectedPaymentMethod = val)" />
-            </div>
+            @if (!IsCollapsed)
+            {
+                <div>
+                    <SearchableDropdown @ref="CurrencySearchableDropdown" Class="dropdown" Placeholder="Show all" Items="@VisibleCurrencyCodes" Text="Currency" OnSubmit="@((val) => SelectedCurrencyCode = val)" />
+                </div>
+                <div>
+                    <SearchableDropdown @ref="PaymentMethodSearchableDropdown" Class="dropdown" Placeholder="Show all" Items="@VisiblePaymentMethods" Text="Payment method" OnSubmit="@((val) => SelectedPaymentMethod = val)" />
+                </div>                
+            }
             <div class="offers-list-text-container">
                 <p class="offers-list-text">@(Direction == "BUY" ? "Buy XMR from" : "Sell XMR to")</p>
                 <p class="offers-list-text">@Offers.Count Offers</p>

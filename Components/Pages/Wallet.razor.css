@@ -120,3 +120,10 @@
   margin-bottom: 10px;
   white-space: nowrap;
 }
+
+.modal-content p {
+  margin-bottom: 6px;
+}
+.modal-content .withdrawal-address {
+  line-break: anywhere;
+}

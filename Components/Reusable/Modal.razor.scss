@@ -1,11 +1,13 @@
+.closeable {
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
 .generic-modal {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    /*background-color: rgba(0, 0, 0, 0.3);*/
-    background-color: rgba(0, 0, 0, 0.4);
     display: flex;
     justify-content: center;
     align-items: center;
@@ -22,15 +24,16 @@
         flex-direction: column;
         justify-content: space-between;
         font-weight: 600;
-        white-space: nowrap;
         max-width: 768px;
         z-index: 300;
 
         .top {
+            display: flex;
+            flex-direction: column;
 
             ::deep p {
-                line-break: anywhere;
-                white-space: pre-wrap;
+                /*               line-break: anywhere;
+                white-space: pre-wrap;*/
             }
 
             .top-icons {
@@ -85,6 +88,11 @@
                 &:disabled {
                     opacity: 0.8;
                 }
+            }
+
+            .ok-button {
+                background-color: cornflowerblue;
+                color: #fff;
             }
         }
     }
