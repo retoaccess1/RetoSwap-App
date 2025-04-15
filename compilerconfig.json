@@ -90,5 +90,13 @@
   {
     "outputFile": "Components/Pages/Index.razor.css",
     "inputFile": "Components/Pages/Index.razor.scss"
+  },
+  {
+    "outputFile": "Components/Reusable/Chart.razor.css",
+    "inputFile": "Components/Reusable/Chart.razor.scss"
+  },
+  {
+    "outputFile": "Components/Reusable/Dropdown.razor.css",
+    "inputFile": "Components/Reusable/Dropdown.razor.scss"
   }
 ]

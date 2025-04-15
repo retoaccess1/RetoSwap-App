@@ -27,6 +27,8 @@ public partial class BuySell : ComponentBase, IDisposable
 
     public List<OfferInfo> Offers { get; set; } = [];
 
+    public bool IsFetching { get; set; }
+
     public string SelectedCurrencyCode 
     { 
         get; 
@@ -203,6 +205,8 @@ public partial class BuySell : ComponentBase, IDisposable
         {
             try
             {
+                IsFetching = true;
+
                 using var grpcChannelHelper = new GrpcChannelHelper();
                 var offersClient = new OffersClient(grpcChannelHelper.Channel);
 
@@ -236,6 +240,7 @@ public partial class BuySell : ComponentBase, IDisposable
                     }
                 }
 
+                IsFetching = false;
                 await InvokeAsync(StateHasChanged);
                 Console.WriteLine($"Fetched {Offers.Count} offers");
 

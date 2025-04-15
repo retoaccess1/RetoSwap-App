@@ -4,6 +4,7 @@ using Manta.Singletons;
 using Microsoft.Extensions.Logging;
 using CommunityToolkit.Maui;
 using Manta.Services;
+using MudBlazor.Services;
 
 namespace Manta;
 
@@ -26,6 +27,7 @@ public static class MauiProgram
             handlers.AddHandler<WebView, CustomWebViewHandler>();
         });
 
+        builder.Services.AddMudServices();
         builder.Services.AddBlazoredLocalStorage();
         builder.Services.AddSingleton<DaemonInfoSingleton>();
         builder.Services.AddSingleton<BalanceSingleton>();

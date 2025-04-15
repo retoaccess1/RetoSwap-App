@@ -9,8 +9,14 @@
   border-radius: initial;
   background-color: transparent;
   color: #fff;
+  padding: 14px;
 }
 .tabs-main .active {
   border-bottom: 2px solid #808080;
   color: #808080;
+}
+
+.center {
+  display: flex;
+  justify-content: center;
 }

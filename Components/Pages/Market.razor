@@ -1,13 +1,78 @@
 ﻿@page "/Market"
 
-@* <p>Haveno version: @Version</p>
+<div class="market-main">
+    <div class="year-price-container">
+        <div class="dropdowns">
+            <Dropdown Class="dropdown-container" @bind-Value="Interval" Items="@([Interval])" />
+            <Dropdown Class="dropdown-container" @bind-Value="Year" Items="Years" />
+        </div>
+        @if (string.IsNullOrEmpty(PreferredCurrency) || string.IsNullOrEmpty(CurrentMarketPrice))
+        {
+            <p class="bold-p price">Loading price...</p>
+        }
+        else
+        {
+            <p class="bold-p price">XMR/@PreferredCurrency: @CurrentMarketPrice</p>
+        }
+    </div>
 
-<p>AvailableXMRBalance: @(Balance?.AvailableXMRBalance.ToMonero()) XMR</p>
-<p>XMRBalance: @(Balance?.XMRBalance.ToMonero()) XMR</p>
-<p>Pending: @(Balance?.PendingXMRBalance.ToMonero()) XMR</p>
-<p>ReservedOfferBalance: @(Balance?.ReservedOfferBalance.ToMonero()) XMR</p>
-<p>ReservedTradeBalance: @(Balance?.ReservedTradeBalance.ToMonero()) XMR</p>
-<p style="line-break:anywhere">Address: @Balance?.PrimaryAddress</p>
+    <div class="chart-container">
+        @if (TradeStatistics.Count == 0)
+        {
+            <div class="graph-spinner">
+                <Spinner IsVisible="true"></Spinner>
+            </div>
+        }
+        else
+        {
+            <p class="y-label">Volume in XMR</p>
+            <MudChart ChartOptions="_options"
+                      ChartType="ChartType.Bar"
+                      ChartSeries="@_series"
+                      @bind-SelectedIndex="_index"
+                      XAxisLabels="@_xAxisLabels"
+                      Width="100%"
+                      Height="100%"
+                      AxisChartOptions="_axisChartOptions">
 
-<p>LATEST 3</p>
- *@
+            </MudChart>
+        }
+    </div>
+    <p class="bold-p trades-p">Trades</p>
+    <div class="table-wrapper">
+        @if (TradeStatistics.Count == 0)
+        {
+            <div class="trades-spinner">
+                <Spinner IsVisible="true"></Spinner>
+            </div>
+        }
+        else
+        {
+            <table class="trades">
+                <tr class="head">
+                    <th>Date</th>
+                    <th>Market</th>
+                    <th>Price</th>
+                    <th>XMR Amount</th>
+                </tr>
+            @foreach (var trade in TradeStatistics.OrderByDescending(x => x.Date))
+            {
+                <tr>
+                    <td>
+                        @trade.Date.ToLocalTime().ToShortDateString()
+                    </td>
+                    <td>
+                        @trade.Currency
+                    </td>
+                    <td>
+                        @(((decimal)trade.Price / 100_000_000).ToString("0.0000"))
+                    </td>
+                    <td>
+                        @(((ulong)trade.Amount).ToMonero())
+                    </td>
+                </tr>
+            }
+            </table>
+        }
+    </div>
+</div>

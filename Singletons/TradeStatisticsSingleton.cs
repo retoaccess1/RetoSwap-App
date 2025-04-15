@@ -17,6 +17,8 @@ public class TradeStatisticsSingleton
     public List<TradeStatistic> TradeStatistics { get; private set; } = [];
     public Task? FetchTradeStatisticsTask {get; private set; }
 
+    public TaskCompletionSource<bool> InitializedTCS { get; private set; } = new();
+
     public TradeStatisticsSingleton()
     {
         _grpcChannelHelper = new();
@@ -48,7 +50,10 @@ public class TradeStatisticsSingleton
                     PaymentMethod = x.PaymentMethod,
                     Price = x.Price,
                     TakerDepositTxId = x.TakerDepositTxId
-                }).OrderBy(x => x.Date).ToList();
+                }).ToList();
+
+                if (!InitializedTCS.Task.IsCompleted)
+                    InitializedTCS.SetResult(true);
             }
             catch (OperationCanceledException)
             {

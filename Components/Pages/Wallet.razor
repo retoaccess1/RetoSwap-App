@@ -34,7 +34,7 @@
         </div>
     </div>
     <div class="tab-container">
-        <Tabs TabNames="@(["Addresses", "Withdraw", "Transactions"])" @bind-SelectedTabIndex="@SelectedTabIndex"/>
+        <Tabs Center="true" TabNames="@(["Addresses", "Withdraw", "Transactions"])" @bind-SelectedTabIndex="@SelectedTabIndex"/>
     </div>
     @switch (SelectedTabIndex)
     {

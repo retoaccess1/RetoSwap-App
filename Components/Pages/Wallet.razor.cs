@@ -18,7 +18,6 @@ public partial class Wallet : ComponentBase, IDisposable
     public ILocalStorageService LocalStorage { get; set; } = default!;
 
     public WalletInfo? Balance { get; set; }
-    public Dictionary<string, decimal> MarketPriceInfos { get; set; } = [];
     public List<string> Addresses { get; set; } = [];
     public List<XmrTx> Transactions { get; set; } = [];
 
@@ -68,14 +67,12 @@ public partial class Wallet : ComponentBase, IDisposable
             try
             {
                 PreferredCurrency = await LocalStorage.GetItemAsStringAsync("preferredCurrency") ?? "USD";
-
-                // TryParse ?
                 PreferredCurrencyFormat = CurrencyCultureInfo.GetFormatForCurrency((Currency)Enum.Parse(typeof(Currency), PreferredCurrency));
 
                 Balance = BalanceSingleton.WalletInfo;
-                Addresses = [BalanceSingleton.WalletInfo?.PrimaryAddress];
 
-                MarketPriceInfos = BalanceSingleton.MarketPriceInfos.ToDictionary(x => x.CurrencyCode, x => (decimal)x.Price);
+                if (BalanceSingleton.WalletInfo is not null)
+                    Addresses = [BalanceSingleton.WalletInfo.PrimaryAddress];
 
                 PendingFiat = BalanceSingleton.ConvertMoneroToFiat(Balance?.PendingXMRBalance.ToMonero() ?? 0m, PreferredCurrency);
                 AvailableFiat = BalanceSingleton.ConvertMoneroToFiat(Balance?.AvailableXMRBalance.ToMonero() ?? 0m, PreferredCurrency);
@@ -118,9 +115,6 @@ public partial class Wallet : ComponentBase, IDisposable
             if (BalanceSingleton.WalletInfo is not null)
                 Addresses = [BalanceSingleton.WalletInfo.PrimaryAddress];
 
-            // Not sure we need all these
-            MarketPriceInfos = BalanceSingleton.MarketPriceInfos.ToDictionary(x => x.CurrencyCode, x => (decimal)x.Price);
-            //
             PendingFiat = BalanceSingleton.ConvertMoneroToFiat(Balance?.PendingXMRBalance.ToMonero() ?? 0m, PreferredCurrency);
             AvailableFiat = BalanceSingleton.ConvertMoneroToFiat(Balance?.AvailableXMRBalance.ToMonero() ?? 0m, PreferredCurrency);
 

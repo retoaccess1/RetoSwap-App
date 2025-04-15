@@ -12,6 +12,7 @@ public class BalanceSingleton
     public WalletInfo? WalletInfo { get; private set; }
     public List<MarketPriceInfo> MarketPriceInfos { get; private set; } = [];
     public Dictionary<string, decimal> MarketPriceInfoDictionary { get; set; } = [];
+    public TaskCompletionSource<bool> InitializedTCS { get; private set; } = new();
 
     public event Action<bool>? OnBalanceFetch;
 
@@ -66,6 +67,9 @@ public class BalanceSingleton
                 MarketPriceInfoDictionary = MarketPriceInfos.ToDictionary(x => x.CurrencyCode, x => (decimal)x.Price);
 
                 Console.WriteLine("Finished fetching prices");
+
+                if (!InitializedTCS.Task.IsCompleted)
+                    InitializedTCS.SetResult(true);
             }
             catch (Exception e)
             {

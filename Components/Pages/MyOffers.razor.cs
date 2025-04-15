@@ -56,7 +56,11 @@ public partial class MyOffers : ComponentBase
                 Id = id
             });
 
-            NavigationManager.NavigateTo("/buysell?title=Buy%20%26%20Sell");
+            var offer = Offers.FirstOrDefault(x => x.Id == id);
+            if (offer is null)
+                return;
+
+            Offers.Remove(offer);
         }
         catch
         {

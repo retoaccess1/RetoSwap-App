@@ -1,16 +1,14 @@
 ﻿#if ANDROID
 
-using Android;
 using Android.App;
 using Android.Content;
 using Android.Content.PM;
-using Android.OS;
 using AndroidX.Core.App;
 using AndroidX.Core.Content;
 using Haveno.Proto.Grpc;
 using Manta.Helpers;
 using System.Text;
-using static Haveno.Proto.Grpc.GetVersion;
+
 using static Haveno.Proto.Grpc.Wallets;
 
 namespace Manta.Services;
@@ -253,6 +251,11 @@ public class TermuxSetupService
         return true;
     }
 
+    public static async Task CheckForHavenoUpdate()
+    {
+
+    }
+
     public static async Task UpdateTermux()
     {
         DeviceDisplay.KeepScreenOn = true;
@@ -301,13 +304,9 @@ public class TermuxSetupService
 
         await Task.Delay(1000);
 
-        // After this we should go back to haveno app
-        //await ExecuteTermuxCommandAsync("am start -a android.intent.action.VIEW -d \"manta://termux_callback\"");
-
         InstallationStep?.Invoke(2);
         await ToggleApps();
 
-        // Update 
         await ExecuteCommandAsync("yes | pkg update -y");
         await ExecuteCommandAsync("yes | pkg upgrade -y");
         await ExecuteCommandAsync("pkg install proot-distro -y");

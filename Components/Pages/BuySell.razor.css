@@ -3,6 +3,13 @@
   flex-direction: column;
   height: 100%;
 }
+.buysell-main .offers-spinner-container {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: calc(100dvh - 62px - 18px - 40px - 176px);
+}
 
 .account-type {
   display: flex;

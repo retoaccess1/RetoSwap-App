@@ -1,0 +1,71 @@
+﻿<div class="chart-main">
+    @foreach (var hiLo in _tradeStatisticsHighLow)
+    {
+        <div class="candle" style=@($"height:{hiLo.Key * 100m};bottom:{hiLo.Value * 100}")></div>
+    }
+</div>
+<div class="">
+    @foreach (TimeInterval value in Enum.GetValues(typeof(TimeInterval)))
+    {
+        <input type="radio" name="timeInterval" value="@value" />   
+    }
+</div>
+
+@code {
+    private List<List<TradeStatistic>> _tradeStatisticsGroupedByTime { get; set; } = [];
+    private List<KeyValuePair<decimal, decimal>> _tradeStatisticsHighLow { get; set; } = [];
+
+    [Parameter]
+    public List<TradeStatistic> TradeStatistics { get; set; } = [];
+
+    public TimeInterval TimeInterval { get; set; } = TimeInterval.Month;
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (TradeStatistics.Count == 0)
+            return;
+
+        var orderedList = TradeStatistics.OrderBy(x => x.Date).ToList();
+
+        var firstDate = orderedList.First().Date;
+
+        int timePeriodIndex = 0;
+        _tradeStatisticsGroupedByTime.Add([]);
+
+        for (int i = 0; i < orderedList.Count; i++)
+        {
+            if ((orderedList[i].Date - firstDate).TotalDays < 28)
+            {
+                _tradeStatisticsGroupedByTime[timePeriodIndex].Add(orderedList[i]);
+            }
+            else
+            {
+                _tradeStatisticsGroupedByTime[timePeriodIndex] = _tradeStatisticsGroupedByTime[timePeriodIndex].OrderBy(x => x.Price).ToList();
+
+                if (_tradeStatisticsGroupedByTime[timePeriodIndex].Count > 1)
+                {
+                    var low = _tradeStatisticsGroupedByTime[timePeriodIndex][0].Price;
+                    var high = _tradeStatisticsGroupedByTime[timePeriodIndex][_tradeStatisticsGroupedByTime[timePeriodIndex].Count - 1].Price;
+
+                    _tradeStatisticsHighLow.Add(new KeyValuePair<decimal, decimal>(((ulong)high).ToMonero(), ((ulong)low).ToMonero()));
+                }
+
+                timePeriodIndex++;
+                _tradeStatisticsGroupedByTime.Add([]);
+                firstDate = orderedList[i].Date;
+            }
+        }
+
+        StateHasChanged();
+
+        base.OnAfterRender(firstRender);
+    }
+
+    protected override void OnInitialized()
+    {
+
+
+
+        base.OnInitialized();
+    }
+}

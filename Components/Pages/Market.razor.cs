@@ -1,21 +1,63 @@
 ﻿using Blazored.LocalStorage;
-using Haveno.Proto.Grpc;
 using Manta.Helpers;
 using Manta.Models;
 using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-
-using static Haveno.Proto.Grpc.GetVersion;
+using MudBlazor;
 
 namespace Manta.Components.Pages;
 
 public partial class Market : ComponentBase, IDisposable
 {
+    private int _index = -1;
+
+    private AxisChartOptions _axisChartOptions = new() 
+    { 
+        MatchBoundsToSize = true 
+    };
+
+    private ChartOptions _options = new ChartOptions
+    {
+        YAxisLines = false,
+        YAxisTicks = 1,
+        MaxNumYAxisTicks = 10,
+        YAxisRequireZeroPoint = true,
+        XAxisLines = false,
+        LineStrokeWidth = 2,
+        ShowLabels = false,
+        ShowLegend = false,
+        ShowLegendLabels = false,
+        ShowToolTips = false,
+        YAxisLabelPosition = YAxisLabelPosition.Left,
+        ChartPalette = ["#bee8c2"]
+    };
+
+    private List<ChartSeries> _series = [];
+
+    private string[] _xAxisLabels = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+
+    public string Interval { get; set; } = "Year";
+
+    public int Year
+    { 
+        get;
+        set 
+        { 
+            field = value; 
+            ProcessTradeStatistics(); 
+        } 
+    }
+
+    public List<int> Years { get; set; } = [];
+
     public bool IsFetching { get; set; }
     public string Version { get; set; } = string.Empty;
-    public WalletInfo? Balance { get; set; }
+    public WalletInfo? WalletInfo { get; set; }
     public List<TradeStatistic> TradeStatistics { get; private set; } = [];
+
+    public string PreferredCurrency { get; set; } = string.Empty;
+    public string CurrentMarketPrice { get; set; } = string.Empty;
 
     [Inject]
     public ILocalStorageService LocalStorage { get; set; } = default!;
@@ -45,11 +87,10 @@ public partial class Market : ComponentBase, IDisposable
                 IsFetching = true;
                 StateHasChanged();
 
-                using var grpcChannelHelper = new GrpcChannelHelper();
-                var client = new GetVersionClient(grpcChannelHelper.Channel);
+                await BalanceSingleton.InitializedTCS.Task;
 
-                var response = await client.GetVersionAsync(new GetVersionRequest());
-                Version = response.Version;
+                PreferredCurrency = await LocalStorage.GetItemAsStringAsync("preferredCurrency") ?? "USD";
+                CurrentMarketPrice = BalanceSingleton.MarketPriceInfoDictionary[PreferredCurrency].ToString("0.00");
 
                 break;
             }
@@ -62,7 +103,9 @@ public partial class Market : ComponentBase, IDisposable
         }
 
         TradeStatistics = TradeStatisticsSingleton.TradeStatistics;
-        Balance = BalanceSingleton.WalletInfo;
+        ProcessTradeStatistics();
+
+        WalletInfo = BalanceSingleton.WalletInfo;
         IsFetching = false;
 
         BalanceSingleton.OnBalanceFetch += HandleBalanceFetch;
@@ -74,7 +117,7 @@ public partial class Market : ComponentBase, IDisposable
     private async void HandleBalanceFetch(bool isFetching)
     {
         await InvokeAsync(() => {
-            Balance = BalanceSingleton.WalletInfo;
+            WalletInfo = BalanceSingleton.WalletInfo;
             StateHasChanged();
         });
     }
@@ -83,8 +126,37 @@ public partial class Market : ComponentBase, IDisposable
     {
         await InvokeAsync(() => {
             TradeStatistics = TradeStatisticsSingleton.TradeStatistics;
+            ProcessTradeStatistics();
+
             StateHasChanged();
         });
+    }
+
+    // UpdateChart
+    public void ProcessTradeStatistics()
+    {
+        if (Years.Count == 0) 
+        {
+            Years = TradeStatistics
+                .OrderBy(x => x.Date)
+                .GroupBy(x => x.Date.Year)
+                .Select(x => x.Key)
+                .ToList();
+
+            Year = Years.FirstOrDefault();
+        }
+
+        var volumePerMonth = new double[12];
+
+        for (int i = 0; i < volumePerMonth.Length; i++)
+        {
+            volumePerMonth[i] = (double)TradeStatistics.Where(x => x.Date.Month == i + 1 && x.Date.Year == Year).Aggregate(0m, (x, y) => x + ((ulong)y.Amount).ToMonero());
+        }
+
+        _series = new List<ChartSeries>()
+        {
+            new ChartSeries() { Name = "Volume in XMR", Data = volumePerMonth },
+        };
     }
 
     public void Dispose()

@@ -57,14 +57,14 @@
         return base.OnInitializedAsync();
     }
 
-    private void HandleSwipe(SwipeDirection swipeDirection)
+    private void HandleSwipe(Manta.Models.SwipeDirection swipeDirection)
     {
         switch (swipeDirection)
         {
-            case SwipeDirection.Left:
+            case Manta.Models.SwipeDirection.Left:
                 MoveNextRoute();
                 break;
-            case SwipeDirection.Right:
+            case Manta.Models.SwipeDirection.Right:
                 MovePrevRoute();
                 break;
             default: break;

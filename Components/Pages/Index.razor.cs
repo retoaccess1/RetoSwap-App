@@ -1,5 +1,6 @@
 ﻿using Blazored.LocalStorage;
 using Manta.Services;
+using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
 
 namespace Manta.Components.Pages;

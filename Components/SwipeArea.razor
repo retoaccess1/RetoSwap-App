@@ -13,7 +13,7 @@
     public RenderFragment? ChildContent { get; set; }
 
     [Parameter]
-    public static Action<SwipeDirection>? OnSwipe { get; set; }
+    public static Action<Manta.Models.SwipeDirection>? OnSwipe { get; set; }
 
     [Parameter]
     public string? Class { get; set; }
@@ -52,11 +52,11 @@
         {
             if (xDiff > 0)
             {
-                InvokeAsync(() => OnSwipe?.Invoke(SwipeDirection.Left));
+                InvokeAsync(() => OnSwipe?.Invoke(Manta.Models.SwipeDirection.Left));
             }
             else
             {
-                InvokeAsync(() => OnSwipe?.Invoke(SwipeDirection.Right));
+                InvokeAsync(() => OnSwipe?.Invoke(Manta.Models.SwipeDirection.Right));
             }
         }
         else
