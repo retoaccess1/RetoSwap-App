@@ -4,6 +4,7 @@ using Android.Content.PM;
 using Android.OS;
 using AndroidX.Work;
 using Manta.Services;
+using Manta.Singletons;
 
 namespace Manta;
 [Activity(LaunchMode = LaunchMode.SingleTop, ScreenOrientation = ScreenOrientation.Portrait, Theme = "@style/Maui.SplashTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]

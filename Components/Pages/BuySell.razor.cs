@@ -121,16 +121,16 @@ public partial class BuySell : ComponentBase, IDisposable
 
     public void ResetFetch()
     {
-        if (ResetSemaphore.CurrentCount == 0)
-            return;
-
-        ResetSemaphore.Wait();
-
-        CancellationTokenSource.Cancel();
-        CancellationTokenSource.Dispose();
-        CancellationTokenSource = new();
-
         Task.Run(async() => {
+            if (ResetSemaphore.CurrentCount == 0)
+                return;
+
+            ResetSemaphore.Wait();
+
+            CancellationTokenSource.Cancel();
+            CancellationTokenSource.Dispose();
+            CancellationTokenSource = new();
+
             if (OfferFetchTask is not null)
                 await OfferFetchTask;
 
@@ -183,8 +183,8 @@ public partial class BuySell : ComponentBase, IDisposable
                 VisiblePaymentMethods = TraditionalPaymentMethods;
                 VisibleCurrencyCodes = TraditionalCurrencyCodes;
 
-                OfferFetchTask = FetchOffersAsync();
-                //OfferFetchTask = Task.Run(FetchOffersAsync);
+                //OfferFetchTask = FetchOffersAsync();
+                OfferFetchTask = Task.Run(FetchOffersAsync);
 
                 break;
             }

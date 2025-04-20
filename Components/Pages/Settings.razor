@@ -1,11 +1,12 @@
 ﻿@page "/settings"
 
-<div>
+<div class="settings-main">
     <div class="info-container">
         <p class="bold-p">Build information</p>
         <p>Version: @Version</p>
         <p>Build: @Build</p>
         <p>Haveno version: @HavenoVersion</p>
+        <p>Daemon status: @(IsConnected ? "Connected" : "Disconnected") </p>
         <p>Monero node: @(XMRNodeIsRunning ? "Running" : "Stopped")</p>
     </div>
     <div class="dropdown">
@@ -14,6 +15,20 @@
     <div class="dropdown">
         <SearchableDropdown InitialValue="@PreferredCurrency" Items="Currencies" Text="Preferred currency" Placeholder="Choose currency" OnSubmit="HandlePreferredCurrencySubmit"></SearchableDropdown>
     </div>
+    <button class="backup-btn" disabled>Backup app data</button>
     @* <SearchableDropdown Items="" Text="Country" Placeholder="Choose country"></SearchableDropdown> *@
     <Toggle OnToggledChanged="HandleToggle" @bind-IsToggled="IsToggled" Text="Notifications" />
+
+    <p class="bold-p remote-node-txt">Remote node configuration</p>
+    <div class="@(IsRemoteNodeToggled ? "remote-node-section" : "remote-node-section remote-node-disabled")">
+        <button @onclick="ScanQRCode" class="qr-btn">Scan QR code</button>
+        <p class="or">Or</p>
+        <label class="bold-p">IP Address</label>
+        <input @bind="Host" type="text"/>
+        <label class="bold-p">Password</label>
+        <input @bind="Password" type="password" />
+        <p>Note: you need to have Orbot installed</p>
+        <button @onclick="ConnectToRemoteNode">Connect to remote node</button>
+    </div>
+    <Toggle OnToggledChanged="HandleRemoteNodeToggle" @bind-IsToggled="IsRemoteNodeToggled" Text="Use remote node" />
 </div>

@@ -87,6 +87,7 @@
     <PackageReference Include="CommunityToolkit.Maui" Version="8.0.1" />
     <PackageReference Include="Google.Protobuf" Version="3.30.0" />
     <PackageReference Include="Grpc.Net.Client" Version="2.67.0" />
+    <PackageReference Include="Grpc.Net.Client.Web" Version="2.70.0" />
     <PackageReference Include="Grpc.Tools" Version="2.70.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -97,6 +98,8 @@
     <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="8.0.100" />
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.1" />
     <PackageReference Include="MudBlazor" Version="8.5.1" />
+    <PackageReference Include="ZXing.Net.Maui" Version="0.4.0" />
+    <PackageReference Include="ZXing.Net.Maui.Controls" Version="0.4.0" />
   </ItemGroup>
 
   <ItemGroup>
@@ -122,6 +125,12 @@
     <PackageReference Include="Xamarin.AndroidX.Work.Runtime">
       <Version>2.8.0</Version>
     </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <MauiXaml Update="CameraPage.xaml">
+      <Generator>MSBuild:Compile</Generator>
+    </MauiXaml>
   </ItemGroup>
   
 </Project>

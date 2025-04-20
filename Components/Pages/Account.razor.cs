@@ -325,6 +325,15 @@ public partial class Account : ComponentBase
 
             var response = await paymentAccountsClient.CreatePaymentAccountAsync(request);
             PaymentAccounts = [.. PaymentAccounts, response.PaymentAccount];
+
+            // Don't show used method types in list
+            var filteredPaymentMethodIds = TraditionalPaymentMethods
+                .Where(x => !PaymentAccounts.Select(y => y.PaymentMethod.Id).Contains(x.Id))
+                .Select(x => x.Id);
+
+            TraditionalPaymentMethodStrings = PaymentMethodsHelper.PaymentMethodsDictionary
+                .Where(x => filteredPaymentMethodIds.Contains(x.Key)).ToDictionary();
+
             SelectedPaymentAccount = null;
             PaymentAccountForm = null;
             CreateCryptoCurrencyPaymentAccountRequest = null;
@@ -334,6 +343,7 @@ public partial class Account : ComponentBase
         catch (Exception e)
         {
             Console.WriteLine(e);
+            throw;
         }
         finally
         {

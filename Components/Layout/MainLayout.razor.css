@@ -10,14 +10,3 @@ main {
   /*flex: 1;*/
   height: calc(100dvh - 62px - 58px);
 }
-
-/*line breaks do not work*/
-::deep .install-modal {
-  word-break: keep-all;
-  overflow-wrap: normal;
-  white-space: nowrap;
-}
-::deep .install-modal p {
-  white-space: nowrap;
-  margin-bottom: 10px;
-}

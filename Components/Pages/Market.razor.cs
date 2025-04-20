@@ -17,7 +17,7 @@ public partial class Market : ComponentBase, IDisposable
         MatchBoundsToSize = true 
     };
 
-    private ChartOptions _options = new ChartOptions
+    private ChartOptions _options = new()
     {
         YAxisLines = false,
         YAxisTicks = 1,
@@ -150,7 +150,9 @@ public partial class Market : ComponentBase, IDisposable
 
         for (int i = 0; i < volumePerMonth.Length; i++)
         {
-            volumePerMonth[i] = (double)TradeStatistics.Where(x => x.Date.Month == i + 1 && x.Date.Year == Year).Aggregate(0m, (x, y) => x + ((ulong)y.Amount).ToMonero());
+            volumePerMonth[i] = (double)TradeStatistics
+                .Where(x => x.Date.Month == i + 1 && x.Date.Year == Year)
+                .Aggregate(0m, (x, y) => x + ((ulong)y.Amount).ToMonero());
         }
 
         _series = new List<ChartSeries>()

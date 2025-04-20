@@ -1,2 +1,25 @@
-﻿body {
+﻿::deep .buttons {
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+
+    .verify-modal-button {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background-color: cornflowerblue;
+        color: #fff;
+        margin-top: 6px;
+
+        &:disabled {
+            opacity: 0.8;
+        }
+    }
+}
+
+.install-modal{
+
+    p{
+        margin-bottom: 10px;
+    }
 }

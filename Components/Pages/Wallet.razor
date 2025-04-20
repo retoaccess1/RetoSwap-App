@@ -27,7 +27,7 @@
                     <p class="wallet-balance-crypto">XMR @(Balance?.AvailableXMRBalance.ToMonero()) </p>
                     <p class="wallet-pending-balance-crypto">XMR @(Balance?.PendingXMRBalance.ToMonero()) pending</p>
                 </div>
-@*                 <div class="monero-card-bottom-reserved">
+                @*                 <div class="monero-card-bottom-reserved">
                     <p class="wallet-balance-crypto">XMR @(((Balance?.ReservedTradeBalance ?? 0) + (Balance?.ReservedOfferBalance ?? 0)).ToMonero()) reserved</p>
                 </div> *@
             </div>
@@ -102,7 +102,14 @@
                                 </p>
                             }
                             <p>
-                                @(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddSeconds(transaction.Timestamp).ToLocalTime())
+                                @if (transaction.IsLocked)
+                                {
+                                    <p>Pending</p>
+                                } 
+                                else
+                                {
+                                    @(new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc).AddSeconds(transaction.Timestamp).ToLocalTime())
+                                }
                             </p>
                         </li>
                     }

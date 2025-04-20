@@ -1,1 +1,1 @@
-﻿.info-container{margin-bottom:10px;}.dropdown{margin-bottom:10px;}
+﻿.settings-main{display:flex;flex-direction:column;padding-bottom:58px;}.settings-main .info-container{margin-bottom:10px;}.settings-main .dropdown{margin-bottom:10px;}.settings-main .remote-node-txt{margin-top:20px;margin-bottom:6px;}.settings-main .remote-node-disabled{pointer-events:none;opacity:.4;}.settings-main .or{text-align:center;margin-top:10px;}.settings-main input{margin-bottom:10px;}.settings-main ::deep .toggle-main{margin-top:10px;}

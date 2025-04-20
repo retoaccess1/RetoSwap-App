@@ -2,18 +2,22 @@
 
 <Spinner IsFullscreen="true" IsVisible="IsInitializing"/>
 
-<Modal 
-    IsOpen="IsModalOpen"
-    Title="Initial setup"
-    OnOkPressed="HandleOkPress" 
-    OnCancelPressed="HandleCancelPress"
-    OkButtonText="Install">
+<Modal IsOpen="IsInstallTypeModalOpen"
+       Title="Initial setup"
+       ModalButtonOptions="ModalButtonOptions.NONE"
+       IsCloseable="false">
     <div class="install-modal">
         <p>In order to use the app the Haveno daemon needs to be installed inside Termux.</p>
 
         <p>In order to do this the app requires a few permissions, however it is possible to manually set this up and instructions are in the <a href="https://github.com/atsamd21/Haveno-app/blob/master/haveno-termux-install.MD">haveno-termux-install</a> file on GitHub.</p>
 
-        <p>Press cancel if you would like to install manually.</p>
+        <p>Please choose an installation type.</p>
+
+        <div class="buttons">
+            <button class="verify-modal-button" @onclick="@(async (e) => { IsInstallTypeModalOpen = false; await HandleInstall(DaemonInstallOptions.TermuxAutomatic); })">Standalone auto</button>
+            <button class="verify-modal-button" @onclick="@(async (e) => { IsInstallTypeModalOpen = false; await HandleInstall(DaemonInstallOptions.TermuxManual); })">Standalone manual</button>
+            <button class="verify-modal-button" @onclick="@(async (e) => { IsInstallTypeModalOpen = false; await HandleInstall(DaemonInstallOptions.RemoteNode); })">Remote node</button>
+        </div>
     </div>
 </Modal>
 <Modal IsOpen="TermuxSetupState != TermuxSetupState.Initial" Title="Haveno setup" ModalButtonOptions="ModalButtonOptions.NONE" IsCloseable="false">
@@ -28,6 +32,7 @@
             break;
         case TermuxSetupState.Finished:
             <p>Finished setting up Haveno.</p>
+            <p>Daemon is starting...</p>
             break;
          default: break;
     }

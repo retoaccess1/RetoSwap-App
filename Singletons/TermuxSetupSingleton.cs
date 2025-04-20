@@ -7,11 +7,13 @@ using AndroidX.Core.App;
 using AndroidX.Core.Content;
 using Haveno.Proto.Grpc;
 using Manta.Helpers;
+using Manta.Models;
+using System.Runtime.InteropServices;
 using System.Text;
 
-using static Haveno.Proto.Grpc.Wallets;
+using static Haveno.Proto.Grpc.GetVersion;
 
-namespace Manta.Services;
+namespace Manta.Singletons;
 
 public static class StorageHelper
 {
@@ -73,29 +75,62 @@ public static class TermuxPermissionHelper
     }
 }
 
+// TODO
+// Handle daemon/termux crash. Restart, reconnect
+// Or if termux gets closed etc 
 // If i can get RUN_COMMAND to work with output return we solve a lot of permission issues and make the install experience better
-public class TermuxSetupService
+public class TermuxSetupSingleton
 {
-    private static readonly Context _context = Android.App.Application.Context;
-    private static readonly string _fileName = "stdout";
+    private readonly Context _context = Android.App.Application.Context;
+    private readonly string _fileName = "stdout";
+    private Task? _havenoDaemonTask;
+    private Task? _stdoutListenerTask;
 
-    public static event Action<int>? InstallationStep;
+    private const int _termuxStartWaitTime = 1_100;
 
-    public static Task? HavenoDaemonTask { get; private set; }
-    public static Task? StoutListenerTask { get; private set; }
+    public event Action<int>? InstallationStep;
 
-    public static TaskCompletionSource<bool> HavenoDaemonRunningTCS { get; private set; } = new();
-
-    public static async Task RestartHavenoDaemon()
+    public TermuxSetupSingleton()
     {
-        throw new NotImplementedException();
 
-        await ExecuteCommandAsync("\"pkill -f tor\"", true, millisecondsTimeout: 200);
-        await ExecuteCommandAsync("\"pkill -f haveno\"", true, millisecondsTimeout: 200);
-        HavenoDaemonTask = Task.Run(() => ExecuteCommandAsync("\"cd haveno && make user1-daemon-stagenet\"", true));
     }
 
-    public static async Task ToggleApps()
+    public async Task<bool> GetIsTermuxAndDaemonInstalledAsync()
+    {
+        return (await SecureStorageHelper.GetAsync<bool>("termux-installed")) && (await SecureStorageHelper.GetAsync<bool>("termux-setup"));
+    }
+
+    public async Task StopLocalHavenoDaemonAsync()
+    {
+        await ExecuteCommandAsync("\"killall -9 -e tor\"", true, millisecondsTimeout: 100);
+        await ExecuteCommandAsync("\"killall -9 haveno\"", true, millisecondsTimeout: 100);
+    }
+
+    //public async Task SwitchDaemonHostingTypeAsync(DaemonInstallOptions daemonInstallOption)
+    //{
+    //    await SecureStorageHelper.SetAsync("daemonInstallOption", daemonInstallOption);
+
+    //    await StopLocalHavenoDaemonAsync();
+
+    //    if (daemonInstallOption == DaemonInstallOptions.RemoteNode)
+    //    {
+
+    //    }
+    //    else
+    //    {
+    //        var successfullyStarted = await TryStartLocalHavenoDaemonAsync(Guid.NewGuid().ToString(), "http://127.0.0.1:3201");
+    //        if (successfullyStarted)
+    //        {
+
+    //        }
+    //        else
+    //        {
+
+    //        }
+    //    }
+    //}
+
+    private async Task ToggleApps()
     {
         await ExecuteTermuxCommandAsync("am start -a android.intent.action.VIEW -d \"manta://termux_callback\"");
 
@@ -106,13 +141,12 @@ public class TermuxSetupService
             _context.StartActivity(intent);
         }
 
-        await Task.Delay(1000);
+        await Task.Delay(_termuxStartWaitTime);
 
         await ExecuteTermuxCommandAsync("am start -a android.intent.action.VIEW -d \"manta://termux_callback\"");
     }
 
-    //private static async Task ListenStdout(string? fireEventOnString = null, Action? callback = null)
-    private static async Task ListenStdout(List<(string, Action)>? callbacks = null)
+    private async Task ListenStdout(List<(string, Action)>? callbacks = null)
     {
         var stdout = Path.Combine(Android.OS.Environment.ExternalStorageDirectory?.AbsolutePath ?? throw new DirectoryNotFoundException("ExternalStorageDirectory"), "/storage/emulated/0/output", _fileName);
 
@@ -156,23 +190,16 @@ public class TermuxSetupService
         }
     }
 
-    // TODO
-    // Handle daemon/termux crash. Restart, reconnect
-    // Or if termux gets closed etc 
-
-    public static async Task<bool> IsHavenoDaemonRunning()
+    public async Task<bool> IsHavenoDaemonRunningAsync()
     {
-        for (int i = 0; i < 2; i++)
+        for (int i = 0; i < 5; i++)
         {
             try
             {
+                // Will tell us its running but not if its initialized
                 using var grpcChannelHelper = new GrpcChannelHelper();
-                var client = new WalletsClient(grpcChannelHelper.Channel);
-                var response = await client.GetXmrPrimaryAddressAsync(new GetXmrPrimaryAddressRequest());
-
-                // Attach stdout listener, shared responsibility?
-                if (StoutListenerTask is null)
-                    StoutListenerTask = Task.Run(() => ListenStdout([("All connections lost", () => Console.WriteLine("LOST CONNECTION")), ("Established a new connection", () => Console.WriteLine("RECONNECTED"))]));
+                var client = new GetVersionClient(grpcChannelHelper.Channel);
+                var response = await client.GetVersionAsync(new GetVersionRequest());
 
                 return true;
             }
@@ -187,15 +214,29 @@ public class TermuxSetupService
         return false;
     }
 
-    public static async Task<bool> TryStartHavenoDaemon()
+    public void TryAttachStdout()
+    {
+        if (_stdoutListenerTask is null)
+            _stdoutListenerTask = Task.Run(() => ListenStdout([("All connections lost", () => Console.WriteLine("LOST CONNECTION")), ("Established a new connection", () => Console.WriteLine("RECONNECTED"))]));
+    }
+
+    public async Task<bool> TryStartLocalHavenoDaemonAsync(string password, string host)
     {
         try
         {
-            if (await IsHavenoDaemonRunning())
+            // Since this is connection based, it could be running but unreachable
+            if (await IsHavenoDaemonRunningAsync())
             {
-                HavenoDaemonRunningTCS?.SetResult(true);
+                TryAttachStdout();
                 return true;
             }
+
+            await SecureStorageHelper.SetAsync("password", password);
+            await SecureStorageHelper.SetAsync("host", host);
+
+            // channel helper should probably just pull this itself so we dont have to set it
+            GrpcChannelHelper.Password = password;
+            GrpcChannelHelper.Host = host;
 
             var intent = _context.PackageManager?.GetLaunchIntentForPackage("com.termux");
             if (intent is not null)
@@ -204,22 +245,26 @@ public class TermuxSetupService
                 _context.StartActivity(intent);
             }
 
-            await Task.Delay(1000);
+            await Task.Delay(_termuxStartWaitTime);
+
+            await StopLocalHavenoDaemonAsync();
+
+            var startScript = $"#!/bin/sh\r\n ./haveno-daemon --baseCurrencyNetwork=XMR_STAGENET --useLocalhostForP2P=false --useDevPrivilegeKeys=false --nodePort=9999 --appName=haveno-XMR_STAGENET_user1 --apiPassword={password} --apiPort=3201 --passwordRequired=false --useNativeXmrWallet=false --torControlHost=127.0.0.1 --torControlPort=9051";
+            
+            await ExecuteCommandAsync("\"rm -f haveno/start.sh\"", true);
+            await ExecuteCommandAsync("\"touch haveno/start.sh\"", true);
+            await ExecuteCommandAsync($"\"printf '{startScript}' > haveno/start.sh\"", true);
+            await ExecuteCommandAsync($"\"chmod +x haveno/start.sh\"", true);
 
             await ExecuteTermuxCommandAsync("am start -a android.intent.action.VIEW -d \"manta://termux_callback\"");
+
             // TODO Don't run as root, everything on termux seems to run as root, set up user with less perms
+            // Send SIGINTs to both of these 
             await ExecuteCommandAsync("\"tor\"", true, exitOnContainsString: "100%");
             // Also runs as root - fix. Limit directory access
             // TODO error handling
-            HavenoDaemonTask = Task.Run(() => ExecuteCommandAsync("\"cd haveno && make user1-daemon-stagenet\"", true));
+            _havenoDaemonTask = Task.Run(() => ExecuteCommandAsync($"\"cd haveno && ./start.sh\"", true));
 
-            // Could loop forever
-            while (!await IsHavenoDaemonRunning())
-            {
-                await Task.Delay(2000);
-            }
-
-            HavenoDaemonRunningTCS?.SetResult(true);
             return true;
         }
         catch (Exception e)
@@ -230,7 +275,7 @@ public class TermuxSetupService
         }
     }
 
-    public static async Task<bool> RequestRequiredPermissions()
+    public async Task<bool> RequestRequiredPermissionsAsync()
     {
         await TermuxPermissionHelper.RequestRunCommandPermissionAsync();
 
@@ -251,12 +296,12 @@ public class TermuxSetupService
         return true;
     }
 
-    public static async Task CheckForHavenoUpdate()
+    public async Task CheckForHavenoUpdate()
     {
 
     }
 
-    public static async Task UpdateTermux()
+    public async Task SetupTermuxAsync()
     {
         DeviceDisplay.KeepScreenOn = true;
 
@@ -272,12 +317,15 @@ public class TermuxSetupService
             _context.StartActivity(intent);
         }
 
-        await Task.Delay(1000);
+        await Task.Delay(_termuxStartWaitTime);
+
+        //// Test
+        //var stopped = _context.StopService(intent);
 
         // Pray that it does not take longer than 15s...
         // Could maybe spin another polling thread? as this will probably time out for some users
         await ExecuteTermuxCommandAsync("termux-reload-settings");
-        await ExecuteTermuxCommandAsync("termux-wake-lock");
+        await ExecuteTermuxCommandAsync("termux-wake-lock", 10_000);
         await ExecuteTermuxCommandAsync("termux-reload-settings");
         await ExecuteTermuxCommandAsync("pkg install termux-am", 15_000);
         //await ExecuteTermuxCommandAsync("am start --user 0 -a android.settings.action.MANAGE_OVERLAY_PERMISSION -d \"package:com.termux\"", 15_000);
@@ -293,16 +341,7 @@ public class TermuxSetupService
             _context.StartActivity(intent2);
         }
 
-        await Task.Delay(1000);
-
-        var intent3 = _context.PackageManager?.GetLaunchIntentForPackage("com.termux");
-        if (intent3 is not null)
-        {
-            intent3.AddFlags(ActivityFlags.NewTask);
-            _context.StartActivity(intent3);
-        }
-
-        await Task.Delay(1000);
+        await Task.Delay(_termuxStartWaitTime);
 
         InstallationStep?.Invoke(2);
         await ToggleApps();
@@ -338,32 +377,39 @@ public class TermuxSetupService
         // I don't know why but if you run this twice it works the second time
         await ExecuteCommandAsync("\"apt install openjdk-21-jdk -y\"", true, exitOnContainsString: "maybe run apt-get update or try with --fix-missing");
         await ExecuteCommandAsync("\"apt install openjdk-21-jdk -y\"", true);
-        await ExecuteCommandAsync("\"apt install git -y\"", true);
         await ExecuteCommandAsync("\"apt install wget -y\"", true);
-        await ExecuteCommandAsync("\"apt install make -y\"", true);
+        await ExecuteCommandAsync("\"apt install unzip -y\"", true);
 
         InstallationStep?.Invoke(5);
         await ToggleApps();
 
-        await ExecuteCommandAsync("\"rm -fv -r haveno\"", true);
-        await ExecuteCommandAsync("\"git clone https://github.com/haveno-dex/haveno.git\"", true);
+        var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 
-        await ExecuteCommandAsync("\"cd haveno && make skip-tests\"", true);
+        string package = isWindows ? "windows" : "linux-";
+        if (!isWindows)
+        {
+            package += RuntimeInformation.OSArchitecture.ToString() == "X64" ? "x86_64" : "aarch64";
+        }
+
+        await ExecuteCommandAsync("\"rm -fv -r haveno\"", true);
+        await ExecuteCommandAsync($"\"wget https://github.com/atsamd21/haveno/releases/download/v1.0.19/{package}.zip\"", true);
+        await ExecuteCommandAsync($"\"unzip {package}.zip\"", true);
+        await ExecuteCommandAsync($"\"rm {package}.zip\"", true);
+        await ExecuteCommandAsync($"\"mv {package} haveno\"", true);
+        await ExecuteCommandAsync($"\"chmod +x haveno/haveno-daemon\"", true);
 
         InstallationStep?.Invoke(6);
         await ToggleApps();
 
         await ExecuteCommandAsync("\"apt install tor -y\"", true);
         await ExecuteCommandAsync("\"sed -i 's/#ControlPort/ControlPort/g' /etc/tor/torrc\"", true);
-        // Custom file with torcontrol ports
-        await ExecuteCommandAsync("\"cd haveno && wget -O Makefile https://raw.githubusercontent.com/atsamd21/Makefile/refs/heads/main/Makefile\"", true);
 
         await ExecuteTermuxCommandAsync("am start -a android.intent.action.VIEW -d \"manta://termux_callback\"");
 
         DeviceDisplay.KeepScreenOn = false;
     }
 
-    public static async Task ExecuteTermuxCommandAsync(string command, int millisecondsTimeout = 200)
+    private async Task ExecuteTermuxCommandAsync(string command, int millisecondsTimeout = 200)
     {
         var intent = new Intent("com.termux.RUN_COMMAND");
         intent.SetClassName("com.termux", "com.termux.app.RunCommandService");
@@ -382,7 +428,7 @@ public class TermuxSetupService
         await Task.Delay(millisecondsTimeout);
     }
 
-    public static async Task ExecuteCommandAsync(
+    private async Task ExecuteCommandAsync(
         string command, 
         bool isUbuntuCommand = false, 
         int millisecondsTimeout = 0, 

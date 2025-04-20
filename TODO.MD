@@ -8,3 +8,4 @@
 # Need a way to sync app with desktop
 # Backup, both wallet and app data
 # Handle network disconnects, daemon takes a long time to reconnect
+# Some payment methods are not working

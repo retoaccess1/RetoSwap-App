@@ -1,4 +1,5 @@
 ﻿using Grpc.Net.Client;
+using Grpc.Net.Client.Web;
 
 namespace Manta.Helpers;
 
@@ -9,29 +10,43 @@ public interface IGrpcChannelHelper
 
 public sealed class GrpcChannelHelper : IGrpcChannelHelper, IDisposable
 {
-    private const string _password = "apitest";
-    private const string _host = "http://127.0.0.1:3201";
+    // Not sure these should be static but works for now
+    public static string Password { get; set; } = string.Empty;
+    public static string Host { get; set; } = string.Empty;
 
     public GrpcChannel Channel { get; }
 
     public GrpcChannelHelper(bool noTimeout = false)
     {
-        // Does this get disposed?
-        // Might need to inject httpclient
-        var httpClient = new HttpClient(new SocketsHttpHandler())
+        HttpClient httpClient;
+
+        if (Host != "http://127.0.0.1:3201")
         {
-            DefaultRequestVersion = new Version(2, 0),
-            DefaultVersionPolicy = HttpVersionPolicy.RequestVersionExact,
-        };
+#if ANDROID
+            httpClient = new HttpClient(new GrpcWebHandler(GrpcWebMode.GrpcWeb, new AndroidSocks5Handler()));
+#else
+            httpClient = new HttpClient();
+#endif
+        }
+        else
+        {
+            // Does this get disposed?
+            // Might need to inject httpclient
+            httpClient = new HttpClient(new SocketsHttpHandler())
+            {
+                DefaultRequestVersion = new Version(2, 0),
+                DefaultVersionPolicy = HttpVersionPolicy.RequestVersionExact,
+            };
+        }
 
         // Mainly for streaming
         if (noTimeout)
             httpClient.Timeout = Timeout.InfiniteTimeSpan;
 
         // TODO configable
-        httpClient.DefaultRequestHeaders.Add("password", _password);
+        httpClient.DefaultRequestHeaders.Add("password", Password);
 
-        Channel = GrpcChannel.ForAddress(_host, new GrpcChannelOptions { HttpClient = httpClient });
+        Channel = GrpcChannel.ForAddress(Host, new GrpcChannelOptions { HttpClient = httpClient });
     }
 
     public void Dispose()

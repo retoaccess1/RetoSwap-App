@@ -9,8 +9,6 @@ namespace Manta.Singletons;
 
 public class TradeStatisticsSingleton
 {
-    private readonly GetTradeStatisticsClient _tradeStatisticsClient;
-    private readonly GrpcChannelHelper _grpcChannelHelper;
     private CancellationTokenSource _cancellationTokenSource = new();
 
     public event Action<bool>? OnTradeStatisticsFetch;
@@ -21,9 +19,6 @@ public class TradeStatisticsSingleton
 
     public TradeStatisticsSingleton()
     {
-        _grpcChannelHelper = new();
-        _tradeStatisticsClient = new GetTradeStatisticsClient(_grpcChannelHelper.Channel);
-
         FetchTradeStatisticsTask = Task.Run(FetchTradeStatisticsAsync);
     }
 
@@ -35,8 +30,11 @@ public class TradeStatisticsSingleton
             {
                 OnTradeStatisticsFetch?.Invoke(true);
 
+                var grpcChannelHelper = new GrpcChannelHelper();
+                var tradeStatisticsClient = new GetTradeStatisticsClient(grpcChannelHelper.Channel);
+
                 // Really should be a way to fetch stats after a certain date
-                var response = await _tradeStatisticsClient.GetTradeStatisticsAsync(new GetTradeStatisticsRequest(), cancellationToken: _cancellationTokenSource.Token);
+                var response = await tradeStatisticsClient.GetTradeStatisticsAsync(new GetTradeStatisticsRequest(), cancellationToken: _cancellationTokenSource.Token);
 
                 TradeStatistics = response.TradeStatistics.Select(x => new TradeStatistic
                 {
