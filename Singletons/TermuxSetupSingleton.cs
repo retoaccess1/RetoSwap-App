@@ -301,6 +301,44 @@ public class TermuxSetupSingleton
 
     }
 
+    private async Task WaitForStoragePermissionAsync()
+    {
+        using CancellationTokenSource cancellationTokenSource = new(60_000);
+
+        while (true)
+        {
+            try
+            {
+                if (cancellationTokenSource.Token.IsCancellationRequested)
+                    return;
+
+                var fileName = Guid.NewGuid().ToString();
+
+                await ExecuteTermuxCommandAsync("termux-setup-storage", millisecondsTimeout: 2000);
+                await ExecuteTermuxCommandAsync($"touch /storage/emulated/0/output/{fileName}");
+
+                Directory.CreateDirectory(Path.Combine(Android.OS.Environment.ExternalStorageDirectory?.AbsolutePath ?? throw new DirectoryNotFoundException("ExternalStorageDirectory"), "/storage/emulated/0/output"));
+                var file = Path.Combine(Android.OS.Environment.ExternalStorageDirectory?.AbsolutePath ?? throw new DirectoryNotFoundException("ExternalStorageDirectory"), "/storage/emulated/0/output", fileName);
+
+                using var fs = new FileStream(file, FileMode.Open, FileAccess.Read, FileShare.Read);
+
+                return;
+            }
+            catch (FileNotFoundException)
+            {
+
+            }
+            catch (TaskCanceledException)
+            {
+                return;
+            }
+            catch
+            {
+                throw;
+            }
+        }
+    }
+
     public async Task SetupTermuxAsync()
     {
         DeviceDisplay.KeepScreenOn = true;
@@ -311,28 +349,24 @@ public class TermuxSetupSingleton
         if (intent is not null)
         {
             intent.AddFlags(ActivityFlags.NewTask);
-            //intent.AddFlags(ActivityFlags.ExcludeFromRecents);
-            //intent.AddFlags(ActivityFlags.PreviousIsTop);
-
             _context.StartActivity(intent);
         }
 
         await Task.Delay(_termuxStartWaitTime);
 
-        //// Test
-        //var stopped = _context.StopService(intent);
-
-        // Pray that it does not take longer than 15s...
-        // Could maybe spin another polling thread? as this will probably time out for some users
-        await ExecuteTermuxCommandAsync("termux-reload-settings");
-        await ExecuteTermuxCommandAsync("termux-wake-lock", 10_000);
         await ExecuteTermuxCommandAsync("termux-reload-settings");
         await ExecuteTermuxCommandAsync("pkg install termux-am", 15_000);
-        //await ExecuteTermuxCommandAsync("am start --user 0 -a android.settings.action.MANAGE_OVERLAY_PERMISSION -d \"package:com.termux\"", 15_000);
-        await ExecuteTermuxCommandAsync("termux-setup-storage", 10_000);
         await ExecuteTermuxCommandAsync("termux-reload-settings");
-        await ExecuteTermuxCommandAsync("am startservice -a com.termux.service_stop com.termux/.app.TermuxService");
-        await Task.Delay(500);
+
+        // TODO remove notification permission from termux
+
+        await WaitForStoragePermissionAsync();
+
+        await ExecuteTermuxCommandAsync("termux-reload-settings");
+        
+        await ExecuteTermuxCommandAsync("am stopservice --user 0 -n com.termux/.app.TermuxService");
+
+        await Task.Delay(2000);
 
         var intent2 = _context.PackageManager?.GetLaunchIntentForPackage("com.termux");
         if (intent2 is not null)
@@ -342,6 +376,9 @@ public class TermuxSetupSingleton
         }
 
         await Task.Delay(_termuxStartWaitTime);
+
+        await ExecuteTermuxCommandAsync("termux-wake-lock", 10_000);
+        await ExecuteTermuxCommandAsync("termux-reload-settings");
 
         InstallationStep?.Invoke(2);
         await ToggleApps();
