@@ -24,6 +24,8 @@ public partial class CreateOffer : ComponentBase
     public string Direction { get; set; } = string.Empty;
     [Parameter]
     public EventCallback OnCloseCreateOffer { get; set; }
+    [Inject]
+    public NavigationManager NavigationManager { get; set; } = default!;
 
     // Repeat
     public Dictionary<string, string> CurrencyCodes { get; set; } = [];
@@ -247,9 +249,9 @@ public partial class CreateOffer : ComponentBase
 
             var response = await offersClient.PostOfferAsync(request);
 
-            // Or nav to my offers page?
+            NavigationManager.NavigateTo("/myoffers?title=My%20Offers");
 
-            await OnCloseCreateOffer.InvokeAsync();
+            //await OnCloseCreateOffer.InvokeAsync();
         }
         catch
         {
