@@ -24,6 +24,8 @@ public partial class Index : ComponentBase
     [Inject]
     public TermuxSetupSingleton TermuxSetupSingleton { get; set; } = default!;
 #endif
+    [Inject]
+    public NotificationSingleton NotificationSingleton { get; set; } = default!;
 
     public void HandleInstallationStepChange(int step)
     {

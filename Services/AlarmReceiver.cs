@@ -1,0 +1,102 @@
+﻿#if ANDROID
+using Android.App;
+using Android.Content;
+using Android.OS;
+using Manta.Singletons;
+using Android.Provider;
+
+namespace Manta.Services;
+
+public static class AlarmUtils
+{
+    public static void CancelAlarm(Context context)
+    {
+        var alarmManager = (AlarmManager?)context.GetSystemService(Context.AlarmService);
+        if (alarmManager is null)
+            return;
+
+        var intent = new Intent(context, typeof(AlarmReceiver));
+
+        var pendingIntent = PendingIntent.GetBroadcast(
+            context, 0, intent, PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable
+        );
+
+        if (pendingIntent is null)
+            return;
+
+        alarmManager.Cancel(pendingIntent);
+    }
+
+    public static void RequestExactAlarmPermission(Context context)
+    {
+        if (Build.VERSION.SdkInt >= BuildVersionCodes.S && !AlarmManagerCanScheduleExactAlarms(context))
+        {
+            Intent intent = new Intent(Settings.ActionRequestScheduleExactAlarm);
+            intent.SetData(Android.Net.Uri.Parse("package:" + context.PackageName));
+            context.StartActivity(intent);
+        }
+    }
+
+    public static bool AlarmManagerCanScheduleExactAlarms(Context context)
+    {
+        if (Build.VERSION.SdkInt >= BuildVersionCodes.S)
+        {
+            var alarmManager = (AlarmManager?)context.GetSystemService(Context.AlarmService);
+            if (alarmManager is null)
+                return false;
+
+            return alarmManager.CanScheduleExactAlarms();
+        }
+
+        return true;
+    }
+
+    public static void ScheduleExactAlarm(Context context)
+    {
+        if (!AlarmManagerCanScheduleExactAlarms(context))
+        {
+            RequestExactAlarmPermission(context);
+        }
+
+        // Tune this, or let user decide - higher frequency will use more battery
+        var mintuesDelay = 1;
+
+        var intent = new Intent(context, typeof(AlarmReceiver));
+        var pendingIntent = PendingIntent.GetBroadcast(context, 0, intent, PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable);
+        if (pendingIntent is null)
+            return;
+
+        var triggerTime = Java.Lang.JavaSystem.CurrentTimeMillis() + mintuesDelay * 60 * 1000;
+
+        var alarmManager = (AlarmManager?)context.GetSystemService(Context.AlarmService);
+        if (alarmManager is null)
+            return;
+
+        // Use exact alarm even during Doze mode
+        alarmManager.SetExactAndAllowWhileIdle(AlarmType.RtcWakeup, triggerTime, pendingIntent);
+    }
+}
+
+[BroadcastReceiver(Enabled = true, Exported = true)]
+public class AlarmReceiver : BroadcastReceiver
+{
+    public override void OnReceive(Context context, Intent intent)
+    {
+        Console.WriteLine("Alarm triggered");
+
+        var serviceProvider = IPlatformApplication.Current?.Services;
+        if (serviceProvider is null)
+            throw new Exception("serviceProvider was null");
+
+        using var scope = serviceProvider.CreateScope();
+
+        var notificationSingleton = scope.ServiceProvider.GetRequiredService<NotificationSingleton>();
+
+        Task.Run(notificationSingleton.BackgroundSync);
+
+        // Chaining alarms basically
+        AlarmUtils.ScheduleExactAlarm(context);
+    }
+}
+
+#endif

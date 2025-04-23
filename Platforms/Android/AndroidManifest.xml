@@ -30,6 +30,7 @@
 	<uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 	<uses-permission android:name="android.permission.RUN_USER_INITIATED_JOBS" />
 	<uses-permission android:name="android.permission.CAMERA" />
+	<!--<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM " />-->
   <queries>
     <package android:name="com.termux" />
   </queries>

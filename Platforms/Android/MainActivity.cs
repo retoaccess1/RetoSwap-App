@@ -16,7 +16,7 @@ public class MainActivity : MauiAppCompatActivity
 {
     public MainActivity()
     {
-
+        WorkManager.GetInstance(Android.App.Application.Context).CancelAllWork();
     }
 
     protected override void OnActivityResult(int requestCode, Result resultCode, Intent? data)

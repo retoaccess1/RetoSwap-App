@@ -11,8 +11,16 @@ public class BackgroundWorker : Worker
     {
     }
 
+    public override void OnStopped()
+    {
+        Console.WriteLine("OnStopped");
+        base.OnStopped();
+    }
+
     public override Result DoWork()
     {
+        Console.WriteLine("DoWork");
+
         try
         {
             var serviceProvider = IPlatformApplication.Current?.Services;

@@ -1,6 +1,7 @@
 ﻿#if ANDROID
 
 using Android.App;
+using Android.Content;
 using Android.OS;
 using AndroidX.Work;
 
@@ -8,7 +9,7 @@ namespace Manta.Services;
 
 public class AppLifecycleService : Java.Lang.Object, Android.App.Application.IActivityLifecycleCallbacks
 {
-    private string? _workName;
+    private readonly string[] _workNames = new string[1];
 
     public void OnActivityCreated(Activity activity, Bundle? savedInstanceState) { }
 
@@ -24,42 +25,49 @@ public class AppLifecycleService : Java.Lang.Object, Android.App.Application.IAc
     {
         Console.WriteLine("App RESUMED from background");
 
-        if (_workName is not null)
-        {
-            WorkManager.GetInstance(Android.App.Application.Context).CancelUniqueWork(_workName);
-            _workName = null;
-        }
+        //WorkManager.GetInstance(Android.App.Application.Context).CancelAllWork();
+
+        //AlarmUtils.CancelAlarm(Android.App.Application.Context);
     }
 
     public void OnActivityStopped(Activity activity)
     {
         Console.WriteLine("App WENT TO SLEEP");
 
-        // Cancel if already running
-        if (_workName is not null)
-        {
-           WorkManager.GetInstance(Android.App.Application.Context).CancelUniqueWork(_workName);
-        }
+        //WorkManager.GetInstance(Android.App.Application.Context).CancelAllWork();
 
-        _workName = $"daemon_fetch_work_{Guid.NewGuid()}";
+        //AlarmUtils.ScheduleExactAlarm(Android.App.Application.Context);
 
-        var constraints = new Constraints.Builder()
-            .SetRequiredNetworkType(NetworkType.Connected)
-            .Build();
+        //if (Build.VERSION.SdkInt >= BuildVersionCodes.S)
+        //{
+        //    var intent = new Intent(Android.Provider.Settings.ActionRequestScheduleExactAlarm);
+        //    activity.StartActivity(intent);
+        //}
 
-        //// Would be nice to start this when the app is in the bg, maybe use a semaphore to make the other service wait and release that lock when app goes into active use
-        //// 15 mins is the minimum
-        //var workRequest = (PeriodicWorkRequest)PeriodicWorkRequest.Builder
-        //    .From<BackgroundWorker>(TimeSpan.FromMinutes(15))
-        //    .SetConstraints(constraints)
-        //    .SetInitialDelay(2, Java.Util.Concurrent.TimeUnit.Minutes)
-        //    .Build();
+        //for (int i = 0; i < _workNames.Length; i++)
+        //{
+        //    var workName = $"daemon_fetch_work_{Guid.NewGuid()}";
 
-        //WorkManager.GetInstance(Android.App.Application.Context).EnqueueUniquePeriodicWork(
-        //    _workName,
-        //    ExistingPeriodicWorkPolicy.Keep,
-        //    workRequest
-        //);
+        //    var constraints = new Constraints.Builder()
+        //        .SetRequiredNetworkType(NetworkType.NotRequired!)
+        //        .Build();
+
+        //    // Would be nice to start this when the app is in the bg, maybe use a semaphore to make the other service wait and release that lock when app goes into active use
+        //    // 15 mins is the minimum
+        //    var workRequest = (PeriodicWorkRequest)PeriodicWorkRequest.Builder
+        //        .From<BackgroundWorker>(15, Java.Util.Concurrent.TimeUnit.Minutes!)
+        //        .SetConstraints(constraints)
+        //        .SetInitialDelay(5 * i, Java.Util.Concurrent.TimeUnit.Minutes)!
+        //        .Build();
+
+        //    WorkManager.GetInstance(Android.App.Application.Context).EnqueueUniquePeriodicWork(
+        //        workName,
+        //        ExistingPeriodicWorkPolicy.Keep!,
+        //        workRequest
+        //    );
+
+        //    _workNames[i] = workName;
+        //}
     }
 }
 
