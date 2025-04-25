@@ -30,6 +30,9 @@ public partial class Wallet : ComponentBase, IDisposable
     public bool VerifyModalIsOpen { get; set; }
     public bool CreatingTxModalIsOpen { get; set; }
 
+    public string WalletSeed { get; set; } = string.Empty;
+    public bool ShowWalletSeed { get; set; }
+
     public XmrTx? Transaction { get; set; }
 
     private ulong _piconeroAmount;
@@ -156,6 +159,17 @@ public partial class Wallet : ComponentBase, IDisposable
         {
 
         }
+    }
+
+    public async Task GetXmrSeedAsync()
+    {
+        using var grpcChannelHelper = new GrpcChannelHelper();
+        var walletsClient = new WalletsClient(grpcChannelHelper.Channel);
+
+        var response = await walletsClient.GetXmrSeedAsync(new GetXmrSeedRequest());
+
+        WalletSeed = response.Seed;
+        ShowWalletSeed = true;
     }
 
     public async Task WithdrawAsync()

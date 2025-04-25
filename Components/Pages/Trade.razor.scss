@@ -1,4 +1,7 @@
 ﻿.trade-main {
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 58px;
 
     .trade-main-top {
         display: flex;
@@ -41,5 +44,21 @@
 @keyframes spin {
     to {
         transform: rotate(360deg);
+    }
+}
+
+.payment-instructions {
+    margin-bottom: 20px;
+
+    .start-payment{
+        margin: 20px 0 10px;
+    }
+}
+
+.info {
+    margin-top: 20px;
+
+    .info-txt {
+        margin-bottom: 10px;
     }
 }

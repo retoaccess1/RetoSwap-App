@@ -42,7 +42,7 @@
   margin-bottom: 10px;
 }
 
-::deep .dropdown {
+.dropdown {
   margin: 10px 0 10px;
 }
 

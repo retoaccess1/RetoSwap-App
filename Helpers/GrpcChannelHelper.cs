@@ -16,7 +16,7 @@ public sealed class GrpcChannelHelper : IGrpcChannelHelper, IDisposable
 
     public GrpcChannel Channel { get; }
 
-    public GrpcChannelHelper(bool noTimeout = false)
+    public GrpcChannelHelper(bool noTimeout = false, bool disableMessageSizeLimit = false)
     {
         HttpClient httpClient;
 
@@ -46,7 +46,12 @@ public sealed class GrpcChannelHelper : IGrpcChannelHelper, IDisposable
         // TODO configable
         httpClient.DefaultRequestHeaders.Add("password", Password);
 
-        Channel = GrpcChannel.ForAddress(Host, new GrpcChannelOptions { HttpClient = httpClient });
+        var channelOptions = new GrpcChannelOptions { HttpClient = httpClient };
+
+        if (disableMessageSizeLimit)
+            channelOptions.MaxReceiveMessageSize = null;
+
+        Channel = GrpcChannel.ForAddress(Host, channelOptions);
     }
 
     public void Dispose()

@@ -1,9 +1,9 @@
-﻿.wallet {
+﻿.wallet-main {
   height: 100%;
   display: flex;
   flex-direction: column;
 }
-.wallet .top .monero-card {
+.wallet-main .top .monero-card {
   height: 200px;
   max-width: 380px;
   background-image: linear-gradient(to right bottom, #4d4d4d, #f26822);
@@ -12,11 +12,11 @@
   display: flex;
   flex-direction: column;
 }
-.wallet .top .monero-card .monero-card-top {
+.wallet-main .top .monero-card .monero-card-top {
   display: flex;
   align-items: center;
 }
-.wallet .top .monero-card .monero-card-top .logo {
+.wallet-main .top .monero-card .monero-card-top .logo {
   background-image: url("../img/monero-logo-black.webp");
   background-position: center;
   background-repeat: no-repeat;
@@ -25,31 +25,31 @@
   height: 50px;
   aspect-ratio: 1;
 }
-.wallet .top .monero-card .monero-card-top .wallet-title {
+.wallet-main .top .monero-card .monero-card-top .wallet-title {
   font-size: 22px;
   font-weight: 600;
   text-align: center;
   margin-left: 20px;
 }
-.wallet .top .monero-card p {
+.wallet-main .top .monero-card p {
   color: #fff;
 }
-.wallet .top .monero-card .monero-card-bottom .monero-card-bottom-available {
+.wallet-main .top .monero-card .monero-card-bottom .monero-card-bottom-available {
   /*display: flex;*/
   align-items: flex-end;
   margin: 10px 0 6px;
 }
-.wallet .top .monero-card .monero-card-bottom .monero-card-bottom-available .wallet-balance-fiat {
+.wallet-main .top .monero-card .monero-card-bottom .monero-card-bottom-available .wallet-balance-fiat {
   font-size: 32px;
   line-height: 32px;
   font-weight: 700;
   margin-right: 10px;
 }
-.wallet .top .monero-card .monero-card-bottom .monero-card-bottom-available .wallet-pending-balance-fiat {
+.wallet-main .top .monero-card .monero-card-bottom .monero-card-bottom-available .wallet-pending-balance-fiat {
   opacity: 0.8;
   line-height: 20px;
 }
-.wallet .top .monero-card .monero-card-bottom .monero-card-bottom-pending .wallet-balance-crypto {
+.wallet-main .top .monero-card .monero-card-bottom .monero-card-bottom-pending .wallet-balance-crypto {
   font-size: 22px;
   font-weight: 400;
   margin-right: 10px;
@@ -57,26 +57,26 @@
   line-height: 22px;
   /*white-space: nowrap;*/
 }
-.wallet .top .monero-card .monero-card-bottom .monero-card-bottom-pending .wallet-pending-balance-crypto {
+.wallet-main .top .monero-card .monero-card-bottom .monero-card-bottom-pending .wallet-pending-balance-crypto {
   opacity: 0.8;
   display: inline-block;
 }
-.wallet .addresses-text {
+.wallet-main .addresses-text {
   margin-top: 10px;
   font-weight: bold;
 }
-.wallet .tab-container {
+.wallet-main .tab-container {
   margin-top: 10px;
   margin-bottom: 20px;
 }
-.wallet ul {
+.wallet-main ul {
   margin-top: 10px;
   overflow-y: auto;
 }
-.wallet ul li {
+.wallet-main ul li {
   margin-bottom: 10px;
 }
-.wallet ul .transaction-card {
+.wallet-main ul .transaction-card {
   display: flex;
   background-color: #d3d3d3;
   padding: 10px;
@@ -85,16 +85,16 @@
   color: #000;
   align-items: center;
 }
-.wallet ul .transaction-card ion-icon {
+.wallet-main ul .transaction-card ion-icon {
   margin-right: 8px;
 }
-.wallet ul .transaction-card .in {
+.wallet-main ul .transaction-card .in {
   /*color: #509944;*/
 }
-.wallet ul .transaction-card .out {
+.wallet-main ul .transaction-card .out {
   /*color: #e95454;*/
 }
-.wallet ul .transaction-card .transaction-amount {
+.wallet-main ul .transaction-card .transaction-amount {
   margin-right: 10px;
 }
 

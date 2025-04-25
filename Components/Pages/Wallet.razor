@@ -11,7 +11,10 @@
     <Spinner IsFullscreen="false"></Spinner>
     <p>Please wait</p>
 </Modal>
-<div class="wallet">
+<Modal @bind-IsOpen="@ShowWalletSeed" Title="Wallet seed" CancelButtonText="Close" OkButtonText="Copy" OnOkPressed="async() => await Clipboard.Default.SetTextAsync(WalletSeed)">
+    <p>@WalletSeed</p>
+</Modal>
+<div class="wallet-main">
     <div class="top">
         <div class="monero-card">
             <div class="monero-card-top ">
@@ -27,7 +30,7 @@
                     <p class="wallet-balance-crypto">XMR @(Balance?.AvailableXMRBalance.ToMonero()) </p>
                     <p class="wallet-pending-balance-crypto">XMR @(Balance?.PendingXMRBalance.ToMonero()) pending</p>
                 </div>
-                @*                 <div class="monero-card-bottom-reserved">
+                @*<div class="monero-card-bottom-reserved">
                     <p class="wallet-balance-crypto">XMR @(((Balance?.ReservedTradeBalance ?? 0) + (Balance?.ReservedOfferBalance ?? 0)).ToMonero()) reserved</p>
                 </div> *@
             </div>
@@ -54,6 +57,9 @@
                     }
                 }
             </ul>
+            <div>
+                <button @onclick="GetXmrSeedAsync">Show wallet seed</button>
+            </div>
             break;
         case 1:
             <div class="withdraw">

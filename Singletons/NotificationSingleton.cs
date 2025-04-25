@@ -6,6 +6,7 @@ using Manta.Services;
 using Protobuf;
 using System.Collections.Concurrent;
 using System.Diagnostics;
+
 using static Haveno.Proto.Grpc.GetTradesRequest.Types;
 using static Haveno.Proto.Grpc.NotificationMessage.Types;
 using static Haveno.Proto.Grpc.Notifications;
@@ -48,6 +49,8 @@ public class NotificationSingleton
                     Category = Category.Open
                 });
 
+                _notificationManagerService.SendNotification($"count: {tradesResponse.Trades.Count}", "count");
+
                 List<TradeInfo> updatedTrades = [];
                 foreach (var trade in tradesResponse.Trades)
                 {
@@ -58,7 +61,7 @@ public class NotificationSingleton
                     });
                 }
 
-                _notificationManagerService.SendNotification($"count: {updatedTrades.Count}", "count");
+                //_notificationManagerService.SendNotification($"count: {updatedTrades.Count}", "count");
 
                 // Not very efficient
                 foreach (var trade in updatedTrades)

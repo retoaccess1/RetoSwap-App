@@ -1,5 +1,8 @@
 ﻿@page "/settings"
 
+<Modal Title="Backup" ModalButtonOptions="ModalButtonOptions.NONE" @bind-IsOpen="IsBackingUp">
+    <p>Please wait</p>
+</Modal>
 <div class="settings-main">
     <div class="info-container">
         <p class="bold-p">Build information</p>
@@ -15,13 +18,13 @@
     <div class="dropdown">
         <SearchableDropdown InitialValue="@PreferredCurrency" Items="Currencies" Text="Preferred currency" Placeholder="Choose currency" OnSubmit="HandlePreferredCurrencySubmit"></SearchableDropdown>
     </div>
-    <button class="backup-btn" disabled>Backup app data</button>
+    <button class="backup-btn" @onclick="BackupAsync">Backup app data</button>
     @* <SearchableDropdown Items="" Text="Country" Placeholder="Choose country"></SearchableDropdown> *@
     <Toggle OnToggledChanged="HandleToggle" @bind-IsToggled="IsToggled" Text="Notifications" />
 
     <p class="bold-p remote-node-txt">Remote node configuration</p>
     <div class="@(IsRemoteNodeToggled ? "remote-node-section" : "remote-node-section remote-node-disabled")">
-        <button @onclick="ScanQRCode" class="qr-btn">Scan QR code</button>
+        <button @onclick="ScanQRCodeAsync" class="qr-btn">Scan QR code</button>
         <p class="or">Or</p>
         <label class="bold-p">IP Address</label>
         <input @bind="Host" type="text"/>

@@ -1,10 +1,13 @@
 ﻿using Blazored.LocalStorage;
+using CommunityToolkit.Maui.Storage;
+using Grpc.Core;
 using Haveno.Proto.Grpc;
 using Manta.Helpers;
 using Manta.Models;
 using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
-using Microsoft.Extensions.Hosting;
+
+using static Haveno.Proto.Grpc.Account;
 
 namespace Manta.Components.Pages;
 
@@ -34,6 +37,7 @@ public partial class Settings : ComponentBase, IDisposable
 #endif
 
     public bool IsFetching { get; set; }
+    public bool IsBackingUp { get; set; }
 
     public bool IsToggled { get; set; }
 
@@ -45,7 +49,53 @@ public partial class Settings : ComponentBase, IDisposable
     public string? Password { get; set; }
     public string? Host { get; set; }
 
-    public async Task ScanQRCode()
+    public async Task BackupAsync()
+    {
+        IsBackingUp = true;
+
+        try
+        {
+            var result = await FolderPicker.Default.PickAsync();
+            if (result.IsSuccessful)
+            {
+
+            }
+            else
+            {
+
+            }
+
+            using var grpcChannelHelper = new GrpcChannelHelper(disableMessageSizeLimit: true);
+            var accountClient = new AccountClient(grpcChannelHelper.Channel);
+
+            var backupStream = accountClient.BackupAccount(new BackupAccountRequest());
+
+            using var memoryStream = new MemoryStream();
+
+            while (await backupStream.ResponseStream.MoveNext())
+            {
+                memoryStream.Write(backupStream.ResponseStream.Current.ZipBytes.Memory.Span);
+            }
+
+            var fileSaverResult = await FileSaver.Default.SaveAsync(result.Folder.Path, $"haveno_backup_{DateTime.Now.ToString()}-{Guid.NewGuid()}.zip", memoryStream);
+            if (fileSaverResult.IsSuccessful)
+            {
+
+            }
+            else
+            {
+
+            }
+        }
+        catch
+        {
+
+        }
+
+        IsBackingUp = false;
+    }
+
+    public async Task ScanQRCodeAsync()
     {
         await Permissions.RequestAsync<Permissions.Camera>();
 

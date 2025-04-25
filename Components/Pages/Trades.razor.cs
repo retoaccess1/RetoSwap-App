@@ -1,7 +1,10 @@
 ﻿using Haveno.Proto.Grpc;
+using Manta.Helpers;
 using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
 using Protobuf;
+
+using static Haveno.Proto.Grpc.Disputes;
 
 namespace Manta.Components.Pages;
 
@@ -10,8 +13,24 @@ public partial class Trades : ComponentBase, IDisposable
     [Inject]
     public NotificationSingleton NotificationSingleton { get; set; } = default!;
 
-    public int SelectedTabIndex { get; set; }
-    public List<TradeInfo> FilteredTradeInfos { get 
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public int SelectedTabIndex 
+    { 
+        get;
+        set
+        {
+            field = value;
+            if (value == 2)
+            {
+                GetDisputes();
+            }
+        }
+    }
+
+    public List<TradeInfo> FilteredTradeInfos 
+    { 
+        get 
         {
             switch(SelectedTabIndex)
             {
@@ -19,11 +38,15 @@ public partial class Trades : ComponentBase, IDisposable
                     return NotificationSingleton.TradeInfos.Values.Where(x => !x.IsCompleted).ToList();
                 case 1:
                     return NotificationSingleton.TradeInfos.Values.Where(x => x.IsCompleted).ToList();
+                case 2:
+                    return [];
                 default: 
                     return [];
             }
         }
     }
+
+    public List<Dispute> Disputes { get; set; } = [];
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -43,11 +66,30 @@ public partial class Trades : ComponentBase, IDisposable
             await NotificationSingleton.InitializedTCS.Task;
         }
 
-
         NotificationSingleton.OnChatMessage += HandleChatMessage;
         NotificationSingleton.OnTradeUpdate += HandleTradeUpdate;
 
         await base.OnInitializedAsync();
+    }
+
+    public async Task GetDisputesAsync()
+    {
+        using var grpcChannelHelper = new GrpcChannelHelper();
+        var disputesClient = new DisputesClient(grpcChannelHelper.Channel);
+
+        var response = await disputesClient.GetDisputesAsync(new GetDisputesRequest());
+
+        Disputes = [.. response.Disputes];
+    }
+
+    public void GetDisputes()
+    {
+        using var grpcChannelHelper = new GrpcChannelHelper();
+        var disputesClient = new DisputesClient(grpcChannelHelper.Channel);
+
+        var response = disputesClient.GetDisputes(new GetDisputesRequest());
+
+        Disputes = [.. response.Disputes];
     }
 
     public async void HandleChatMessage(ChatMessage chatMessage)

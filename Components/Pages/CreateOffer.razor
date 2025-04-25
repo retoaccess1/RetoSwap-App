@@ -1,5 +1,5 @@
 ﻿<div class="create-offer-main">
-    <p class="bold-p">Create offer</p>
+    <p class="bold-p margin">Create offer</p>
 
     <Modal Title="Creating offer" ModalButtonOptions="ModalButtonOptions.NONE" @bind-IsOpen="IsFetching">
         <p>Please wait</p>
@@ -12,46 +12,48 @@
     else
     {
         <div class="dropdown">
-            <SearchableDropdown InitialValue="@SelectedPaymentAccountId" Items="@PaymentAccounts" Text="Choose trading account" Placeholder="No accounts" OnSubmit="(val) => SelectedPaymentAccountId = val"></SearchableDropdown>
+            <SearchableDropdown InitialValue="@SelectedPaymentAccountId" Items="@PaymentAccounts" Text="Trading account" Placeholder="No accounts" OnSubmit="(val) => SelectedPaymentAccountId = val"></SearchableDropdown>
         </div>
 
         <div class="dropdown">
             <SearchableDropdown InitialValue="@SelectedCurrencyCode" Placeholder="Show all" Items="@CurrencyCodes" Text="Currency" OnSubmit="@((val) => SelectedCurrencyCode = val)" />
         </div>
 
-        @* <EditForm EditContext="_editContext" class="input-fields" OnValidSubmit="OnValidSubmit">
-    <DataAnnotationsValidator />
-</EditForm> *@
         <div>
             <label>Amount of XMR to @Direction.ToLower()</label>
-            <input type="number" @bind="MoneroAmount" placeholder="Enter amount in XMR" />
+            <input class="no-margin" type="number" max="@MaxTradeLimit" @bind="MoneroAmount" @onblur="@(() => Calculate(MoneroAmount, "MoneroAmount"))" placeholder="Enter amount in XMR" />
+            <p class="margin">Note: max trade limit is @MaxTradeLimit XMR</p>
 
             <label>Minimum amount of XMR</label>
-            <input type="number" @bind="MinimumMoneroAmount" placeholder="Enter amount in XMR" />
+            <input type="number" @bind="MinimumMoneroAmount" @onblur="@(() => Calculate(MinimumMoneroAmount, "MinimumMoneroAmount"))" placeholder="Enter amount in XMR" />
         </div>
 
-        @if (Direction == "BUY")
+        <div class="price-toggle">
+            <Toggle Text="@(UseFixedPrice ? "Using fixed price" : "Using market %")" @bind-IsToggled="UseFixedPrice"></Toggle>
+        </div>
+
+        <label>Fixed price in @(SelectedCurrencyCode) for 1 XMR</label>
+        <input readonly="@(!UseFixedPrice)" type="number" @bind="FixedPrice" @onblur="@(() => Calculate(FixedPrice, "FixedPrice"))" />
+
+        <label>@(Direction == "BUY" ? "Below" : "Above") % from market price</label>
+        <input readonly="@(UseFixedPrice)" type="number" @bind="MarketPriceMarginPct" @onblur="@(() => Calculate(MarketPriceMarginPct, "MarketPriceMarginPct"))" />
+
+
+        if (!UseFixedPrice)
         {
-            <label>Below % from market price</label>
-            <input type="number" @bind="MarketPriceMarginPct" />
-
-            <label>Deactive offer if above</label>
-            <input type="number" @bind="TriggerAmount" />
-
-            <label>Amount in @(SelectedCurrencyCode) to spend</label>
-            <input type="number" @bind="FiatPrice" />
+            <label>Deactive offer if @(Direction == "BUY" ? "above" : "below")</label>
+            <input readonly="@true" type="number" @bind="TriggerAmount" />
         }
-        else
-        {
-            <label>Above % from market price</label>
-            <input type="number" @bind="MarketPriceMarginPct" />
 
-            <label>Deactive offer if below</label>
-            <input type="number" @bind="TriggerAmount" />
+        <label>Amount in @(SelectedCurrencyCode) to @(Direction == "BUY" ? "spend" : "receive")</label>
+        <input type="number" @bind="FiatPrice" @onblur="@(() => Calculate(FiatPrice, "FiatPrice"))" />
 
-            <label>Amount in @(SelectedCurrencyCode) to receive</label>
-            <input type="number" @bind="FiatPrice" />
-        }
+        <label>Set both traders' security deposit (%)</label>
+        <input readonly="@BuyerAsTakerWithoutDeposit" type="number" @bind="SecurityDepositPct" />
+
+        <div class="deposit-toggle">
+            <Toggle Text="No deposit required from buyer" @bind-IsToggled="BuyerAsTakerWithoutDeposit"></Toggle>
+        </div>
 
         <div class="buttons">
             <button @onclick="PostOfferAsync">Create offer</button>

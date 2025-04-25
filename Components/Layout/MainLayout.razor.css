@@ -12,7 +12,7 @@ main {
 }
 
 /*line breaks do not work*/
-::deep .install-modal {
+/*::deep .install-modal {
   word-break: keep-all;
   overflow-wrap: normal;
   white-space: nowrap;
@@ -21,3 +21,4 @@ main {
   white-space: nowrap;
   margin-bottom: 10px;
 }
+*/

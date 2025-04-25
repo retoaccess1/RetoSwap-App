@@ -4,20 +4,20 @@
     /*    height: calc(100dvh - 62px - 58px);*/
     padding-bottom: 58px;
 
-    p {
-        margin-bottom: 10px;
-    }
-
     .buttons {
         margin-top: 20px;
-/*        position: absolute;
-        bottom: 0;
-        background-color: #131313;
-        padding: 10px 0 10px;*/
 
         button {
             margin-bottom: 10px;
         }
+    }
+
+    .margin {
+        margin-bottom: 10px;
+    }
+
+    .no-margin {
+        margin-bottom: 0 !important;
     }
 
     .dropdown {
@@ -27,4 +27,8 @@
     input[type=number] {
         margin-bottom: 10px;
     }
+}
+
+.price-toggle {
+    margin-bottom: 10px;
 }

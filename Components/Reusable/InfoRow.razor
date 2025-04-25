@@ -2,17 +2,19 @@
     <p class="info-text">@Label</p>
     <div class="inner-container">
         <p class=@(IsExpandable && _isExpanded ? "data expanded" : "data")>@Value</p>
-        @if (IsExpandable)
-        {
-            <ion-icon class="eye" @onclick="() => _isExpanded = !_isExpanded" name=@(_isExpanded ? "eye-sharp" : "eye-outline")></ion-icon>
-        }
-        <ion-icon @onclick="@OnCopy" name="copy-outline"></ion-icon>
-        @if (_displayCopied)
-        {
-            <div class="copied">
-                Copied!
-            </div>
-        }
+        <div class="right">
+            @if (IsExpandable)
+            {
+                <ion-icon class="eye" @onclick="() => _isExpanded = !_isExpanded" name=@(_isExpanded ? "eye-sharp" : "eye-outline")></ion-icon>
+            }
+            <ion-icon @onclick="@OnCopy" name="copy-outline"></ion-icon>
+            @if (_displayCopied)
+            {
+                <div class="copied">
+                    Copied!
+                </div>
+            }
+        </div>
     </div>
 </div>
 

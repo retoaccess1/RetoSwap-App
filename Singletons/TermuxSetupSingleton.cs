@@ -7,7 +7,6 @@ using AndroidX.Core.App;
 using AndroidX.Core.Content;
 using Haveno.Proto.Grpc;
 using Manta.Helpers;
-using Manta.Models;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -245,22 +244,28 @@ public class TermuxSetupSingleton
                 _context.StartActivity(intent);
             }
 
-            await Task.Delay(_termuxStartWaitTime);
+            await Task.Delay(2_000);
+
+            await ExecuteTermuxCommandAsync("am start -a android.intent.action.VIEW -d \"manta://termux_callback\"");
 
             await StopLocalHavenoDaemonAsync();
 
-            var startScript = $"#!/bin/sh\r\n ./haveno-daemon --baseCurrencyNetwork=XMR_STAGENET --useLocalhostForP2P=false --useDevPrivilegeKeys=false --nodePort=9999 --appName=haveno-XMR_STAGENET_user1 --apiPassword={password} --apiPort=3201 --passwordRequired=false --useNativeXmrWallet=false --torControlHost=127.0.0.1 --torControlPort=9051";
+            var appName = "XMR_LOCAL_user3";
+
+            //var startScript = $"#!/bin/sh\r\n ./haveno-daemon --baseCurrencyNetwork=XMR_STAGENET --useLocalhostForP2P=false --useDevPrivilegeKeys=false --nodePort=9999 --appName=haveno-XMR_STAGENET_user1 --apiPassword={password} --apiPort=3201 --passwordRequired=false --useNativeXmrWallet=false --torControlHost=127.0.0.1 --torControlPort=9051";
+            var startScript = $"#!/bin/sh\r\n ./haveno-daemon --seedNodes=10.0.2.2:2002 --baseCurrencyNetwork=XMR_LOCAL --useLocalhostForP2P=true --useDevPrivilegeKeys=true --nodePort=7778 --appName=haveno-{appName} --apiPassword={password} --apiPort=3201 --xmrNode=http://10.0.2.2:28081 --walletRpcBindPort=38093 --passwordRequired=false --useNativeXmrWallet=false";
             
             await ExecuteCommandAsync("\"rm -f haveno/start.sh\"", true);
             await ExecuteCommandAsync("\"touch haveno/start.sh\"", true);
             await ExecuteCommandAsync($"\"printf '{startScript}' > haveno/start.sh\"", true);
             await ExecuteCommandAsync($"\"chmod +x haveno/start.sh\"", true);
 
-            await ExecuteTermuxCommandAsync("am start -a android.intent.action.VIEW -d \"manta://termux_callback\"");
+            //await ExecuteTermuxCommandAsync("am start -a android.intent.action.VIEW -d \"manta://termux_callback\"");
 
             // TODO Don't run as root, everything on termux seems to run as root, set up user with less perms
             // Send SIGINTs to both of these 
             await ExecuteCommandAsync("\"tor\"", true, exitOnContainsString: "100%");
+            //"Consensus not signed by sufficient number of requested authorities"
             // Also runs as root - fix. Limit directory access
             // TODO error handling
             _havenoDaemonTask = Task.Run(() => ExecuteCommandAsync($"\"cd haveno && ./start.sh\"", true));
@@ -352,7 +357,7 @@ public class TermuxSetupSingleton
             _context.StartActivity(intent);
         }
 
-        await Task.Delay(_termuxStartWaitTime);
+        await Task.Delay(1_500);
 
         await ExecuteTermuxCommandAsync("termux-reload-settings");
         await ExecuteTermuxCommandAsync("pkg install termux-am", 15_000);
@@ -429,7 +434,7 @@ public class TermuxSetupSingleton
         }
 
         await ExecuteCommandAsync("\"rm -fv -r haveno\"", true);
-        await ExecuteCommandAsync($"\"wget https://github.com/atsamd21/haveno/releases/download/v1.0.19/{package}.zip\"", true);
+        await ExecuteCommandAsync($"\"wget https://github.com/atsamd21/haveno/releases/download/v1.1.0/{package}.zip\"", true);
         await ExecuteCommandAsync($"\"unzip {package}.zip\"", true);
         await ExecuteCommandAsync($"\"rm {package}.zip\"", true);
         await ExecuteCommandAsync($"\"mv {package} haveno\"", true);

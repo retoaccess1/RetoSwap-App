@@ -14,6 +14,10 @@
         justify-content: space-between;
         color: #000;
 
+        .right {
+            display: flex;
+        }
+
         .copied {
             position: absolute;
             top: -24px;

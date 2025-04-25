@@ -11,7 +11,7 @@ namespace Manta.Components.Pages;
 
 public class AdjustedPrices
 {
-    public decimal? FiatPrice;
+    public decimal FiatPrice;
     public decimal MoneroAmount;
 }
 
@@ -35,8 +35,22 @@ public partial class CreateOffer : ComponentBase
         set 
         { 
             field = value;
-            CurrencyCodes = ProtoPaymentAccounts.FirstOrDefault(x => x.Id == value)?.TradeCurrencies.ToDictionary(x => x.Code, x => $"{x.Name} ({x.Code})") ?? [];
-            SelectedCurrencyCode = ProtoPaymentAccounts.FirstOrDefault(x => x.Id == SelectedPaymentAccountId)?.TradeCurrencies.FirstOrDefault()?.Code ?? throw new Exception();
+
+            if (!string.IsNullOrEmpty(value))
+            {
+                CurrencyCodes = ProtoPaymentAccounts.FirstOrDefault(x => x.Id == field)?.TradeCurrencies.ToDictionary(x => x.Code, x => $"{x.Name} ({x.Code})") ?? [];
+                SelectedCurrencyCode = ProtoPaymentAccounts.FirstOrDefault(x => x.Id == SelectedPaymentAccountId)?.TradeCurrencies.FirstOrDefault()?.Code ?? throw new Exception();
+
+                // Get trade limits
+                var paymentMethod = ProtoPaymentAccounts.First(x => x.Id == field).PaymentMethod;
+                MaxTradeLimit = ((ulong)paymentMethod.MaxTradeLimit).ToMonero();
+            }
+            else
+            {
+                CurrencyCodes = [];
+                // Doesnt really clear as the dropdown does not re-render TODO
+                SelectedCurrencyCode = "";
+            }
 
             Clear();
 
@@ -58,137 +72,194 @@ public partial class CreateOffer : ComponentBase
     } = string.Empty;
 
     // Currently does not respect trade limits, TODO
-    private ulong _piconeroAmount;
-    public decimal MoneroAmount
-    {
-        get;
-        set
-        {
-            var adjustedPrices = GetAdjustedPrices(value);
-            if (adjustedPrices is null)
-            {
-                field = value;
-            }
-            else
-            {
-                field = adjustedPrices.MoneroAmount;
-                FiatPrice = adjustedPrices.FiatPrice;
-            }
-
-            if (field < MinimumMoneroAmount || MinimumMoneroAmount == 0m)
-            {
-                MinimumMoneroAmount = field;
-            }
-
-            _piconeroAmount = field.ToPiconero();
-        }
-    }
-
-    private ulong _minimumPiconeroAmount;
-    public decimal MinimumMoneroAmount
-    {
-        get;
-        set
-        {
-            var adjustedPrices = GetAdjustedPrices(value);
-            if (adjustedPrices is null)
-            {
-                field = value;
-            }
-            else
-            {
-                field = adjustedPrices.MoneroAmount;
-            }
-
-            if (field > MoneroAmount)
-            {
-                MoneroAmount = field;
-            }
-
-            _minimumPiconeroAmount = field.ToPiconero();
-        }
-    }
-
-    public decimal? MarketPriceMarginPct 
+    public decimal MaxTradeLimit { get; set; }
+    public decimal MoneroAmount { get; set; }
+    public decimal MinimumMoneroAmount { get; set; }
+    public decimal MarketPriceMarginPct { get; set; }
+    public decimal FiatPrice { get; set; }
+    public decimal FixedPrice { get; set; }
+    public bool UseFixedPrice { get; set; }
+    public decimal TriggerAmount { get; set; }
+    public decimal SecurityDepositPct { get; set; } = 15m;
+    public bool BuyerAsTakerWithoutDeposit 
     { 
         get;
         set
         {
-            if (value >= 100m)
-                field = 99.99m;
-            else
-                field = value;
-
-            MoneroAmount = MoneroAmount;
-            MinimumMoneroAmount = MinimumMoneroAmount;
+            field = value;
+            SecurityDepositPct = 15m;
         }
     }
-
-    // When set from input, should round and adjust monero amount TODO
-    // When set externally null marketpricemarginpct
-    public decimal? FiatPrice 
-    {
-        get;
-        set
-        {
-            if (value is null)
-                field = null;
-            else
-            {
-                field = Math.Round(value.Value);
-
-                //if (BalanceSingleton.MarketPriceInfoDictionary.TryGetValue(SelectedCurrencyCode, out var price))
-                //{
-                //    MoneroAmount = Math.Round(MoneroAmount / price, 4);
-                //    MinimumMoneroAmount = MoneroAmount;
-                //}
-            }
-        }
-    }
-
-    public decimal TriggerAmount { get; set; }
-    public decimal SecurityDepositPct { get; set; } = 15m;
 
     public bool IsFetching { get; set; }
 
     public void Clear()
     {
-        MinimumMoneroAmount = 0;
-        MoneroAmount = 0;
-        FiatPrice = null;
-        MarketPriceMarginPct = null;
+        MinimumMoneroAmount = 0m;
+        MoneroAmount = 0m;
+        FiatPrice = 0m;
+        MarketPriceMarginPct = 0m;
         TriggerAmount = 0;
         SecurityDepositPct = 15m;
     }
 
     // Gives the adjusted amounts so that the fiat value is a whole number
-    public AdjustedPrices? GetAdjustedPrices(decimal unadjustedMoneroAmount)
+    public AdjustedPrices GetAdjustedPrices(decimal unadjustedMoneroAmount, decimal priceForOneXMR, decimal marketPriceMarginPct)
     {
-        AdjustedPrices? adjustedPrices = null;
+        decimal adjustedMktPrice;
+        var percent = marketPriceMarginPct / 100m;
 
-        if (MarketPriceMarginPct is not null && BalanceSingleton.MarketPriceInfoDictionary.TryGetValue(SelectedCurrencyCode, out var price))
+        if (Direction == "BUY")
         {
-            decimal adjustedMktPrice;
-            var percent = (MarketPriceMarginPct.Value / 100m);
+            adjustedMktPrice = priceForOneXMR - (priceForOneXMR * percent);
+        }
+        else
+        {
+            adjustedMktPrice = priceForOneXMR + (priceForOneXMR * percent);
+        }
 
-            if (Direction == "BUY")
-            {
-                adjustedMktPrice = price - (price * percent);
-            }
-            else
-            {
-                adjustedMktPrice = price + (price * percent);
-            }
+        var adjustedPrices = new AdjustedPrices
+        {
+            FiatPrice = Math.Round(adjustedMktPrice * unadjustedMoneroAmount),
+        };
 
-            adjustedPrices = new AdjustedPrices
-            {
-                FiatPrice = Math.Round(adjustedMktPrice * unadjustedMoneroAmount),
-            };
-
-            adjustedPrices.MoneroAmount = Math.Round(adjustedPrices.FiatPrice.Value / adjustedMktPrice, 4);
+        if (adjustedMktPrice != 0m)
+        {
+            adjustedPrices.MoneroAmount = Math.Round(adjustedPrices.FiatPrice / adjustedMktPrice, 4);
+        }
+        else
+        {
+            adjustedPrices.MoneroAmount = 0m;
         }
 
         return adjustedPrices;
+    }
+
+    public void Calculate(decimal value, string inputName)
+    {
+        BalanceSingleton.MarketPriceInfoDictionary.TryGetValue(SelectedCurrencyCode, out var priceForOneXMR);
+
+        switch (inputName)
+        {
+            case "MoneroAmount":
+                {
+                    var adjustedPrices = GetAdjustedPrices(value, priceForOneXMR, MarketPriceMarginPct);
+
+                    MoneroAmount = adjustedPrices.MoneroAmount;
+                    FiatPrice = adjustedPrices.FiatPrice;
+
+                    if (MoneroAmount < MinimumMoneroAmount || MinimumMoneroAmount == 0m)
+                    {
+                        MinimumMoneroAmount = MoneroAmount;
+                    }
+                }
+                break;
+            case "MinimumMoneroAmount":
+                {
+                    var adjustedPrices = GetAdjustedPrices(value, priceForOneXMR, MarketPriceMarginPct);
+
+                    MinimumMoneroAmount = adjustedPrices.MoneroAmount;
+
+                    if (MinimumMoneroAmount > MoneroAmount)
+                    {
+                        MoneroAmount = MinimumMoneroAmount;
+                    }
+                }
+                break;
+            case "FixedPrice":
+                {
+                    var percent = value / priceForOneXMR;
+
+                    MarketPriceMarginPct = Math.Round(percent - 1m, 2) * 100m;
+
+                    FiatPrice = Math.Round(MoneroAmount * value);
+
+                    if (MoneroAmount == MinimumMoneroAmount)
+                    {
+                        MoneroAmount = Math.Round(FiatPrice / value, 4);
+                        MinimumMoneroAmount = MoneroAmount;
+                    }
+                    else
+                    {
+                        MoneroAmount = Math.Round(FiatPrice / value, 4);
+
+                        if (MoneroAmount < MinimumMoneroAmount || MinimumMoneroAmount == 0m)
+                        {
+                            MinimumMoneroAmount = MoneroAmount;
+                        }
+                    }
+                }
+                break;
+            case "MarketPriceMarginPct":
+                {
+                    if (value >= 100m)
+                        value = 99.99m;
+
+                    decimal adjustedMktPrice;
+                    var percent = MarketPriceMarginPct / 100m;
+
+                    if (Direction == "BUY")
+                    {
+                        adjustedMktPrice = priceForOneXMR - (priceForOneXMR * percent);
+                    }
+                    else
+                    {
+                        adjustedMktPrice = priceForOneXMR + (priceForOneXMR * percent);
+                    }
+
+                    FixedPrice = adjustedMktPrice;
+                    FiatPrice = Math.Round(adjustedMktPrice);
+
+                    if (MoneroAmount == MinimumMoneroAmount)
+                    {
+                        MoneroAmount = Math.Round(FiatPrice / adjustedMktPrice, 4);
+                        MinimumMoneroAmount = MoneroAmount;
+                    }
+                    else
+                    {
+                        MoneroAmount = Math.Round(FiatPrice / adjustedMktPrice, 4);
+
+                        if (MoneroAmount < MinimumMoneroAmount || MinimumMoneroAmount == 0m)
+                        {
+                            MinimumMoneroAmount = MoneroAmount;
+                        }
+                    }
+                }
+                break;
+            case "FiatPrice":
+                {
+                    var fiatPrice = Math.Round(FiatPrice);
+
+                    decimal adjustedMktPrice;
+                    var percent = MarketPriceMarginPct / 100m;
+
+                    if (Direction == "BUY")
+                    {
+                        adjustedMktPrice = priceForOneXMR - (priceForOneXMR * percent);
+                    }
+                    else
+                    {
+                        adjustedMktPrice = priceForOneXMR + (priceForOneXMR * percent);
+                    }
+
+                    if (MoneroAmount == MinimumMoneroAmount)
+                    {
+                        MoneroAmount = Math.Round(fiatPrice / adjustedMktPrice, 4);
+                        MinimumMoneroAmount = MoneroAmount;
+                    }
+                    else
+                    {
+                        MoneroAmount = Math.Round(fiatPrice / adjustedMktPrice, 4);
+
+                        if (MoneroAmount < MinimumMoneroAmount || MinimumMoneroAmount == 0m)
+                        {
+                            MinimumMoneroAmount = MoneroAmount;
+                        }
+                    }
+                }
+                break;
+            default: break;
+        }
     }
 
     protected override async Task OnInitializedAsync()
@@ -202,11 +273,12 @@ public partial class CreateOffer : ComponentBase
         
         if (ProtoPaymentAccounts.Count != 0)
         {
-            // Get trade limits
-            //paymentAccountResponse.PaymentAccounts.FirstOrDefault(x => x.Id == SelectedPaymentAccountId).PaymentMethod.
-
             SelectedPaymentAccountId = PaymentAccounts.Select(x => x.Key).FirstOrDefault() ?? string.Empty;
             SelectedCurrencyCode = paymentAccountResponse.PaymentAccounts.FirstOrDefault(x => x.Id == SelectedPaymentAccountId)?.TradeCurrencies.FirstOrDefault()?.Code ?? throw new Exception();
+
+            // Get trade limits
+            var paymentMethod = paymentAccountResponse.PaymentAccounts.First(x => x.Id == SelectedPaymentAccountId).PaymentMethod;
+            MaxTradeLimit = ((ulong)paymentMethod.MaxTradeLimit).ToMonero();
         }
 
         await base.OnInitializedAsync();
@@ -223,35 +295,32 @@ public partial class CreateOffer : ComponentBase
 
             var request = new PostOfferRequest
             {
-                Amount = _piconeroAmount,
-                MinAmount = _minimumPiconeroAmount,
+                Amount = MoneroAmount.ToPiconero(),
+                MinAmount = MinimumMoneroAmount.ToPiconero(),
                 PaymentAccountId = SelectedPaymentAccountId,
                 CurrencyCode = SelectedCurrencyCode,
                 Direction = Direction,
-                SecurityDepositPct = (double)(SecurityDepositPct / 100),
+                SecurityDepositPct = (double)(SecurityDepositPct / 100m),
 
                 TriggerPrice = TriggerAmount.ToString(),
                 MarketPriceMarginPct = 0,
                 Price = "",
-                UseMarketBasedPrice = true
+                UseMarketBasedPrice = true,
+                BuyerAsTakerWithoutDeposit = BuyerAsTakerWithoutDeposit
             };
 
-            if (MarketPriceMarginPct is null)
+            if (MarketPriceMarginPct == 0m)
             {
                 request.MarketPriceMarginPct = 0;
             }
             else 
             {
-                //request.UseMarketBasedPrice = false;
-                //request.MarketPriceMarginPct = (double)(MarketPriceMarginPct * 100);
-                request.MarketPriceMarginPct = (double)(MarketPriceMarginPct);
+                request.MarketPriceMarginPct = (double)MarketPriceMarginPct;
             }
 
             var response = await offersClient.PostOfferAsync(request);
 
             NavigationManager.NavigateTo("/myoffers?title=My%20Offers");
-
-            //await OnCloseCreateOffer.InvokeAsync();
         }
         catch
         {

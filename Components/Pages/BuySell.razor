@@ -29,11 +29,11 @@
         <div class="inputs">
             @if (!IsCollapsed)
             {
-                <div>
-                    <SearchableDropdown @ref="CurrencySearchableDropdown" Class="dropdown" Placeholder="Show all" Items="@VisibleCurrencyCodes" Text="Currency" OnSubmit="@((val) => SelectedCurrencyCode = val)" />
+                <div class="dropdown">
+                    <SearchableDropdown @ref="CurrencySearchableDropdown" Placeholder="Show all" Items="@VisibleCurrencyCodes" Text="Currency" OnSubmit="@((val) => SelectedCurrencyCode = val)" />
                 </div>
-                <div>
-                    <SearchableDropdown @ref="PaymentMethodSearchableDropdown" Class="dropdown" Placeholder="Show all" Items="@VisiblePaymentMethods" Text="Payment method" OnSubmit="@((val) => SelectedPaymentMethod = val)" />
+                <div class="dropdown">
+                    <SearchableDropdown @ref="PaymentMethodSearchableDropdown" Placeholder="Show all" Items="@VisiblePaymentMethods" Text="Payment method" OnSubmit="@((val) => SelectedPaymentMethod = val)" />
                 </div>                
             }
             <div class="offers-list-text-container">

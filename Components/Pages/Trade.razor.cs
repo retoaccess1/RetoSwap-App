@@ -1,8 +1,12 @@
 ﻿using Haveno.Proto.Grpc;
+using Manta.Extensions;
 using Manta.Helpers;
 using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
+using Protobuf;
 
+using static Haveno.Proto.Grpc.Disputes;
+using static Haveno.Proto.Grpc.PaymentAccounts;
 using static Haveno.Proto.Grpc.Trades;
 
 namespace Manta.Components.Pages;
@@ -13,6 +17,7 @@ public partial class Trade : ComponentBase, IDisposable
     [SupplyParameterFromQuery]
     public string TradeId { get; set; } = string.Empty;
     public TradeInfo TradeInfo { get; set; } = default!;
+    public PaymentMethod? PaymentMethod { get; set; }
     [Inject]
     public NotificationSingleton NotificationSingleton { get; set; } = default!;
     [Inject]
@@ -21,6 +26,10 @@ public partial class Trade : ComponentBase, IDisposable
     public int SellerState { get; set; }
     public int BuyerState { get; set; }
     public bool IsBuyer { get; set; }
+    public bool IsNotCompletedInTime { get; set; }
+    public TimeSpan MaxTradePeriod { get; set; }
+    public DateTime TradeExpiresDateUTC { get; set; }
+    public bool IsFetching { get; set; }
 
     public string[] BuyerSteps { get; set; } = ["Wait for blockchain confirmations", "Start payment", "Wait until payment arrived", "Completed"];
     public string[] SellerSteps { get; set; } = ["Wait for blockchain confirmations", "Wait until payment has been sent", "Confirm payment received", "Completed"];
@@ -42,6 +51,42 @@ public partial class Trade : ComponentBase, IDisposable
 
                 TradeInfo = tradeInfo!;
 
+                if (PaymentMethod is null)
+                {
+                    using var paymentAccountChannel = new GrpcChannelHelper();
+                    var paymentAccountsClient = new PaymentAccountsClient(paymentAccountChannel.Channel);
+
+                    var paymentMethodsResponse = await paymentAccountsClient.GetPaymentMethodsAsync(new GetPaymentMethodsRequest());
+
+                    PaymentMethod = paymentMethodsResponse.PaymentMethods.FirstOrDefault(x => x.Id == TradeInfo.Offer.PaymentMethodId);
+                }
+
+                if (PaymentMethod is not null)
+                {
+                    MaxTradePeriod = new TimeSpan(PaymentMethod.MaxTradePeriod * 10_000);
+
+                    // This is wrong, should be from the time of the first blockchain conf
+                    TradeExpiresDateUTC = TradeInfo.Date.ToDateTime().Add(MaxTradePeriod);
+
+                    // Really only need to do this if trade is not completed - fix 
+                    var utcNow = DateTime.UtcNow;
+
+                    if (utcNow >= TradeExpiresDateUTC)
+                    {
+                        IsNotCompletedInTime = true;
+                    }
+                    else
+                    {
+                        _ = Task.Run(async () => {
+                            await Task.Delay(TradeExpiresDateUTC.Subtract(utcNow));
+
+                            IsNotCompletedInTime = true;
+
+                            await InvokeAsync(StateHasChanged);
+                        });
+                    }
+                }
+
                 UpdateTradeState();
 
                 NotificationSingleton.OnTradeUpdate += HandleTradeUpdate;
@@ -49,7 +94,7 @@ public partial class Trade : ComponentBase, IDisposable
                 FetchTradeTask = FetchTradeAsync();
                 break;
             }
-            catch
+            catch (Exception ex)
             {
 
             }
@@ -69,6 +114,18 @@ public partial class Trade : ComponentBase, IDisposable
         }
 
         IsBuyer = (TradeInfo.Offer.IsMyOffer && TradeInfo.Offer.Direction == "BUY") || (!TradeInfo.Offer.IsMyOffer && TradeInfo.Offer.Direction == "SELL");
+
+        switch (TradeInfo.PayoutState)
+        {
+            case "PAYOUT_PUBLISHED":
+            case "PAYOUT_CONFIRMED":
+            case "PAYOUT_UNLOCKED":
+                SellerState = 4;
+                BuyerState = 4;
+                return;
+            default:
+                break;
+        }
 
         switch (TradeInfo.State)
         {
@@ -129,6 +186,8 @@ public partial class Trade : ComponentBase, IDisposable
 
     public async Task ConfirmPaymentReceivedAsync(string tradeId)
     {
+        IsFetching = true;
+
         using var grpcChannelHelper = new GrpcChannelHelper();
         var tradesClient = new TradesClient(grpcChannelHelper.Channel);
 
@@ -143,10 +202,14 @@ public partial class Trade : ComponentBase, IDisposable
         TradeInfo = getTradeResponse.Trade;
 
         UpdateTradeState();
+
+        IsFetching = false;
     }
 
     public async Task ConfirmPaymentSentAsync(string tradeId)
     {
+        IsFetching = true;
+
         using var grpcChannelHelper = new GrpcChannelHelper();
         var tradesClient = new TradesClient(grpcChannelHelper.Channel);
 
@@ -154,6 +217,8 @@ public partial class Trade : ComponentBase, IDisposable
         {
             TradeId = tradeId
         });
+
+        IsFetching = false;
     }
 
     public async Task CompleteTradeAsync(string tradeId)
@@ -207,6 +272,16 @@ public partial class Trade : ComponentBase, IDisposable
 
             await Task.Delay(5_000, CancellationTokenSource.Token);
         }
+    }
+
+    public async Task OpenDisputeAsync(string tradeId)
+    {
+        using var grpcChannelHelper = new GrpcChannelHelper();
+        var disputesClient = new DisputesClient(grpcChannelHelper.Channel);
+
+        var response = await disputesClient.OpenDisputeAsync(new OpenDisputeRequest { TradeId = tradeId });
+
+        NavigationManager.NavigateTo("trades?title=Trades&tab=2");
     }
 
     public void Dispose()

@@ -4,8 +4,8 @@
     <p>Are you sure you want to delete this account?</p>
 </Modal>
 <div class="account-main">
+    <p class="accounts-text">My accounts</p>
     <div class="accounts">
-        <p class="accounts-text">My accounts</p>
         @* <Tabs TabNames="@(["Traditional", "Crypto"])" @bind-SelectedTabIndex="@SelectedTabIndex"></Tabs> *@
 
         @if (PaymentAccounts.Count == 0)
@@ -69,7 +69,7 @@
     {
         <div class="input-fields">
             <div class="field">
-                <SearchableDropdown Text="Cryptocurrency" Items="CryptoCurrencyHelper.CryptoCurrenciesDictionary" Placeholder="Select or search cryptocurrency" />
+                <SearchableDropdown OnSubmit="(item) => { CreateCryptoCurrencyPaymentAccountRequest.CurrencyCode = item; CreateCryptoCurrencyPaymentAccountRequest.AccountName = item; }" Text="Cryptocurrency" Items="CryptoCurrencyHelper.CryptoCurrenciesDictionary" Placeholder="Select or search cryptocurrency" />
             </div>
             <div class="field">
                 <label>Cryptocurrency address</label>

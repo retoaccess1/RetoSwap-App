@@ -20,6 +20,9 @@
 .chat-main ul li .date {
   font-size: 11px;
 }
+.chat-main ul li .message {
+  white-space: pre-wrap;
+}
 .chat-main ul .right {
   background-color: cornflowerblue;
   align-self: flex-end;

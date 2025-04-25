@@ -135,6 +135,9 @@ public partial class Market : ComponentBase, IDisposable
     // UpdateChart
     public void ProcessTradeStatistics()
     {
+        if (TradeStatistics.Count ==  0) 
+            return;
+
         if (Years.Count == 0) 
         {
             Years = TradeStatistics

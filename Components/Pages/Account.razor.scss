@@ -8,6 +8,11 @@ label {
     font-weight: bold;
 }
 
+.accounts-text {
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
 .accounts {
     max-height: 170px;
     overflow: auto;
@@ -27,13 +32,6 @@ label {
 
     .active-account {
         background-color: #808080;
-    }
-
-    .accounts-text {
-        margin-bottom: 10px;
-        font-weight: bold;
-        /*margin-left: 10px;*/
-        /*border-bottom: 1px solid #fff;*/
     }
 }
 

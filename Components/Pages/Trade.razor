@@ -1,5 +1,9 @@
 ﻿@page "/trade"
 
+<Modal IsOpen="IsFetching" Title="Loading" ModalButtonOptions="ModalButtonOptions.NONE" IsCloseable="false">
+    <p>Please wait...</p>
+</Modal>
+
 @if (TradeInfo is not null)
 {
     <div class="trade-main">
@@ -31,21 +35,33 @@
                     </li>
                 }
             </ul>
+            @if (IsBuyer && BuyerState == 2)
+            {
+                <div class="payment-instructions">
+                    <p class="bold-p start-payment">Start payment using @TradeInfo.Offer.PaymentMethodShortName</p>
+
+                    <InfoRow Label="Amount to transfer" Value="@(TradeInfo.TradeVolume + " " + TradeInfo.Offer.CounterCurrencyCode)"></InfoRow>
+                    @foreach (var keyVal in TradeInfo.Offer.IsMyOffer ? TradeInfo.Contract.TakerPaymentAccountPayload.Convert() : TradeInfo.Contract.MakerPaymentAccountPayload.Convert())
+                    {
+                        <InfoRow Label="@keyVal.Key" Value="@keyVal.Value"></InfoRow>
+                    }
+                </div>
+            }
             @switch (BuyerState)
             {
                 case 0: break;
                 case 1: 
 
-                break;
+                    break;
                 case 2:
-                    <button @onclick="() => ConfirmPaymentSentAsync(TradeInfo.TradeId)">Mark as payment sent</button>
-                break;
+                    <button @onclick="async () => await ConfirmPaymentSentAsync(TradeInfo.TradeId)">Payment sent</button>
+                    break;
                 case 3: 
 
-                break;
+                    break;
                 case 4:
-                    <button @onclick="() => CompleteTradeAsync(TradeInfo.TradeId)">Close</button>
-                break;
+                    <button @onclick="async () => await CompleteTradeAsync(TradeInfo.TradeId)">Close trade</button>
+                    break;
                 default: break;
             }
         }
@@ -80,13 +96,40 @@
                 case 2:
                     break;
                 case 3:
-                    <button @onclick="() => ConfirmPaymentReceivedAsync(TradeInfo.TradeId)">Mark as payment received</button>
+                    <button @onclick="async () => await ConfirmPaymentReceivedAsync(TradeInfo.TradeId)">Payment received</button>
                     break;
                 case 4:
-                    <button @onclick="() => CompleteTradeAsync(TradeInfo.TradeId)">Close</button>
+                    <button @onclick="async () => await CompleteTradeAsync(TradeInfo.TradeId)">Close trade</button>
                     break;
                 default: break;
             }
         }
+        <div class="info">
+            <p class="bold-p info-txt">Trade info</p>
+            <InfoRow IsExpandable="true" Label="Taker deposit transaction ID" Value="@TradeInfo.TakerDepositTxId"></InfoRow>
+            <InfoRow IsExpandable="true" Label="Maker deposit transaction ID" Value="@TradeInfo.MakerDepositTxId"></InfoRow>
+            <InfoRow Label="Max allowed trade period" Value="@MaxTradePeriod.ToString()"></InfoRow>
+            <InfoRow Label="Expires" Value="@TradeExpiresDateUTC.ToString()"></InfoRow>
+        </div>
+        <div class="dispute">
+            @if (PaymentMethod is not null)
+            {
+                if (IsNotCompletedInTime)
+                {
+                    if (IsBuyer)
+                    {
+                        if (BuyerState < 4)
+                        {
+                            // TODO disable if dispute already exists
+                            <button @onclick="async () => await OpenDisputeAsync(TradeInfo.TradeId)">Open support ticket</button>
+                        }
+                    }
+                    else if (SellerState < 4)
+                    {
+                        <button @onclick="async () => await OpenDisputeAsync(TradeInfo.TradeId)">Open support ticket</button>
+                    }
+                }
+            }
+        </div>
     </div>
 }

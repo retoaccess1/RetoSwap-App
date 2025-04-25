@@ -177,7 +177,6 @@ public partial class Account : ComponentBase
                 TraditionalPaymentMethods = [.. paymentMethodsResponse.PaymentMethods];
 
                 var filteredPaymentMethodIds = paymentMethodsResponse.PaymentMethods
-                    .Where(x => !PaymentAccounts.Select(y => y.PaymentMethod.Id).Contains(x.Id))
                     .Select(x => x.Id);
 
                 TraditionalPaymentMethodStrings = PaymentMethodsHelper.PaymentMethodsDictionary
@@ -279,6 +278,7 @@ public partial class Account : ComponentBase
 
         PaymentAccounts = [.. PaymentAccounts.Where(x => x.Id != paymentAccountId)];
         SelectedPaymentAccount = null;
+        ShowDeleteAccountModal = false;
     }
 
     public async Task CreateCryptoPaymentAccountAsync()
@@ -326,9 +326,7 @@ public partial class Account : ComponentBase
             var response = await paymentAccountsClient.CreatePaymentAccountAsync(request);
             PaymentAccounts = [.. PaymentAccounts, response.PaymentAccount];
 
-            // Don't show used method types in list
             var filteredPaymentMethodIds = TraditionalPaymentMethods
-                .Where(x => !PaymentAccounts.Select(y => y.PaymentMethod.Id).Contains(x.Id))
                 .Select(x => x.Id);
 
             TraditionalPaymentMethodStrings = PaymentMethodsHelper.PaymentMethodsDictionary

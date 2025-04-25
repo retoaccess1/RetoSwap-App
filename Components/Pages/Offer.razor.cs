@@ -29,9 +29,22 @@ public partial class Offer : ComponentBase, IDisposable
     {
         get; 
         set 
-        { 
-            field = value; 
-            _piconeroAmount = value.ToPiconero();
+        {
+            if (value > OfferInfo!.Amount.ToMonero())
+            {
+                field = OfferInfo.Amount.ToMonero();
+            }
+            else if (value < OfferInfo.MinAmount.ToMonero())
+            {
+                field = OfferInfo.MinAmount.ToMonero();
+            }
+            else
+            {
+                field = value; 
+            }
+
+            _piconeroAmount = field.ToPiconero();
+
             if (OfferInfo is not null)  // Price changes...
                 FiatAmount = decimal.Parse(OfferInfo.Price) * Amount;
         } 
