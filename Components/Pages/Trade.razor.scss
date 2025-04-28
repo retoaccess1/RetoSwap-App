@@ -62,3 +62,22 @@
         margin-bottom: 10px;
     }
 }
+
+.dispute-container {
+    margin-bottom: 10px;
+    display: flex;
+
+    i {
+        margin: 0;
+        margin-right: 10px;
+    }
+
+    p {
+        font-weight: bold;
+    }
+}
+
+.blue-button {
+    background-color:  cornflowerblue;
+    color: #fff;
+}

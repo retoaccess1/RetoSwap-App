@@ -164,22 +164,21 @@ input[type=checkbox] {
     color: #000;
     width: 16px;
     height: 16px;
-    /*border: 2px solid #fff;*/
-    border: none;
+    border: 2px solid #fff;
     border-radius: 2px;
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
+}
+
+input[type=checkbox]:checked {
 
     &:before {
-        content: "";
-    }
-
-    &:checked:before {
-    }
-
-    &:checked {
-        background-color: #000;
+        content: url(bootstrap-icons-1.11.3/check-lg.svg);
+        left: -2px;
+        top: -1px;
+        position: absolute;
     }
 }
 

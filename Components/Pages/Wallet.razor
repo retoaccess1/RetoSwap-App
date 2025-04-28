@@ -74,7 +74,7 @@
                     <label for="amount">Amount</label>
                     <div class="amount-container">
                         <input id="amount" name="amount" type="number" @bind="Amount" />
-                        <p class="send-all" @onclick="() => _piconeroAmount = Balance.AvailableXMRBalance">Send all</p>
+                        @* <p class="send-all" @onclick="() => _piconeroAmount = Balance.AvailableXMRBalance">Send all</p> *@
                     </div>
                     <label for="memo">Memo</label>
                     <input id="memo" name="memo" @bind="Memo" placeholder="Optional" />

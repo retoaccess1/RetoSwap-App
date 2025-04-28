@@ -18,9 +18,6 @@ public partial class Chat : ComponentBase, IDisposable
     [Parameter]
     [SupplyParameterFromQuery]
     public string DisputeTradeId { get; set; } = string.Empty;
-    [Parameter]
-    [SupplyParameterFromQuery]
-    public string DisputeId { get; set; } = string.Empty;
     [Inject]
     public NotificationSingleton NotificationSingleton { get; set; } = default!;
     [Inject]
@@ -34,9 +31,13 @@ public partial class Chat : ComponentBase, IDisposable
     [Parameter]
     [SupplyParameterFromQuery]
     public string TradePeer { get; set; } = string.Empty;
+
+    // Unused
     [Parameter]
     [SupplyParameterFromQuery]
     public string MyAddress { get; set; } = string.Empty;
+
+    public string DisputeId { get; set; } = string.Empty;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -67,7 +68,7 @@ public partial class Chat : ComponentBase, IDisposable
                 var messagesResponse = await tradesClient.GetChatMessagesAsync(request);
 
                 // Might be worth caching these
-                Messages = [.. messagesResponse.Message.Skip(1).OrderBy(x => x.Date)];
+                Messages = [.. messagesResponse.Message.OrderBy(x => x.Date)];
             }
             else if (!string.IsNullOrEmpty(DisputeTradeId))
             {
@@ -76,7 +77,8 @@ public partial class Chat : ComponentBase, IDisposable
 
                 var response = await disputesClient.GetDisputeAsync(new GetDisputeRequest { TradeId = DisputeTradeId });
 
-                Messages = [.. response.Dispute.ChatMessage];
+                Messages = [.. response.Dispute.ChatMessage.OrderBy(x => x.Date)];
+                DisputeId = response.Dispute.Id;
             }
 
             NotificationSingleton.OnChatMessage += HandleChatMessage;

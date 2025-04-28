@@ -118,14 +118,11 @@ public partial class BuySell : ComponentBase, IDisposable
     }
 
     public SemaphoreSlim ResetSemaphore { get; set; } = new(1);
-
     public void ResetFetch()
     {
         Task.Run(async() => {
-            if (ResetSemaphore.CurrentCount == 0)
+            if (!ResetSemaphore.Wait(0))
                 return;
-
-            ResetSemaphore.Wait();
 
             CancellationTokenSource.Cancel();
             CancellationTokenSource.Dispose();
@@ -135,7 +132,7 @@ public partial class BuySell : ComponentBase, IDisposable
                 await OfferFetchTask;
 
             OfferFetchTask = FetchOffersAsync();
-            
+
             ResetSemaphore.Release();
         });
     }

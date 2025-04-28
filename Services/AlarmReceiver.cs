@@ -59,7 +59,7 @@ public static class AlarmUtils
         }
 
         // Tune this, or let user decide - higher frequency will use more battery
-        var mintuesDelay = 1;
+        var mintuesDelay = 10;
 
         var intent = new Intent(context, typeof(AlarmReceiver));
         var pendingIntent = PendingIntent.GetBroadcast(context, 0, intent, PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable);

@@ -34,3 +34,8 @@
   padding: 10px;
   border-radius: 10px;
 }
+.disputes-list .dispute-card a {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+}

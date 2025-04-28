@@ -65,14 +65,7 @@
                                     @offer.CounterCurrencyCode
                                     (@Math.Round(offer.MarketPriceMarginPct, 2).ToString("0.00")%)
                                 </div>
-                                @if (offer.IsMyOffer)
-                                {
-                                    <div>
-                                        <p>Remove</p>
-                                        <p>Edit</p>
-                                    </div>
-                                }
-                                else
+                                @if (!offer.IsMyOffer)
                                 {
                                     <div class="card">
                                         @offer.PaymentMethodShortName
@@ -86,16 +79,15 @@
 
                                     if (minVolume == volume)
                                     {
-                                        @(Math.Round(volume, 2) + " ")
+                                        <p>Min/max: @(Math.Round(volume, 2) + " ") @offer.CounterCurrencyCode</p>
                                     }
                                     else
                                     {
-                                        @($"{Math.Round(minVolume, 2)} - {Math.Round(volume, 2)} ")
+                                        <p>Min/max: @($"{Math.Round(minVolume, 2)} - {Math.Round(volume, 2)} ") @offer.CounterCurrencyCode</p>
                                     }
                                 }
-                                @offer.CounterCurrencyCode
                             </div>
-                            @(offer.Amount == offer.MinAmount ? $"{offer.Amount.ToMonero()} XMR" : $"{offer.MinAmount.ToMonero()} - {offer.Amount.ToMonero()} XMR")
+                            <p>Min/max: @(offer.Amount == offer.MinAmount ? $"{offer.Amount.ToMonero()} XMR" : $"{offer.MinAmount.ToMonero()} - {offer.Amount.ToMonero()} XMR")</p>
                         </a>
                     </li>
                 }

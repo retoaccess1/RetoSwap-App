@@ -12,7 +12,7 @@ else
     {
         var message = Messages[i];
         // This is fucking stupid
-        var isMyMessage = message.SenderNodeAddress.HostName.Split(".")[0] != TradePeer && message.SenderNodeAddress.HostName.Split(".")[0] != Arbitrator;
+        var isMyMessage = message.SenderNodeAddress.HostName.Split(".")[0] != TradePeer && message.SenderNodeAddress.HostName.Split(".")[0] != Arbitrator && !message.IsSystemMessage;
 
         <li class="@(isMyMessage ? "right" : "left")" id="@(i == Messages.Count - 1 ? "last-message" : "")">
             <p class="date">

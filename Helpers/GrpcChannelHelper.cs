@@ -20,6 +20,16 @@ public sealed class GrpcChannelHelper : IGrpcChannelHelper, IDisposable
     {
         HttpClient httpClient;
 
+        // Temporary hack - need to investigate why this does not persist after app being in background. Only used when fetching updates when app is minimized
+        if (string.IsNullOrEmpty(Password))
+        {
+            Password = SecureStorageHelper.Get<string>("password") ?? string.Empty;
+        }
+        if (string.IsNullOrEmpty(Host))
+        {
+            Host = SecureStorageHelper.Get<string>("host") ?? string.Empty;
+        }
+
         if (Host != "http://127.0.0.1:3201")
         {
 #if ANDROID

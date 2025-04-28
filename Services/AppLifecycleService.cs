@@ -2,6 +2,7 @@
 
 using Android.App;
 using Android.OS;
+using Manta.Helpers;
 
 namespace Manta.Services;
 
@@ -21,15 +22,17 @@ public class AppLifecycleService : Java.Lang.Object, Android.App.Application.IAc
     {
         Console.WriteLine("App RESUMED from background");
 
-        //AlarmUtils.CancelAlarm(Android.App.Application.Context);
+        AlarmUtils.CancelAlarm(Android.App.Application.Context);
     }
 
     public void OnActivityStopped(Activity activity)
     {
         Console.WriteLine("App WENT TO SLEEP");
 
-        // TODO only if notifs are enabled
-        //AlarmUtils.ScheduleExactAlarm(Android.App.Application.Context);
+        if (SecureStorageHelper.Get<bool>("notifications-enabled"))
+        {
+            AlarmUtils.ScheduleExactAlarm(Android.App.Application.Context);
+        }
     }
 }
 

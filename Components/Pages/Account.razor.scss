@@ -55,6 +55,7 @@ label {
     max-height: 160px;
     overflow-y: auto;
     margin: 0 0 10px;
+    overflow: auto;
 
     .checkbox-container {
         display: flex;
@@ -94,4 +95,23 @@ label {
     label {
         margin-left: 6px;
     }
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    border-radius: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 8px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
 }

@@ -96,7 +96,10 @@ public partial class Index : ComponentBase
                     TermuxSetupState = TermuxSetupState.Finished;
                     StateHasChanged();
 
-                    var successfullyStarted = await TermuxSetupSingleton.TryStartLocalHavenoDaemonAsync(Guid.NewGuid().ToString(), "http://127.0.0.1:3201");
+                    var host = "http://127.0.0.1:3201";
+                    var password = Guid.NewGuid().ToString();
+
+                    var successfullyStarted = await TermuxSetupSingleton.TryStartLocalHavenoDaemonAsync(password, host);
                     if (successfullyStarted)
                     {
                         NavigationManager.NavigateTo("/Market");
@@ -160,7 +163,7 @@ public partial class Index : ComponentBase
 
                         if (string.IsNullOrEmpty(host) || string.IsNullOrEmpty(password))
                         {
-                            throw new Exception("host/password was null or empty");
+
                         }
                         else
                         {

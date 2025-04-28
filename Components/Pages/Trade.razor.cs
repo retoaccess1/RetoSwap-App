@@ -37,6 +37,8 @@ public partial class Trade : ComponentBase, IDisposable
     public CancellationTokenSource CancellationTokenSource = new();
     public Task? FetchTradeTask;
 
+    public string? DisputeMessage { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         while (true)
@@ -114,6 +116,19 @@ public partial class Trade : ComponentBase, IDisposable
         }
 
         IsBuyer = (TradeInfo.Offer.IsMyOffer && TradeInfo.Offer.Direction == "BUY") || (!TradeInfo.Offer.IsMyOffer && TradeInfo.Offer.Direction == "SELL");
+
+        switch (TradeInfo.DisputeState) 
+        {
+            case "DISPUTE_CLOSED":
+                DisputeMessage = "This trade was resolved by arbitration";
+                break;
+            case "MEDIATION_CLOSED":
+                DisputeMessage = "This trade was resolved by mediation";
+                break;
+            case "REFUND_REQUEST_CLOSED":
+                break;
+            default: break;
+        }
 
         switch (TradeInfo.PayoutState)
         {
@@ -281,7 +296,12 @@ public partial class Trade : ComponentBase, IDisposable
 
         var response = await disputesClient.OpenDisputeAsync(new OpenDisputeRequest { TradeId = tradeId });
 
-        NavigationManager.NavigateTo("trades?title=Trades&tab=2");
+        NavigationManager.NavigateTo("trades?title=Trades&SelectedTabIndex=2");
+    }
+
+    public async Task GoToDisputeAsync()
+    {
+        NavigationManager.NavigateTo($"/chat?disputeTradeId={TradeInfo.TradeId}&title=Trade%20{TradeInfo.ShortId}%20chat&arbitrator={TradeInfo.ArbitratorNodeAddress.Split(".")[0]}&tradePeer={TradeInfo.TradePeerNodeAddress.Split(".")[0]}&myAddress={TradeInfo.Offer.OwnerNodeAddress.Split(".")[0]}");
     }
 
     public void Dispose()

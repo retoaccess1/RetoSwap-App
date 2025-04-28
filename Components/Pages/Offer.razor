@@ -21,8 +21,8 @@
 </div>
 
 <Modal IsOpen="IsTakingOffer" Title="Taking offer" ModalButtonOptions="ModalButtonOptions.CANCEL" OnCancelPressed="() => CancelOfferCts.Cancel()">
-    <p>Taking offer...</p>
-    <span class="loader"></span>
+    <p>Please wait</p>
+    @* <Spinner IsVisible="true"></Spinner> *@
 </Modal>
 <Modal Title="No payment account" IsOpen="UserDoesNotHaveAccount" ModalButtonOptions="ModalButtonOptions.OK" OkButtonText="Create account" OnOkPressed="@NavigateToAccount">
     <p>You do not have an account of this type.</p>

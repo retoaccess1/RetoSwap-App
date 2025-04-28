@@ -35,8 +35,6 @@ public class NotificationSingleton
 
     public async Task BackgroundSync()
     {
-        _notificationManagerService.SendNotification($"BackgroundSync ran at {DateTime.Now}", "BackgroundSync");
-
         for (int i = 0; i < 2; i++)
         {
             try
@@ -49,8 +47,6 @@ public class NotificationSingleton
                     Category = Category.Open
                 });
 
-                _notificationManagerService.SendNotification($"count: {tradesResponse.Trades.Count}", "count");
-
                 List<TradeInfo> updatedTrades = [];
                 foreach (var trade in tradesResponse.Trades)
                 {
@@ -61,29 +57,18 @@ public class NotificationSingleton
                     });
                 }
 
-                //_notificationManagerService.SendNotification($"count: {updatedTrades.Count}", "count");
-
-                // Not very efficient
                 foreach (var trade in updatedTrades)
                 {
                     GetChatMessagesReply? response = null;
 
-                    for (int j = 0; j < 2; j++)
+                    try
                     {
-                        try
-                        {
-                            response = await tradesClient.GetChatMessagesAsync(new GetChatMessagesRequest { TradeId = trade.TradeId });
-                            break;
-                        }
-                        catch (RpcException e)
-                        {
-                            Console.WriteLine(e);
-                            await Task.Delay(1000);
-                        }
-                        catch (Exception e)
-                        {
-                            Console.WriteLine(e);
-                        }
+                        response = await tradesClient.GetChatMessagesAsync(new GetChatMessagesRequest { TradeId = trade.TradeId });
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                        continue;
                     }
 
                     if (response is null)
@@ -113,7 +98,7 @@ public class NotificationSingleton
 
                 break;
             }
-            catch
+            catch (Exception e)
             {
                 if (i == 1)
                 {
@@ -215,7 +200,6 @@ public class NotificationSingleton
                             break;
                         default: break;
                     }
-
                 }
             }
             catch (TaskCanceledException)

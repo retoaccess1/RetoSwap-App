@@ -12,6 +12,8 @@ using static Haveno.Proto.Grpc.PaymentAccounts;
 
 namespace Manta.Components.Pages;
 
+
+// Bug where delete account modal keeps popping up
 public partial class Account : ComponentBase
 {
     private ValidationMessageStore? _messageStore;
@@ -38,6 +40,10 @@ public partial class Account : ComponentBase
     public SearchableDropdown PaymentMethodSearchableDropdown { get; set; } = default!;
 
     public bool CustomAccountNameEnabled { get; set; }
+
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? AccountToCreate { get; set; }
 
     public string? AccountToDelete { get; set; }
     public bool ShowDeleteAccountModal 
@@ -181,6 +187,11 @@ public partial class Account : ComponentBase
 
                 TraditionalPaymentMethodStrings = PaymentMethodsHelper.PaymentMethodsDictionary
                     .Where(x => filteredPaymentMethodIds.Contains(x.Key)).ToDictionary();
+
+                if (!string.IsNullOrEmpty(AccountToCreate))
+                {
+                    SelectedPaymentMethodId = AccountToCreate;
+                }
 
                 break;
             }

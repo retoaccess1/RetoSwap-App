@@ -2,7 +2,6 @@
 using Android.Content;
 using Android.Content.PM;
 using Android.OS;
-using AndroidX.Work;
 using Manta.Services;
 using Manta.Singletons;
 
@@ -16,7 +15,7 @@ public class MainActivity : MauiAppCompatActivity
 {
     public MainActivity()
     {
-        WorkManager.GetInstance(Android.App.Application.Context).CancelAllWork();
+
     }
 
     protected override void OnActivityResult(int requestCode, Result resultCode, Intent? data)
@@ -51,7 +50,9 @@ public class MainActivity : MauiAppCompatActivity
 
         CreateNotificationFromIntent(Intent);
 
+#if ANDROID29_0_OR_GREATER
         RegisterActivityLifecycleCallbacks(new AppLifecycleService());
+#endif
     }
 
     protected override void OnNewIntent(Intent? intent)

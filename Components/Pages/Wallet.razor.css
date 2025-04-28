@@ -105,8 +105,8 @@
   display: flex;
 }
 .withdraw .amount-container input {
-  border-end-end-radius: 0;
-  border-start-end-radius: 0;
+  /*           border-end-end-radius: 0;
+             border-start-end-radius: 0;*/
 }
 .withdraw .amount-container .send-all {
   display: flex;

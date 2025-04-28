@@ -4,5 +4,4 @@
 # Need a way to sync app with desktop
 
 ## priority
-# Disputes WIP - need to show more info
 # Some payment methods are not working - F2F, MoneyGram

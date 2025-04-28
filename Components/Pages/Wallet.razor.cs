@@ -141,8 +141,7 @@ public partial class Wallet : ComponentBase, IDisposable
             request.Destinations.Add(new XmrDestination
             {
                 Address = WithdrawalAddress,
-                // Apparently "1" means max amount
-                Amount = _piconeroAmount == Balance.AvailableXMRBalance ? "1" : _piconeroAmount.ToString()
+                Amount = _piconeroAmount.ToString()
             });
 
             var response = await walletsClient.CreateXmrTxAsync(request);

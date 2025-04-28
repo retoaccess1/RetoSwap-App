@@ -50,3 +50,20 @@
 .info .info-txt {
   margin-bottom: 10px;
 }
+
+.dispute-container {
+  margin-bottom: 10px;
+  display: flex;
+}
+.dispute-container i {
+  margin: 0;
+  margin-right: 10px;
+}
+.dispute-container p {
+  font-weight: bold;
+}
+
+.blue-button {
+  background-color: cornflowerblue;
+  color: #fff;
+}

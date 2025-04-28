@@ -31,6 +31,7 @@
             @ref="PaymentMethodSearchableDropdown"
             Items="@TraditionalPaymentMethodStrings"
             Text="Create new account"
+            InitialValue="@AccountToCreate"
             OnSubmit="@((val) => SelectedPaymentMethodId = val)" />
         </div>
     </div>
@@ -40,6 +41,8 @@
         <p class="account-info-text">Account info</p>
 
         <InfoRow Label="Payment method" Value="@PaymentMethodsHelper.PaymentMethodsDictionary[SelectedPaymentAccount.PaymentMethod.Id]"></InfoRow>
+
+        @* could use helper here *@
 
         switch (SelectedPaymentAccount.PaymentMethod.Id)
         {

@@ -105,30 +105,6 @@ public class TermuxSetupSingleton
         await ExecuteCommandAsync("\"killall -9 haveno\"", true, millisecondsTimeout: 100);
     }
 
-    //public async Task SwitchDaemonHostingTypeAsync(DaemonInstallOptions daemonInstallOption)
-    //{
-    //    await SecureStorageHelper.SetAsync("daemonInstallOption", daemonInstallOption);
-
-    //    await StopLocalHavenoDaemonAsync();
-
-    //    if (daemonInstallOption == DaemonInstallOptions.RemoteNode)
-    //    {
-
-    //    }
-    //    else
-    //    {
-    //        var successfullyStarted = await TryStartLocalHavenoDaemonAsync(Guid.NewGuid().ToString(), "http://127.0.0.1:3201");
-    //        if (successfullyStarted)
-    //        {
-
-    //        }
-    //        else
-    //        {
-
-    //        }
-    //    }
-    //}
-
     private async Task ToggleApps()
     {
         await ExecuteTermuxCommandAsync("am start -a android.intent.action.VIEW -d \"manta://termux_callback\"");
@@ -219,6 +195,7 @@ public class TermuxSetupSingleton
             _stdoutListenerTask = Task.Run(() => ListenStdout([("All connections lost", () => Console.WriteLine("LOST CONNECTION")), ("Established a new connection", () => Console.WriteLine("RECONNECTED"))]));
     }
 
+    // Issues with starting tor recently
     public async Task<bool> TryStartLocalHavenoDaemonAsync(string password, string host)
     {
         try
@@ -228,7 +205,7 @@ public class TermuxSetupSingleton
             {
                 TryAttachStdout();
                 return true;
-            }
+            } 
 
             await SecureStorageHelper.SetAsync("password", password);
             await SecureStorageHelper.SetAsync("host", host);
@@ -250,11 +227,9 @@ public class TermuxSetupSingleton
 
             await StopLocalHavenoDaemonAsync();
 
-            var appName = "XMR_LOCAL_user3";
+            var startScript = $"#!/bin/sh\r\n ./haveno-daemon --baseCurrencyNetwork=XMR_STAGENET --useLocalhostForP2P=false --useDevPrivilegeKeys=false --nodePort=9999 --appName=haveno-XMR_STAGENET_user1 --apiPassword={password} --apiPort=3201 --passwordRequired=false --useNativeXmrWallet=false --torControlHost=127.0.0.1 --torControlPort=9051";
+            //var startScript = $"#!/bin/sh\r\n ./haveno-daemon --seedNodes=10.0.2.2:2002 --baseCurrencyNetwork=XMR_LOCAL --useLocalhostForP2P=true --useDevPrivilegeKeys=true --nodePort=7778 --appName=haveno-XMR_LOCAL_user3 --apiPassword={password} --apiPort=3201 --xmrNode=http://10.0.2.2:28081 --walletRpcBindPort=38093 --passwordRequired=false --useNativeXmrWallet=false";
 
-            //var startScript = $"#!/bin/sh\r\n ./haveno-daemon --baseCurrencyNetwork=XMR_STAGENET --useLocalhostForP2P=false --useDevPrivilegeKeys=false --nodePort=9999 --appName=haveno-XMR_STAGENET_user1 --apiPassword={password} --apiPort=3201 --passwordRequired=false --useNativeXmrWallet=false --torControlHost=127.0.0.1 --torControlPort=9051";
-            var startScript = $"#!/bin/sh\r\n ./haveno-daemon --seedNodes=10.0.2.2:2002 --baseCurrencyNetwork=XMR_LOCAL --useLocalhostForP2P=true --useDevPrivilegeKeys=true --nodePort=7778 --appName=haveno-{appName} --apiPassword={password} --apiPort=3201 --xmrNode=http://10.0.2.2:28081 --walletRpcBindPort=38093 --passwordRequired=false --useNativeXmrWallet=false";
-            
             await ExecuteCommandAsync("\"rm -f haveno/start.sh\"", true);
             await ExecuteCommandAsync("\"touch haveno/start.sh\"", true);
             await ExecuteCommandAsync($"\"printf '{startScript}' > haveno/start.sh\"", true);
@@ -371,7 +346,7 @@ public class TermuxSetupSingleton
         
         await ExecuteTermuxCommandAsync("am stopservice --user 0 -n com.termux/.app.TermuxService");
 
-        await Task.Delay(2000);
+        await Task.Delay(2_000);
 
         var intent2 = _context.PackageManager?.GetLaunchIntentForPackage("com.termux");
         if (intent2 is not null)
@@ -434,7 +409,7 @@ public class TermuxSetupSingleton
         }
 
         await ExecuteCommandAsync("\"rm -fv -r haveno\"", true);
-        await ExecuteCommandAsync($"\"wget https://github.com/atsamd21/haveno/releases/download/v1.1.0/{package}.zip\"", true);
+        await ExecuteCommandAsync($"\"wget https://github.com/atsamd21/haveno/releases/download/v1.1.1/{package}.zip\"", true);
         await ExecuteCommandAsync($"\"unzip {package}.zip\"", true);
         await ExecuteCommandAsync($"\"rm {package}.zip\"", true);
         await ExecuteCommandAsync($"\"mv {package} haveno\"", true);

@@ -62,7 +62,8 @@ public partial class Settings : ComponentBase, IDisposable
             }
             else
             {
-
+                IsBackingUp = false;
+                return;
             }
 
             using var grpcChannelHelper = new GrpcChannelHelper(disableMessageSizeLimit: true);
@@ -84,7 +85,8 @@ public partial class Settings : ComponentBase, IDisposable
             }
             else
             {
-
+                IsBackingUp = false;
+                return;
             }
         }
         catch
@@ -176,6 +178,14 @@ public partial class Settings : ComponentBase, IDisposable
         if (isToggled)
         {
             var status = await Permissions.RequestAsync<NotificationPermission>() == PermissionStatus.Granted;
+            if (status)
+                await SecureStorageHelper.SetAsync("notifications-enabled", true);
+            else 
+                IsToggled = false;
+        }
+        else
+        {
+            await SecureStorageHelper.SetAsync("notifications-enabled", false);
         }
 #endif
     }
@@ -211,7 +221,7 @@ public partial class Settings : ComponentBase, IDisposable
     protected override async Task OnInitializedAsync()
     {
 #if ANDROID
-        IsToggled = await Permissions.CheckStatusAsync<NotificationPermission>() == PermissionStatus.Granted;
+        IsToggled = (await Permissions.CheckStatusAsync<NotificationPermission>() == PermissionStatus.Granted) && (await SecureStorageHelper.GetAsync<bool>("notifications-enabled"));
 #endif
 
         var preferredCurrency = await LocalStorage.GetItemAsStringAsync("preferredCurrency");

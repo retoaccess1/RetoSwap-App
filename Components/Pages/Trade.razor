@@ -35,32 +35,29 @@
                     </li>
                 }
             </ul>
-            @if (IsBuyer && BuyerState == 2)
+            @if (!string.IsNullOrEmpty(DisputeMessage))
             {
-                <div class="payment-instructions">
-                    <p class="bold-p start-payment">Start payment using @TradeInfo.Offer.PaymentMethodShortName</p>
-
-                    <InfoRow Label="Amount to transfer" Value="@(TradeInfo.TradeVolume + " " + TradeInfo.Offer.CounterCurrencyCode)"></InfoRow>
-                    @foreach (var keyVal in TradeInfo.Offer.IsMyOffer ? TradeInfo.Contract.TakerPaymentAccountPayload.Convert() : TradeInfo.Contract.MakerPaymentAccountPayload.Convert())
-                    {
-                        <InfoRow Label="@keyVal.Key" Value="@keyVal.Value"></InfoRow>
-                    }
+                <div class="dispute-container">
+                    <i class="bi-exclamation-circle info"></i>
+                    <p>@DisputeMessage</p>
                 </div>
             }
             @switch (BuyerState)
             {
-                case 0: break;
-                case 1: 
-
-                    break;
                 case 2:
-                    <button @onclick="async () => await ConfirmPaymentSentAsync(TradeInfo.TradeId)">Payment sent</button>
-                    break;
-                case 3: 
+                    <div class="payment-instructions">
+                        <p class="bold-p start-payment">Start payment using @TradeInfo.Offer.PaymentMethodShortName</p>
 
+                        <InfoRow Label="Amount to transfer" Value="@(TradeInfo.TradeVolume + " " + TradeInfo.Offer.CounterCurrencyCode)"></InfoRow>
+                        @foreach (var keyVal in TradeInfo.Offer.IsMyOffer ? TradeInfo.Contract.TakerPaymentAccountPayload.Convert() : TradeInfo.Contract.MakerPaymentAccountPayload.Convert())
+                        {
+                            <InfoRow Label="@keyVal.Key" Value="@keyVal.Value"></InfoRow>
+                        }
+                    </div>
+                    <button class="blue-button" @onclick="async () => await ConfirmPaymentSentAsync(TradeInfo.TradeId)">Payment sent</button>
                     break;
                 case 4:
-                    <button @onclick="async () => await CompleteTradeAsync(TradeInfo.TradeId)">Close trade</button>
+                    <button class="blue-button" @onclick="async () => await CompleteTradeAsync(TradeInfo.TradeId)">Close trade</button>
                     break;
                 default: break;
             }
@@ -87,19 +84,20 @@
                     </li>
                 }
             </ul>
+            @if (!string.IsNullOrEmpty(DisputeMessage))
+            {
+                <div class="dispute-container">
+                    <i class="bi-exclamation-circle info"></i>
+                    <p>@DisputeMessage</p>
+                </div>
+            }
             @switch (SellerState)
             {
-                case 0: break;
-                case 1:
-
-                    break;
-                case 2:
-                    break;
                 case 3:
-                    <button @onclick="async () => await ConfirmPaymentReceivedAsync(TradeInfo.TradeId)">Payment received</button>
+                    <button class="blue-button" @onclick="async () => await ConfirmPaymentReceivedAsync(TradeInfo.TradeId)">Payment received</button>
                     break;
                 case 4:
-                    <button @onclick="async () => await CompleteTradeAsync(TradeInfo.TradeId)">Close trade</button>
+                    <button class="blue-button" @onclick="async () => await CompleteTradeAsync(TradeInfo.TradeId)">Close trade</button>
                     break;
                 default: break;
             }
@@ -109,25 +107,32 @@
             <InfoRow IsExpandable="true" Label="Taker deposit transaction ID" Value="@TradeInfo.TakerDepositTxId"></InfoRow>
             <InfoRow IsExpandable="true" Label="Maker deposit transaction ID" Value="@TradeInfo.MakerDepositTxId"></InfoRow>
             <InfoRow Label="Max allowed trade period" Value="@MaxTradePeriod.ToString()"></InfoRow>
-            <InfoRow Label="Expires" Value="@TradeExpiresDateUTC.ToString()"></InfoRow>
+            <InfoRow Label="Expires" Value="N/A"></InfoRow>
         </div>
         <div class="dispute">
+            @* refactor this lol *@
             @if (PaymentMethod is not null)
             {
-                if (IsNotCompletedInTime)
+                if (TradeInfo.DisputeState == "NO_DISPUTE")
                 {
-                    if (IsBuyer)
+                    if (IsNotCompletedInTime)
                     {
-                        if (BuyerState < 4)
+                        if (IsBuyer)
                         {
-                            // TODO disable if dispute already exists
+                            if (BuyerState < 4)
+                            {
+                                <button @onclick="async () => await OpenDisputeAsync(TradeInfo.TradeId)">Open support ticket</button>
+                            }
+                        }
+                        else if (SellerState < 4)
+                        {
                             <button @onclick="async () => await OpenDisputeAsync(TradeInfo.TradeId)">Open support ticket</button>
                         }
                     }
-                    else if (SellerState < 4)
-                    {
-                        <button @onclick="async () => await OpenDisputeAsync(TradeInfo.TradeId)">Open support ticket</button>
-                    }
+                }
+                else
+                {
+                    <button @onclick="async () => await GoToDisputeAsync()">Go to dispute</button>
                 }
             }
         </div>

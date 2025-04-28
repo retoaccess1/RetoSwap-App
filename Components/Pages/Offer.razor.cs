@@ -58,6 +58,7 @@ public partial class Offer : ComponentBase, IDisposable
 
     public bool IsTakingOffer { get; set; }
     public bool UserDoesNotHaveAccount { get; set; }
+    public string? AccountToCreate { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -71,26 +72,34 @@ public partial class Offer : ComponentBase, IDisposable
 
     protected override async Task OnInitializedAsync()
     {
-        using var grpcChannelHelper = new GrpcChannelHelper();
-        OffersClient offersClient = new(grpcChannelHelper.Channel);
-
-        var offerResponse = await offersClient.GetOfferAsync(new GetOfferRequest { Id = OfferId });
-        OfferInfo = offerResponse.Offer;
-
-        FiatAmount = decimal.Parse(OfferInfo.Price) * Amount;
-
-        var paymentAccountsClient = new PaymentAccountsClient(grpcChannelHelper.Channel);
-
-        var paymentAccountResponse = await paymentAccountsClient.GetPaymentAccountsAsync(new GetPaymentAccountsRequest());
-        PaymentAccounts = paymentAccountResponse.PaymentAccounts.ToDictionary(x => x.Id, x => x.AccountName);
-
-        SelectedPaymentAccountId = PaymentAccounts.FirstOrDefault(x => x.Value == OfferInfo.PaymentMethodId).Key;
-        if (string.IsNullOrEmpty(SelectedPaymentAccountId))
+        try
         {
-            UserDoesNotHaveAccount = true;
-        }
+            using var grpcChannelHelper = new GrpcChannelHelper();
+            OffersClient offersClient = new(grpcChannelHelper.Channel);
 
-        Amount = OfferInfo.Amount.ToMonero();
+            var offerResponse = await offersClient.GetOfferAsync(new GetOfferRequest { Id = OfferId });
+            OfferInfo = offerResponse.Offer;
+
+            FiatAmount = decimal.Parse(OfferInfo.Price) * Amount;
+
+            var paymentAccountsClient = new PaymentAccountsClient(grpcChannelHelper.Channel);
+
+            var paymentAccountResponse = await paymentAccountsClient.GetPaymentAccountsAsync(new GetPaymentAccountsRequest());
+            PaymentAccounts = paymentAccountResponse.PaymentAccounts.ToDictionary(x => x.Id, x => x.AccountName);
+
+            SelectedPaymentAccountId = PaymentAccounts.FirstOrDefault(x => x.Value == OfferInfo.PaymentMethodId).Key;
+            if (string.IsNullOrEmpty(SelectedPaymentAccountId))
+            {
+                UserDoesNotHaveAccount = true;
+                AccountToCreate = OfferInfo.PaymentMethodId;
+            }
+
+            Amount = OfferInfo.Amount.ToMonero();
+        }
+        catch
+        {
+            Cancel();
+        }
 
         await base.OnInitializedAsync();
     }
@@ -134,7 +143,7 @@ public partial class Offer : ComponentBase, IDisposable
 
     public void NavigateToAccount()
     {
-        NavigationManager.NavigateTo("account");
+        NavigationManager.NavigateTo($"account?accountToCreate={AccountToCreate}&title=Account");
     }
 
     public void Cancel()
