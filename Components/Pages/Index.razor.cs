@@ -189,7 +189,37 @@ public partial class Index : ComponentBase
                     }
                     break;
                 case DaemonInstallOptions.TermuxManual:
-                    NavigationManager.NavigateTo("/Settings");
+                    {
+                        var result = await TermuxSetupSingleton.RequestRequiredPermissionsAsync();
+                        if (!result)
+                        {
+                            IsInstallTypeModalOpen = true;
+                            return;
+                        }
+
+                        var host = await SecureStorageHelper.GetAsync<string>("host");
+                        var password = await SecureStorageHelper.GetAsync<string>("password");
+
+                        if (string.IsNullOrEmpty(host) || string.IsNullOrEmpty(password))
+                        {
+
+                        }
+                        else
+                        {
+                            GrpcChannelHelper.Password = password;
+                            GrpcChannelHelper.Host = host;
+                        }
+
+                        var successfullyStarted = await TermuxSetupSingleton.TryStartLocalHavenoDaemonAsync(Guid.NewGuid().ToString(), "http://127.0.0.1:3201");
+                        if (successfullyStarted)
+                        {
+                            NavigationManager.NavigateTo("/Market");
+                        }
+                        else
+                        {
+
+                        }
+                    }
                     break;
                 case DaemonInstallOptions.RemoteNode:
                     {
