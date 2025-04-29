@@ -141,6 +141,11 @@ public class NotificationSingleton
         _ = Task.Run(PollTrades);
     }
 
+    public async Task Reset()
+    {
+
+    }
+
     private async Task PollTrades()
     {
         start: 

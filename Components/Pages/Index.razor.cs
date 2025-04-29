@@ -13,6 +13,7 @@ public partial class Index : ComponentBase
     public TermuxSetupState TermuxSetupState { get; set; }
     public bool IsInstallTypeModalOpen { get; set; }
     public int InstallationStep { get; set; }
+    public string? InstallationErrorMessage { get; set; }
 
     [Inject]
     public ISetupService SetupService { get; set; } = default!;
@@ -59,14 +60,19 @@ public partial class Index : ComponentBase
 
 #if ANDROID
 
-        if ((await SecureStorageHelper.GetAsync<bool>("termux-installed")) is false)
+        if (!await SecureStorageHelper.GetAsync<bool>("termux-installed"))
         {
             try
             {
                 TermuxSetupState = TermuxSetupState.InstallingTermux;
                 StateHasChanged();
 
-                await TermuxInstallService.InstallTermuxAsync();
+                var res = await TermuxInstallService.InstallTermuxAsync();
+                if (!res.Item1)
+                {
+                    InstallationErrorMessage = res.Item2;
+                    return;
+                }
 
                 await SecureStorageHelper.SetAsync("termux-installed", true);
             }
@@ -78,7 +84,7 @@ public partial class Index : ComponentBase
             StateHasChanged();
         }
 
-        if ((await SecureStorageHelper.GetAsync<bool>("termux-setup")) is false)
+        if (!await SecureStorageHelper.GetAsync<bool>("termux-setup"))
         {
             try
             {

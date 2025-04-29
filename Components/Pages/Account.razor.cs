@@ -121,11 +121,13 @@ public partial class Account : ComponentBase
             using var payChannelHelper = new GrpcChannelHelper();
             var paymentAccountsClient = new PaymentAccountsClient(payChannelHelper.Channel);
 
-            // This is a network call in a setter, should not do this 
-            var getPaymentAccountFormResponse = paymentAccountsClient.GetPaymentAccountForm(new GetPaymentAccountFormRequest
+            var getPaymentAccountFormResponse = Task.Run(() =>
             {
-                PaymentMethodId = SelectedPaymentMethodId
-            });
+                return paymentAccountsClient.GetPaymentAccountForm(new GetPaymentAccountFormRequest
+                {
+                    PaymentMethodId = SelectedPaymentMethodId
+                });
+            }).GetAwaiter().GetResult();
 
             // Add a default account name
             var accountNameField = getPaymentAccountFormResponse.PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == PaymentAccountFormField.Types.FieldId.AccountName);

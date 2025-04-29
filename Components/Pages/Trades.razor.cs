@@ -84,12 +84,7 @@ public partial class Trades : ComponentBase, IDisposable
 
     public void GetDisputes()
     {
-        using var grpcChannelHelper = new GrpcChannelHelper();
-        var disputesClient = new DisputesClient(grpcChannelHelper.Channel);
-
-        var response = disputesClient.GetDisputes(new GetDisputesRequest());
-
-        Disputes = [.. response.Disputes];
+        Task.Run(GetDisputesAsync).GetAwaiter().GetResult();
     }
 
     public async void HandleChatMessage(ChatMessage chatMessage)

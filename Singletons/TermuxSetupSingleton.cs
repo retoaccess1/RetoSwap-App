@@ -165,7 +165,7 @@ public class TermuxSetupSingleton
         }
     }
 
-    public async Task<bool> IsHavenoDaemonRunningAsync()
+    public async Task<bool> IsHavenoDaemonRunningAsync(CancellationToken cancellationToken = default)
     {
         for (int i = 0; i < 5; i++)
         {
@@ -174,16 +174,27 @@ public class TermuxSetupSingleton
                 // Will tell us its running but not if its initialized
                 using var grpcChannelHelper = new GrpcChannelHelper();
                 var client = new GetVersionClient(grpcChannelHelper.Channel);
-                var response = await client.GetVersionAsync(new GetVersionRequest());
+                var response = await client.GetVersionAsync(new GetVersionRequest(), cancellationToken: cancellationToken);
 
                 return true;
+            }
+            catch (TaskCanceledException)
+            {
+                throw;
             }
             catch (Exception e) // Catch correct exception TODO, ignore rate limit exception
             {
 
             }
 
-            await Task.Delay(1000);
+            try
+            {
+                await Task.Delay(1000, cancellationToken: cancellationToken);
+            }
+            catch (TaskCanceledException)
+            {
+                throw;
+            }
         }
 
         return false;
@@ -193,6 +204,11 @@ public class TermuxSetupSingleton
     {
         if (_stdoutListenerTask is null)
             _stdoutListenerTask = Task.Run(() => ListenStdout([("All connections lost", () => Console.WriteLine("LOST CONNECTION")), ("Established a new connection", () => Console.WriteLine("RECONNECTED"))]));
+    }
+
+    public async Task CloseTermux()
+    {
+        await ExecuteTermuxCommandAsync("am stopservice --user 0 -n com.termux/.app.TermuxService");
     }
 
     // Issues with starting tor recently

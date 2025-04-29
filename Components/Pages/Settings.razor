@@ -3,6 +3,12 @@
 <Modal Title="Backup" ModalButtonOptions="ModalButtonOptions.NONE" @bind-IsOpen="IsBackingUp">
     <p>Please wait</p>
 </Modal>
+<Modal Title="Connecting to remote node" ModalButtonOptions="ModalButtonOptions.CANCEL" @bind-IsOpen="IsConnecting" OnCancelPressed="CancelConnectToRemoteNode">
+    <p>Make sure you have Orbot installed and "power user mode" enabled in settings to enable the proxy</p>
+</Modal>
+<Modal Title="Error" ModalButtonOptions="ModalButtonOptions.OK" IsOpen="@(!string.IsNullOrEmpty(ConnectionError))" IsOpenChanged="(e) => { if (!e) { ConnectionError = null; } }">
+    <p>@ConnectionError</p>
+</Modal>
 <div class="settings-main">
     <div class="info-container">
         <p class="bold-p">Build information</p>

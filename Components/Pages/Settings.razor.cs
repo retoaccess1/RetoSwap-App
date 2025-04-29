@@ -35,9 +35,14 @@ public partial class Settings : ComponentBase, IDisposable
     [Inject]
     public TermuxSetupSingleton TermuxSetupSingleton { get; set; } = default!;
 #endif
+    [Inject]
+    public NotificationSingleton NotificationSingleton { get; set; } = default!;
+    [Inject]
+    public NavigationManager NavigationManager { get; set; } = default!;
 
     public bool IsFetching { get; set; }
     public bool IsBackingUp { get; set; }
+    public bool IsConnecting { get; set; }
 
     public bool IsToggled { get; set; }
 
@@ -48,6 +53,9 @@ public partial class Settings : ComponentBase, IDisposable
 
     public string? Password { get; set; }
     public string? Host { get; set; }
+
+    public CancellationTokenSource RemoteNodeConnectCts { get; set; } = new();
+    public string? ConnectionError { get; set; }
 
     public async Task BackupAsync()
     {
@@ -135,11 +143,18 @@ public partial class Settings : ComponentBase, IDisposable
         await current.MainPage.Navigation.PopModalAsync();
     }
 
+    public async Task CancelConnectToRemoteNode()
+    {
+        await RemoteNodeConnectCts.CancelAsync();
+    }
+
     public async Task ConnectToRemoteNode()
     {
         // Todo validation
         if (string.IsNullOrEmpty(Password) || string.IsNullOrEmpty(Host))
             return;
+
+        IsConnecting = true;
 
         await SecureStorageHelper.SetAsync("daemonInstallOption", DaemonInstallOptions.RemoteNode);
 
@@ -153,6 +168,30 @@ public partial class Settings : ComponentBase, IDisposable
 
 #if ANDROID
         await TermuxSetupSingleton.StopLocalHavenoDaemonAsync();
+        await TermuxSetupSingleton.CloseTermux();
+
+        try
+        {
+            // Try for 2 minutes
+            for (int i = 0; i < 24; i++)
+            {
+                if (await TermuxSetupSingleton.IsHavenoDaemonRunningAsync(RemoteNodeConnectCts.Token))
+                {
+                    IsConnecting = false;
+                    await NotificationSingleton.Reset();
+                    return;
+                }
+            }
+        }
+        catch (TaskCanceledException)
+        {
+            RemoteNodeConnectCts.Dispose();
+            RemoteNodeConnectCts = new();
+            return;
+        }
+
+        IsConnecting = false;
+        ConnectionError = "Could not connect to remote node. Make sure Orbot is installed and configured.";
 #endif
     }
 
@@ -161,10 +200,18 @@ public partial class Settings : ComponentBase, IDisposable
         // Prompt that account won't be synced and that if running, local daemon, termux etc needs to be stopped
         if (!isToggled)
         {
+#if ANDROID
+            // Theres a small issue if orbot is running at the same time as it listens to the same ports that the Termux tor instance listens on, however users should not be regularly switching hosting modes
             await SecureStorageHelper.SetAsync("daemonInstallOption", DaemonInstallOptions.TermuxAutomatic);
 
-#if ANDROID
-            await TermuxSetupSingleton.TryStartLocalHavenoDaemonAsync(Guid.NewGuid().ToString(), "http://127.0.0.1:3201");
+            if (await TermuxSetupSingleton.GetIsTermuxAndDaemonInstalledAsync())
+            {
+                await TermuxSetupSingleton.TryStartLocalHavenoDaemonAsync(Guid.NewGuid().ToString(), "http://127.0.0.1:3201");
+            }
+            else
+            {
+                NavigationManager.NavigateTo("/");
+            }
 #endif
 
             Password = null;

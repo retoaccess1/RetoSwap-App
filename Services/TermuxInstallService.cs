@@ -22,7 +22,7 @@ public class TermuxInstallService : Activity
         }
     }
 
-    public static async Task InstallTermuxAsync()
+    public static async Task<(bool, string?)> InstallTermuxAsync()
     {
         try
         {
@@ -51,10 +51,12 @@ public class TermuxInstallService : Activity
                     await Task.Delay(1000);
                 }
             });
+
+            return (true, null);
         }
         catch (Exception e)
         {
-
+            return (false, e.Message);
         }
     }
 }

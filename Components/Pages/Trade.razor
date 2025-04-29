@@ -107,7 +107,8 @@
             <InfoRow IsExpandable="true" Label="Taker deposit transaction ID" Value="@TradeInfo.TakerDepositTxId"></InfoRow>
             <InfoRow IsExpandable="true" Label="Maker deposit transaction ID" Value="@TradeInfo.MakerDepositTxId"></InfoRow>
             <InfoRow Label="Max allowed trade period" Value="@MaxTradePeriod.ToString()"></InfoRow>
-            <InfoRow Label="Expires" Value="N/A"></InfoRow>
+            @* <InfoRow Label="Expires" Value="N/A"></InfoRow> *@
+            <InfoRow Label="Expires" Value="@TradeExpiresDateUTC.ToString()"></InfoRow>
         </div>
         <div class="dispute">
             @* refactor this lol *@

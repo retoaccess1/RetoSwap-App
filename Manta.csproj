@@ -44,18 +44,16 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-android|AnyCPU'">
     <AndroidPackageFormat>apk</AndroidPackageFormat>
+    <DebugType>None</DebugType>
+    <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
   <ItemGroup>
     <!-- App Icon -->
-    <MauiIcon Include="Resources\AppIcon\haveno_logo.png" ForegroundFile="Resources\AppIcon\haveno_logo.png" Color="#131313" />
-    <MauiSplashScreen Include="Resources\Splash\haveno_logo.svg">
-      <Color>#131313</Color>
-      <BaseSize>512,256</BaseSize>
-    </MauiSplashScreen>
+    <MauiIcon Include="Resources\AppIcon\havenologo.png" ForegroundFile="Resources\AppIcon\havenologo.png" Color="#131313" />
 
     <!-- Splash Screen -->
-    <MauiSplashScreen Include="Resources\Splash\haveno_logo.svg" Color="#131313" BaseSize="512,256" />
+    <MauiSplashScreen Include="Resources\Splash\havenologo.svg" Color="#131313" BaseSize="512,256" />
 
     <!-- Images -->
     <MauiImage Include="Resources\Images\*" />
