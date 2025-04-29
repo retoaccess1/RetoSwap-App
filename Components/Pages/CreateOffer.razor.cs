@@ -168,6 +168,12 @@ public partial class CreateOffer : ComponentBase
                 break;
             case "FixedPrice":
                 {
+                    if (!UseFixedPrice)
+                        return;
+
+                    if (value == 0)
+                        return;
+
                     var percent = value / priceForOneXMR;
 
                     MarketPriceMarginPct = Math.Round(percent - 1m, 2) * 100m;
@@ -192,6 +198,9 @@ public partial class CreateOffer : ComponentBase
                 break;
             case "MarketPriceMarginPct":
                 {
+                    if (UseFixedPrice)
+                        return;
+
                     if (value >= 100m)
                         value = 99.99m;
 
@@ -208,7 +217,7 @@ public partial class CreateOffer : ComponentBase
                     }
 
                     FixedPrice = adjustedMktPrice;
-                    FiatPrice = Math.Round(adjustedMktPrice);
+                    FiatPrice = Math.Round(adjustedMktPrice * MoneroAmount);
 
                     if (MoneroAmount == MinimumMoneroAmount)
                     {
@@ -309,13 +318,21 @@ public partial class CreateOffer : ComponentBase
                 BuyerAsTakerWithoutDeposit = BuyerAsTakerWithoutDeposit
             };
 
-            if (MarketPriceMarginPct == 0m)
+            if (UseFixedPrice)
             {
-                request.MarketPriceMarginPct = 0;
+                request.Price = FixedPrice.ToString();
+                request.UseMarketBasedPrice = false;
             }
-            else 
+            else
             {
-                request.MarketPriceMarginPct = (double)MarketPriceMarginPct;
+                if (MarketPriceMarginPct == 0m)
+                {
+                    request.MarketPriceMarginPct = 0;
+                }
+                else 
+                {
+                    request.MarketPriceMarginPct = (double)MarketPriceMarginPct;
+                }
             }
 
             var response = await offersClient.PostOfferAsync(request);
