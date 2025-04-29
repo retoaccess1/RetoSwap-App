@@ -4,16 +4,20 @@
 Currently only available for Android, however MAUI supports iOS, macOS and Windows so this could change
 
 ## Setup
-The easiest way to run the project is by using Visual Studio 2022
+Install the APK from releases 
+
+or
+
+Run the project from Visual Studio 2022 Community edition - https://visualstudio.microsoft.com/downloads/
 The app can run either on a physical device with USB debugging and developer mode enabled or via the Android emulator
 
 ## Notes
-There are three options for installing the Haveno daemon, both use Termux
+There are three options for installing the Haveno daemon - you can technically switch after choosing but its not fully supported to switch from a local to remote node
 1. There is a built in installer, it installs a modified Termux with allow-external-apps enabled by default. It does need quite a few permissions however. File access is one that I wish was not needed but currently I can't get the RUN_COMMAND stdout to return so I'm using a file to communicate between apps.
-2. Manually set up Termux and daemon by following the instructions in haveno-termux-install.MD
-3. Remote node: https://github.com/atsamd21/Haveno-remote-node.
 
-This is very much work in progress, you can make simple trades on the public stagenet network but I have not tested all payment types
+2. Manually set up Termux and daemon by following the instructions in haveno-termux-install.MD - https://github.com/atsamd21/Haveno-app/blob/master/haveno-termux-install.MD
+
+3. Remote node: https://github.com/atsamd21/Haveno-remote-node. This requires Orbot with "Power user mode" enabled in settings. Orbot can be installed either via the Play Store or github as an APK: https://github.com/guardianproject/orbot-android/releases
 
 ## Donate
 ```

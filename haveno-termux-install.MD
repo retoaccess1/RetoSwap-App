@@ -23,7 +23,7 @@ apt upgrade -y
 apt install make wget git -y
 apt install openjdk-21-jdk -y  - have to run this twice?
 
-# Build haveno - this should not be needed in future with prebuilt daemon etc
+# Build haveno
 git clone https://github.com/haveno-dex/haveno.git
 cd haveno
 git checkout master
