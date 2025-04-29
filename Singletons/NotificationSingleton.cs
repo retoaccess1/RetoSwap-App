@@ -161,7 +161,8 @@ public class NotificationSingleton
                 registerResponse = notificationClient.RegisterNotificationListener(new RegisterNotificationListenerRequest(), cancellationToken: _cancellationTokenSource.Token);
                 // Inital fetch has happened, and we have registered so we get updates.
                 // Consumers can now be sure that data is available
-                InitializedTCS.SetResult(true);
+                if (!InitializedTCS.Task.IsCompleted)
+                    InitializedTCS.SetResult(true);
 
                 // TODO parse this, misses first response otherwise
                 var metadata = await registerResponse.ResponseHeadersAsync;

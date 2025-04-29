@@ -263,13 +263,13 @@ public partial class Account : ComponentBase
 
         try
         {
-            // This blocks and is a network call, not great to do synchronously
-            var response = paymentAccountsClient.ValidateFormField(new ValidateFormFieldRequest
+
+            var response = Task.Run(() => paymentAccountsClient.ValidateFormField(new ValidateFormFieldRequest
             {
                 FieldId = field.Id,
                 Form = PaymentAccountForm,
                 Value = field.Value
-            });
+            })).GetAwaiter().GetResult();
         }
         catch (RpcException ex)
         {

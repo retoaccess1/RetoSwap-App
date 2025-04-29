@@ -76,7 +76,7 @@
             </div>
             <div class="field">
                 <label>Cryptocurrency address</label>
-                <InputText placeholder="" @bind-Value="CreateCryptoCurrencyPaymentAccountRequest.Address" @oninput="(e) => ValidateField(Protobuf.PaymentAccountFormField.Types.FieldId.Address, (string?)e.Value ?? string.Empty)"></InputText>
+                <InputText placeholder="" @bind-Value="CreateCryptoCurrencyPaymentAccountRequest.Address"></InputText>
             </div>
             <div class="field">
                 <InfoRow Label="Limitations" Value="@($"{MaxTradeLimit}, {MaxTradePeriod}")"></InfoRow>
