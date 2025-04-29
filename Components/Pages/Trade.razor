@@ -1,6 +1,6 @@
 ﻿@page "/trade"
 
-<Modal IsOpen="IsFetching" Title="Loading" ModalButtonOptions="ModalButtonOptions.NONE" IsCloseable="false">
+<Modal IsOpen="IsFetching" Title="Loading" ModalButtonOptions="ModalButtonOptions.NONE">
     <p>Please wait...</p>
 </Modal>
 
@@ -104,11 +104,20 @@
         }
         <div class="info">
             <p class="bold-p info-txt">Trade info</p>
+            <div class="price-info">
+                @(TradeInfo.Offer.Direction == "SELL" ? TradeInfo.Offer.BaseCurrencyCode : TradeInfo.Offer.CounterCurrencyCode)
+                <ion-icon name="arrow-forward-outline"></ion-icon>
+                @(TradeInfo.Offer.Direction == "SELL" ? TradeInfo.Offer.CounterCurrencyCode : TradeInfo.Offer.BaseCurrencyCode)
+            </div>
+            <div class="amount-info">
+                <p>Amount: @TradeInfo.Amount.ToMonero() XMR / @TradeInfo.TradeVolume @(TradeInfo.Offer.Direction == "SELL" ? TradeInfo.Offer.BaseCurrencyCode : TradeInfo.Offer.CounterCurrencyCode)</p>
+                <p>Price: @decimal.Parse(TradeInfo.Price).ToString("0.0000") @(TradeInfo.Offer.Direction == "SELL" ? TradeInfo.Offer.BaseCurrencyCode : TradeInfo.Offer.CounterCurrencyCode)</p>
+            </div>
             <InfoRow IsExpandable="true" Label="Taker deposit transaction ID" Value="@TradeInfo.TakerDepositTxId"></InfoRow>
             <InfoRow IsExpandable="true" Label="Maker deposit transaction ID" Value="@TradeInfo.MakerDepositTxId"></InfoRow>
             <InfoRow Label="Max allowed trade period" Value="@MaxTradePeriod.ToString()"></InfoRow>
             @* <InfoRow Label="Expires" Value="N/A"></InfoRow> *@
-            <InfoRow Label="Expires" Value="@TradeExpiresDateUTC.ToString()"></InfoRow>
+            <InfoRow Label="Expires" Value="@TradeExpiresDateUTC.ToLocalTime().ToString()"></InfoRow>
         </div>
         <div class="dispute">
             @* refactor this lol *@

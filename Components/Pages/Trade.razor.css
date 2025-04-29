@@ -50,6 +50,17 @@
 .info .info-txt {
   margin-bottom: 10px;
 }
+.info .price-info {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.info .price-info ion-icon {
+  margin: 0 6px 0;
+}
+.info .amount-info {
+  margin-bottom: 10px;
+}
 
 .dispute-container {
   margin-bottom: 10px;

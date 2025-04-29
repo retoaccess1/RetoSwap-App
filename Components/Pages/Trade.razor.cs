@@ -203,7 +203,7 @@ public partial class Trade : ComponentBase, IDisposable
     {
         IsFetching = true;
 
-        using var grpcChannelHelper = new GrpcChannelHelper();
+        using var grpcChannelHelper = new GrpcChannelHelper(noTimeout: true);
         var tradesClient = new TradesClient(grpcChannelHelper.Channel);
 
         var confirmPaymentReceivedResponse = await tradesClient.ConfirmPaymentReceivedAsync(new ConfirmPaymentReceivedRequest
@@ -225,7 +225,7 @@ public partial class Trade : ComponentBase, IDisposable
     {
         IsFetching = true;
 
-        using var grpcChannelHelper = new GrpcChannelHelper();
+        using var grpcChannelHelper = new GrpcChannelHelper(noTimeout: true);
         var tradesClient = new TradesClient(grpcChannelHelper.Channel);
 
         var confirmPaymentReceivedResponse = await tradesClient.ConfirmPaymentSentAsync(new ConfirmPaymentSentRequest

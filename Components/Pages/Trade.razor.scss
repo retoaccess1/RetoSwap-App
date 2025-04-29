@@ -61,6 +61,20 @@
     .info-txt {
         margin-bottom: 10px;
     }
+
+    .price-info {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+
+        ion-icon {
+            margin: 0 6px 0;
+        }
+    }
+
+    .amount-info {
+        margin-bottom: 10px;
+    }
 }
 
 .dispute-container {

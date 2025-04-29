@@ -110,7 +110,7 @@ public partial class Offer : ComponentBase, IDisposable
 
         try
         {
-            using var grpcChannelHelper = new GrpcChannelHelper();
+            using var grpcChannelHelper = new GrpcChannelHelper(noTimeout: true);
             var tradesClient = new TradesClient(grpcChannelHelper.Channel);
 
             var takeOfferRequest = new TakeOfferRequest
