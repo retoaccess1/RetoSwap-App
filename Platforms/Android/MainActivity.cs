@@ -15,14 +15,11 @@ public class MainActivity : MauiAppCompatActivity
 {
     public MainActivity()
     {
-
+        _ = typeof(Manta.Services.TermuxReceiver);
     }
 
     protected override void OnActivityResult(int requestCode, Result resultCode, Intent? data)
     {
-        if (requestCode == StorageHelper.RequestCode)
-            StorageHelper.OnActivityResult();
-
         base.OnActivityResult(requestCode, resultCode, data);
     }
 
@@ -31,6 +28,7 @@ public class MainActivity : MauiAppCompatActivity
         if (intent?.Data?.Host == "termux_callback")
         {
             Console.WriteLine("Returned from Termux!");
+            var output = intent.Data.GetQueryParameter("result");
         }
 
         // TODO Handle notification. if message, navigate to chat, if trade navigate to trade
@@ -87,5 +85,11 @@ public class MainActivity : MauiAppCompatActivity
     {
         TermuxPermissionHelper.HandlePermissionResult(requestCode, permissions, grantResults);
         base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    protected override void OnResume()
+    {
+        base.OnResume();
+        TermuxInstallService.Resumed();
     }
 }

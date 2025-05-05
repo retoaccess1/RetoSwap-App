@@ -45,6 +45,7 @@ public partial class Settings : ComponentBase, IDisposable
     public bool IsConnecting { get; set; }
 
     public bool IsToggled { get; set; }
+    public bool IsWakeLockToggled { get; set; }
 
     public bool IsConnected { get; set; }
 
@@ -237,6 +238,23 @@ public partial class Settings : ComponentBase, IDisposable
 #endif
     }
 
+    public async Task HandleWakeLockToggle(bool isToggled)
+    {
+#if ANDROID
+        if (!isToggled)
+            return;
+
+        if (await TermuxSetupSingleton.RequestEnableWakeLockAsync())
+        {
+            await SecureStorageHelper.SetAsync("wakelock-enabled", true);
+        }
+        else
+        {
+            IsWakeLockToggled = false;
+        }
+#endif
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -270,6 +288,7 @@ public partial class Settings : ComponentBase, IDisposable
 #if ANDROID
         IsToggled = (await Permissions.CheckStatusAsync<NotificationPermission>() == PermissionStatus.Granted) && (await SecureStorageHelper.GetAsync<bool>("notifications-enabled"));
 #endif
+        IsWakeLockToggled = await SecureStorageHelper.GetAsync<bool>("wakelock-enabled");
 
         var preferredCurrency = await LocalStorage.GetItemAsStringAsync("preferredCurrency");
         if (preferredCurrency is not null)

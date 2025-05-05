@@ -10,6 +10,15 @@
 					android:name="android.support.FILE_PROVIDER_PATHS"
 					android:resource="@xml/file_paths"></meta-data>
 		</provider>
+    <service android:name=".PluginResultsService" />
+    <receiver
+			android:name=".TermuxReceiver"
+			android:enabled="true"
+			android:exported="true">
+      <intent-filter>
+        <action android:name="com.companyname.manta.TERMUX_READY" />
+      </intent-filter>
+    </receiver>
     </application>
 	<uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 	<uses-permission android:name="android.permission.INTERNET" />

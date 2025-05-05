@@ -8,14 +8,10 @@
        IsCloseable="false">
     <div class="install-modal">
         <p>In order to use the app the Haveno daemon needs to be installed inside Termux.</p>
-
-        <p>In order to do this the app requires a few permissions, however it is possible to manually set this up and instructions are in the <a href="https://github.com/atsamd21/Haveno-app/blob/master/haveno-termux-install.MD">haveno-termux-install</a> file on GitHub.</p>
-
         <p>Please choose an installation type.</p>
 
         <div class="buttons">
-            <button class="verify-modal-button" @onclick="@(async (e) => { IsInstallTypeModalOpen = false; await HandleInstall(DaemonInstallOptions.TermuxAutomatic); })">Standalone auto</button>
-            <button class="verify-modal-button" @onclick="@(async (e) => { IsInstallTypeModalOpen = false; await HandleInstall(DaemonInstallOptions.TermuxManual); })">Standalone manual</button>
+            <button class="verify-modal-button" @onclick="@(async (e) => { IsInstallTypeModalOpen = false; await HandleInstall(DaemonInstallOptions.TermuxAutomatic); })">Standalone</button>
             <button class="verify-modal-button" @onclick="@(async (e) => { IsInstallTypeModalOpen = false; await HandleInstall(DaemonInstallOptions.RemoteNode); })">Remote node</button>
         </div>
     </div>
@@ -24,15 +20,17 @@
     @switch (TermuxSetupState)
     {
         case TermuxSetupState.InstallingTermux:
-            <p>Downloading Termux...</p>
+            <div class="installing">
+                <span class="loader"></span>
+                <p>Downloading Termux...</p>
+            </div>
+            @* <p>@($"Downloaded {ProgressPercentage:F2}%")</p> *@
             break;
         case TermuxSetupState.SettingUpTermux:
-            <p>Setting up Termux and Haveno daemon...</p>
-            <p>Step @InstallationStep/6</p>
+            <p>Setting up Haveno...</p>
             break;
         case TermuxSetupState.Finished:
-            <p>Finished setting up Haveno.</p>
-            <p>Daemon is starting...</p>
+            <p>Finished setting up Haveno. Daemon is starting...</p>
             break;
          default: break;
     }

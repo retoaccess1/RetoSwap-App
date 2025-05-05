@@ -13,6 +13,7 @@ public partial class Index : ComponentBase
     public TermuxSetupState TermuxSetupState { get; set; }
     public bool IsInstallTypeModalOpen { get; set; }
     public int InstallationStep { get; set; }
+    public double ProgressPercentage { get; set; }
     public string? InstallationErrorMessage { get; set; }
 
     [Inject]
@@ -44,14 +45,17 @@ public partial class Index : ComponentBase
             case DaemonInstallOptions.TermuxAutomatic:
                 await InstallHavenoDaemonAutomatically();
                 break;
-            case DaemonInstallOptions.TermuxManual:
-                NavigationManager.NavigateTo("/Settings");
-                break;
             case DaemonInstallOptions.RemoteNode:
                 NavigationManager.NavigateTo("/Settings");
                 break;
             default: return;
         }
+    }
+
+    public void HandleProgressPercentageChange(double progressPercentage)
+    {
+        ProgressPercentage = progressPercentage;
+        StateHasChanged();
     }
 
     public async Task InstallHavenoDaemonAutomatically()
@@ -62,77 +66,59 @@ public partial class Index : ComponentBase
 
         if (!await SecureStorageHelper.GetAsync<bool>("termux-installed"))
         {
-            try
-            {
-                TermuxSetupState = TermuxSetupState.InstallingTermux;
-                StateHasChanged();
-
-                var res = await TermuxInstallService.InstallTermuxAsync();
-                if (!res.Item1)
-                {
-                    InstallationErrorMessage = res.Item2;
-                    return;
-                }
-
-                await SecureStorageHelper.SetAsync("termux-installed", true);
-            }
-            catch (Exception e)
-            {
-                // Tell user why install failed TODO
-            }
-
+            TermuxSetupState = TermuxSetupState.InstallingTermux;
             StateHasChanged();
-        }
 
-        if (!await SecureStorageHelper.GetAsync<bool>("termux-setup"))
-        {
-            try
+            //TermuxInstallService.OnProgressPercentageChange += HandleProgressPercentageChange;
+
+            var res = await TermuxInstallService.InstallTermuxAsync();
+            if (!res.Item1)
             {
-                var accepted = await TermuxSetupSingleton.RequestRequiredPermissionsAsync();
-                if (accepted)
+                InstallationErrorMessage = res.Item2;
+                StateHasChanged();
+                return;
+            }
+
+            //TermuxInstallService.OnProgressPercentageChange -= HandleProgressPercentageChange;
+
+            TermuxSetupState = TermuxSetupState.SettingUpTermux;
+            StateHasChanged();
+
+            await TermuxSetupSingleton.OpenTermux();
+
+            // Add timeout
+            await TermuxReceiver.TaskCompletionSource.Task;
+
+            TermuxSetupState = TermuxSetupState.Finished;
+            StateHasChanged();
+
+            await SecureStorageHelper.SetAsync("termux-installed", true);
+
+            var accepted = await TermuxPermissionHelper.RequestRunCommandPermissionAsync();
+            if (accepted)
+            {
+                var host = "http://127.0.0.1:3201";
+                var password = Guid.NewGuid().ToString();
+
+                var successfullyStarted = await TermuxSetupSingleton.TryStartLocalHavenoDaemonAsync(password, host);
+                if (successfullyStarted)
                 {
-                    TermuxSetupSingleton.InstallationStep += HandleInstallationStepChange;
-
-                    TermuxSetupState = TermuxSetupState.SettingUpTermux;
-                    StateHasChanged();
-
-                    await TermuxSetupSingleton.SetupTermuxAsync();
-                    await SecureStorageHelper.SetAsync("termux-setup", true);
-
-                    TermuxSetupState = TermuxSetupState.Finished;
-                    StateHasChanged();
-
-                    var host = "http://127.0.0.1:3201";
-                    var password = Guid.NewGuid().ToString();
-
-                    var successfullyStarted = await TermuxSetupSingleton.TryStartLocalHavenoDaemonAsync(password, host);
-                    if (successfullyStarted)
-                    {
-                        NavigationManager.NavigateTo("/Market");
-                    }
-                    else
-                    {
-
-                    }
+                    NavigationManager.NavigateTo("/Market");
                 }
                 else
                 {
-                    // Permissions required
-                    // Maybe show user that installation can't continue
-                    await SecureStorageHelper.SetAsync("daemonInstallOption", DaemonInstallOptions.None);
 
-                    TermuxSetupState = TermuxSetupState.Initial;
-                    IsInstallTypeModalOpen = true;
                 }
             }
-            catch (Exception e)
+            else
             {
+                await SecureStorageHelper.SetAsync("daemonInstallOption", DaemonInstallOptions.None);
 
+                TermuxSetupState = TermuxSetupState.Initial;
+                IsInstallTypeModalOpen = true;
             }
-            finally
-            {
-                TermuxSetupSingleton.InstallationStep -= HandleInstallationStepChange;
-            }
+
+            StateHasChanged();
         }
 #endif
     }
@@ -164,39 +150,6 @@ public partial class Index : ComponentBase
                     }
                     else
                     {
-                        var host = await SecureStorageHelper.GetAsync<string>("host");
-                        var password = await SecureStorageHelper.GetAsync<string>("password");
-
-                        if (string.IsNullOrEmpty(host) || string.IsNullOrEmpty(password))
-                        {
-
-                        }
-                        else
-                        {
-                            GrpcChannelHelper.Password = password;
-                            GrpcChannelHelper.Host = host;
-                        }
-
-                        var successfullyStarted = await TermuxSetupSingleton.TryStartLocalHavenoDaemonAsync(Guid.NewGuid().ToString(), "http://127.0.0.1:3201");
-                        if (successfullyStarted)
-                        {
-                            NavigationManager.NavigateTo("/Market");
-                        }
-                        else
-                        {
-
-                        }
-                    }
-                    break;
-                case DaemonInstallOptions.TermuxManual:
-                    {
-                        var result = await TermuxSetupSingleton.RequestRequiredPermissionsAsync();
-                        if (!result)
-                        {
-                            IsInstallTypeModalOpen = true;
-                            return;
-                        }
-
                         var host = await SecureStorageHelper.GetAsync<string>("host");
                         var password = await SecureStorageHelper.GetAsync<string>("password");
 

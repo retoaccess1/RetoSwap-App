@@ -38,7 +38,7 @@
             }
             <div class="offers-list-text-container">
                 <p class="offers-list-text">@(Direction == "BUY" ? "Buy XMR from" : "Sell XMR to")</p>
-                <p class="offers-list-text">@Offers.Count Offers</p>
+                <p class="offers-list-text">@FilteredOffers.Count Offers</p>
             </div>
         </div>
         @if (IsFetching)
@@ -50,7 +50,7 @@
         else
         {
             <ul class="offers">
-                @foreach (var offer in Offers)
+                @foreach (var offer in FilteredOffers)
                 {
                     <li class="offer">
                         @* check that payment method also supports currency *@

@@ -25,18 +25,23 @@ public partial class BuySell : ComponentBase, IDisposable
 
     public CancellationTokenSource CancellationTokenSource { get; set; } = new();
 
+    public List<OfferInfo> FilteredOffers { get { return FilterOffers(Offers); } }
     public List<OfferInfo> Offers { get; set; } = [];
 
     public bool IsFetching { get; set; }
 
-    public string SelectedCurrencyCode 
-    { 
-        get; 
-        set 
-        { 
-            field = value;
-            ResetFetch();
-        } 
+    // Does not update when these change
+    public string SelectedCurrencyCode
+    {
+        get;
+        set
+        {
+            if (field != value)
+            {
+                field = value;
+                ResetFetch();
+            }
+        }
     } = string.Empty;
 
     public string SelectedPaymentMethod
@@ -44,8 +49,11 @@ public partial class BuySell : ComponentBase, IDisposable
         get;
         set
         {
-            field = value;
-            ResetFetch();
+            if (field != value)
+            {
+                field = value;
+                ResetFetch();
+            }
         }
     } = string.Empty;
 
@@ -84,8 +92,6 @@ public partial class BuySell : ComponentBase, IDisposable
             PaymentMethodSearchableDropdown.Clear();
             SelectedCurrencyCode = string.Empty;
             SelectedPaymentMethod = string.Empty;
-
-            ResetFetch();
         } 
     }
     public string Direction { get; set; } = "BUY";
@@ -120,10 +126,10 @@ public partial class BuySell : ComponentBase, IDisposable
     public SemaphoreSlim ResetSemaphore { get; set; } = new(1);
     public void ResetFetch()
     {
-        Task.Run(async() => {
-            if (!ResetSemaphore.Wait(0))
-                return;
+        if (!ResetSemaphore.Wait(0))
+            return;
 
+        Task.Run(async() => {
             CancellationTokenSource.Cancel();
             CancellationTokenSource.Dispose();
             CancellationTokenSource = new();
@@ -180,7 +186,6 @@ public partial class BuySell : ComponentBase, IDisposable
                 VisiblePaymentMethods = TraditionalPaymentMethods;
                 VisibleCurrencyCodes = TraditionalCurrencyCodes;
 
-                //OfferFetchTask = FetchOffersAsync();
                 OfferFetchTask = Task.Run(FetchOffersAsync);
 
                 break;
@@ -194,6 +199,28 @@ public partial class BuySell : ComponentBase, IDisposable
         }
 
         await base.OnInitializedAsync();
+    }
+
+    private List<OfferInfo> FilterOffers(List<OfferInfo> offers)
+    {
+        if (!string.IsNullOrEmpty(SelectedPaymentMethod))
+        {
+            return [.. offers.Where(x => x.PaymentMethodId == SelectedPaymentMethod)];
+        }
+        else
+        {
+            switch (OfferPaymentType)
+            {
+                case 0:
+                    return [.. offers.Where(x => TraditionalPaymentMethods.ContainsKey(x.PaymentMethodId)).Where(x => x.PaymentMethodId != "BLOCK_CHAINS")];
+                case 1:
+                    return [.. offers.Where(x => CryptoPaymentMethods.ContainsKey(x.PaymentMethodId))];
+                case 2:
+                    return [.. offers.Where(x => !TraditionalPaymentMethods.ContainsKey(x.PaymentMethodId)).Where(x => x.PaymentMethodId != "BLOCK_CHAINS")];
+                default:
+                    return [.. offers];
+            }
+        }
     }
 
     private async Task FetchOffersAsync()
@@ -213,29 +240,8 @@ public partial class BuySell : ComponentBase, IDisposable
                     Direction = Direction == "BUY" ? "SELL" : "BUY"
                 };
 
-                var offers = await offersClient.GetOffersAsync(offersRequest, cancellationToken: CancellationTokenSource.Token);
-                if (!string.IsNullOrEmpty(SelectedPaymentMethod))
-                {
-                    Offers = [.. offers.Offers.Where(x => x.PaymentMethodId == SelectedPaymentMethod)];
-                }
-                else
-                {
-                    switch (OfferPaymentType)
-                    {
-                        case 0:
-                            Offers = [.. offers.Offers.Where(x => TraditionalPaymentMethods.ContainsKey(x.PaymentMethodId)).Where(x => x.PaymentMethodId != "BLOCK_CHAINS")];
-                            break;
-                        case 1:
-                            Offers = [.. offers.Offers.Where(x => CryptoPaymentMethods.ContainsKey(x.PaymentMethodId))];
-                            break;
-                        case 2:
-                            Offers = [.. offers.Offers.Where(x => !TraditionalPaymentMethods.ContainsKey(x.PaymentMethodId)).Where(x => x.PaymentMethodId != "BLOCK_CHAINS")];
-                            break;
-                        default: 
-                            Offers = [.. offers.Offers];
-                            break;
-                    }
-                }
+                var offers = await offersClient.GetOffersAsync(offersRequest);
+                Offers = [.. offers.Offers];
 
                 IsFetching = false;
                 await InvokeAsync(StateHasChanged);

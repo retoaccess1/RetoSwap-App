@@ -9,6 +9,7 @@ namespace Manta.Singletons;
 
 public class TradeStatisticsSingleton
 {
+    private int _delay = 5_000;
     private CancellationTokenSource _cancellationTokenSource = new();
 
     public event Action<bool>? OnTradeStatisticsFetch;
@@ -51,7 +52,12 @@ public class TradeStatisticsSingleton
                 }).ToList();
 
                 if (!InitializedTCS.Task.IsCompleted)
+                {
                     InitializedTCS.SetResult(true);
+#if !DEBUG
+                    _delay = 60_000;
+#endif
+                }
             }
             catch (OperationCanceledException)
             {
@@ -59,18 +65,14 @@ public class TradeStatisticsSingleton
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                //Console.WriteLine(e);
             }
             finally
             {
                 OnTradeStatisticsFetch?.Invoke(false);
             }
 
-#if DEBUG
-            await Task.Delay(5_000, _cancellationTokenSource.Token);
-#else
-            await Task.Delay(60_000, _cancellationTokenSource.Token);
-#endif
+            await Task.Delay(_delay, _cancellationTokenSource.Token);
         }
     }
 }

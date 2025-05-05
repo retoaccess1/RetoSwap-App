@@ -48,6 +48,10 @@
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <UseNativeHttpHandler>false</UseNativeHttpHandler>
+  </PropertyGroup>
+
   <ItemGroup>
     <!-- App Icon -->
     <MauiIcon Include="Resources\AppIcon\havenologo.png" ForegroundFile="Resources\AppIcon\havenologo.png" Color="#131313" />
