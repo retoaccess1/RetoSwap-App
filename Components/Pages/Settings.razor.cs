@@ -288,8 +288,6 @@ public partial class Settings : ComponentBase, IDisposable
 #if ANDROID
         IsToggled = (await Permissions.CheckStatusAsync<NotificationPermission>() == PermissionStatus.Granted) && (await SecureStorageHelper.GetAsync<bool>("notifications-enabled"));
 #endif
-        IsWakeLockToggled = await SecureStorageHelper.GetAsync<bool>("wakelock-enabled");
-
         var preferredCurrency = await LocalStorage.GetItemAsStringAsync("preferredCurrency");
         if (preferredCurrency is not null)
         {
@@ -305,6 +303,8 @@ public partial class Settings : ComponentBase, IDisposable
 
         DaemonInstallOption = await SecureStorageHelper.GetAsync<DaemonInstallOptions>("daemonInstallOption");
         IsRemoteNodeToggled = DaemonInstallOption == DaemonInstallOptions.RemoteNode;
+
+        IsWakeLockToggled = (await SecureStorageHelper.GetAsync<bool>("wakelock-enabled")) || DaemonInstallOption == DaemonInstallOptions.RemoteNode;
 
         HavenoVersion = DaemonConnectionSingleton.Version;
         IsConnected = DaemonConnectionSingleton.IsConnected;

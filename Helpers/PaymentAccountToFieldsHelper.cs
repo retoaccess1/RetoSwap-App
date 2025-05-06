@@ -1,9 +1,14 @@
 ﻿using Protobuf;
+using System.Text.RegularExpressions;
 
 namespace Manta.Helpers;
 
-public static class PaymentAccountToFieldsHelper
+public static partial class PaymentAccountToFieldsHelper
 {
+    static IEnumerable<string> SplitCamelCase(this string input)
+    {
+        return CamelCaseRegex().Split(input).Where(str => !string.IsNullOrEmpty(str));
+    }
 
     /// <summary>
     /// Convert a PaymentAccountPayload to a list of field name and field values
@@ -22,7 +27,10 @@ public static class PaymentAccountToFieldsHelper
 
         foreach(var property in properties)
         {
-            yield return new KeyValuePair<string, string>(property.Name, property.GetValue(val)?.ToString() ?? "");
+            yield return new KeyValuePair<string, string>(string.Join(' ', property.Name.SplitCamelCase()), property.GetValue(val)?.ToString() ?? "");
         }
     }
+
+    [GeneratedRegex(@"([A-Z]?[a-z]+)")]
+    private static partial Regex CamelCaseRegex();
 }

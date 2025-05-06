@@ -136,6 +136,9 @@ public class TermuxSetupSingleton
     {
         try
         {
+            //await ToggleApps();
+
+            // Might just need to wake Termux up?
             // Since this is connection based, it could be running but unreachable
             if (await IsHavenoDaemonRunningAsync())
             {

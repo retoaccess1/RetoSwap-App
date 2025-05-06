@@ -55,7 +55,7 @@
                     <th>Price</th>
                     <th>XMR Amount</th>
                 </tr>
-            @foreach (var trade in TradeStatistics.OrderByDescending(x => x.Date))
+            @foreach (var trade in FilteredTradeStatistics)
             {
                 <tr>
                     <td>
@@ -74,5 +74,10 @@
             }
             </table>
         }
+    </div>
+    <div class="nav-buttons">
+        <ion-icon @onclick="PreviousPage" size="large" name="chevron-back-circle-outline"></ion-icon>
+        <p>@(CurrentPage + 1)/@(PageCount + 1)</p>
+        <ion-icon @onclick="NextPage" size="large" name="chevron-forward-circle-outline"></ion-icon>
     </div>
 </div>

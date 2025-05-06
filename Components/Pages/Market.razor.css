@@ -23,6 +23,7 @@
 }
 .market-main .table-wrapper {
   overflow: auto;
+  height: 100%;
 }
 .market-main .table-wrapper .trades {
   border-collapse: collapse;
@@ -34,6 +35,8 @@
 }
 .market-main .table-wrapper .trades td, .market-main .table-wrapper .trades th {
   border-bottom: 1px solid #808080;
+  height: 30px;
+  max-height: 30px;
 }
 .market-main .table-wrapper .trades th {
   position: sticky;
@@ -86,4 +89,15 @@
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.nav-buttons {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  justify-content: center;
+  margin-top: 10px;
+}
+.nav-buttons p {
+  margin: 0 10px 0;
 }

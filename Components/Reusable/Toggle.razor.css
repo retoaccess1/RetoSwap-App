@@ -35,3 +35,7 @@
 .active {
   left: 32px;
 }
+
+.disabled {
+  opacity: 0.7;
+}

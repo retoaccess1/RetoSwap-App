@@ -24,7 +24,7 @@ public partial class Market : ComponentBase, IDisposable
         MaxNumYAxisTicks = 10,
         YAxisRequireZeroPoint = true,
         XAxisLines = false,
-        LineStrokeWidth = 2,
+        LineStrokeWidth = 8,
         ShowLabels = false,
         ShowLegend = false,
         ShowLegendLabels = false,
@@ -35,7 +35,7 @@ public partial class Market : ComponentBase, IDisposable
 
     private List<ChartSeries> _series = [];
 
-    private string[] _xAxisLabels = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
+    private readonly string[] _xAxisLabels = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
     public string Interval { get; set; } = "Year";
 
@@ -54,10 +54,15 @@ public partial class Market : ComponentBase, IDisposable
     public bool IsFetching { get; set; }
     public string Version { get; set; } = string.Empty;
     public WalletInfo? WalletInfo { get; set; }
-    public List<TradeStatistic> TradeStatistics { get; private set; } = [];
+    public List<TradeStatistic> FilteredTradeStatistics { get { return FilterTradeStatistics(); } }
+    public List<TradeStatistic> TradeStatistics { get; private set { field = value; PageCount = TradeStatistics.Count / PageSize; } } = [];
 
     public string PreferredCurrency { get; set; } = string.Empty;
     public string CurrentMarketPrice { get; set; } = string.Empty;
+
+    public int PageSize { get; set; } = 20;
+    public int CurrentPage { get; set; }
+    public int PageCount { get; set; }
 
     [Inject]
     public ILocalStorageService LocalStorage { get; set; } = default!;
@@ -67,6 +72,31 @@ public partial class Market : ComponentBase, IDisposable
     public BalanceSingleton BalanceSingleton { get; set; } = default!;
     [Inject]
     public TradeStatisticsSingleton TradeStatisticsSingleton { get; set; } = default!;
+
+    public List<TradeStatistic> FilterTradeStatistics()
+    {
+        return TradeStatistics
+            .OrderByDescending(x => x.Date)
+            .Skip(CurrentPage * PageSize)
+            .Take(PageSize)
+            .ToList();
+    }
+
+    public void NextPage()
+    {
+        if (CurrentPage < PageCount) 
+        {
+            CurrentPage++;
+        }
+    }
+
+    public void PreviousPage()
+    {
+        if (CurrentPage > 0)
+        {
+            CurrentPage--;
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -103,6 +133,7 @@ public partial class Market : ComponentBase, IDisposable
         }
 
         TradeStatistics = TradeStatisticsSingleton.TradeStatistics;
+        
         ProcessTradeStatistics();
 
         WalletInfo = BalanceSingleton.WalletInfo;

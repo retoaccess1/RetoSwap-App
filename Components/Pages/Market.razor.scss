@@ -20,13 +20,14 @@
             width: fit-content;
         }
 
-        .dropdowns{
+        .dropdowns {
             display: flex;
         }
     }
 
     .table-wrapper {
         overflow: auto;
+        height: 100%;
 
         .trades {
             border-collapse: collapse;
@@ -42,6 +43,8 @@
 
             td, th {
                 border-bottom: 1px solid #808080;
+                height: 30px;
+                max-height: 30px;
             }
 
             td {
@@ -103,4 +106,16 @@
     display: flex;
     justify-content: center;
     align-items:center;
+}
+
+.nav-buttons{
+    display: flex;
+    align-items: center;
+    width: 100%;
+    justify-content: center;
+    margin-top: 10px;
+
+    p {
+        margin: 0 10px 0;
+    }
 }

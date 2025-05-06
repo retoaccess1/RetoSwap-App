@@ -121,6 +121,7 @@ public partial class Account : ComponentBase
             using var payChannelHelper = new GrpcChannelHelper();
             var paymentAccountsClient = new PaymentAccountsClient(payChannelHelper.Channel);
 
+            // TODO cache this and clear when daemon version changes
             var getPaymentAccountFormResponse = Task.Run(() =>
             {
                 return paymentAccountsClient.GetPaymentAccountForm(new GetPaymentAccountFormRequest
@@ -197,7 +198,7 @@ public partial class Account : ComponentBase
 
                 break;
             }
-            catch
+            catch (Exception e)
             {
 
             }
