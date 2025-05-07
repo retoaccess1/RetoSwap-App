@@ -1,4 +1,4 @@
-﻿![alt text](https://github.com/atsamd21/Haveno-app/blob/master/App.png "Image of application")
+﻿![alt text](https://github.com/atsamd21/Haveno-app/blob/master/AppImages/App2.jpg "Image of application")
 
 ## WIP
 Currently only available for Android, however MAUI supports iOS, macOS and Windows so this could change
