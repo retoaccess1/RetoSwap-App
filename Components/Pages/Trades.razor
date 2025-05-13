@@ -17,11 +17,11 @@
                         @* if this is a completed or canceled trade this should open a modal instead TODO *@
                         <div class="trade-card-top">
                             <p class="short-id">@tradeInfo.ShortId</p>
-                            <p class="date">@(tradeInfo.Date.ToDateTime().ToLocalTime().ToString("yyyy/MM/dd"))</p>
                             @if (SelectedTabIndex == 1)
                             {
-                                <p class="status">@(tradeInfo.IsCompleted ? "Completed" : "") </p>
+                                <p class="short-id">@(tradeInfo.IsCompleted ? "Completed" : "") </p>
                             }
+                            <p class="date">@(tradeInfo.Date.ToDateTime().ToLocalTime().ToString("yyyy/MM/dd"))</p>
                         </div>
                         <div class="middle">
                             <p class="xmr-amount">XMR Amount: @tradeInfo.Amount.ToMonero() XMR</p>
