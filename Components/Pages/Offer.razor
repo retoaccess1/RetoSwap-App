@@ -1,4 +1,4 @@
-﻿@page "/offer"
+﻿@page "/buysell/offer"
 
 <div class="offer-main">
     <div class="dropdown">
@@ -8,16 +8,16 @@
     <input step="0.01" min="@OfferInfo?.MinAmount.ToMonero()" max="@OfferInfo?.Amount.ToMonero()" @bind="@Amount" type="number" />
     @if (OfferInfo?.MinAmount == OfferInfo?.Amount)
     {
-        <p class="range">MIN/MAX: @OfferInfo?.MinAmount.ToMonero() XMR</p>
+        <p class="range">Min/Max: @OfferInfo?.MinAmount.ToMonero() XMR</p>
     }
     else
     {
-        <p class="range">MIN/MAX: @OfferInfo?.MinAmount.ToMonero() XMR - @OfferInfo?.Amount.ToMonero() XMR</p>
+        <p class="range">Min/Max: @OfferInfo?.MinAmount.ToMonero() XMR - @OfferInfo?.Amount.ToMonero() XMR</p>
     }
     <label>Total in @OfferInfo?.CounterCurrencyCode:</label>
     <input readonly @bind="@FiatAmount" type="number" step="0.01" />
-    <button disabled="@UserDoesNotHaveAccount" @onclick="TakeOfferAsync">Take offer</button>
-    <button @onclick="Cancel">Cancel</button>
+    <button class="button-submit" disabled="@UserDoesNotHaveAccount" @onclick="TakeOfferAsync">Take offer</button>
+    <button class="button-cancel" @onclick="Cancel">Cancel</button>
 </div>
 
 <Modal IsOpen="IsTakingOffer" Title="Taking offer" ModalButtonOptions="ModalButtonOptions.NONE" OnCancelPressed="() => CancelOfferCts.Cancel()">

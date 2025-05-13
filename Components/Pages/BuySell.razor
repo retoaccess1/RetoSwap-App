@@ -62,7 +62,7 @@
                 {
                     <li class="offer">
                         @* check that payment method also supports currency *@
-                        <a class="offer-link" href=@($"offer?OfferId={offer.Id}&title=Offer")>
+                        <a class="offer-link" href=@($"buysell/offer?OfferId={offer.Id}&title=Offer")>
                             <div class="offer-top">
                                 <div class="offer-currency">
                                     @(Direction == "SELL" ? offer.BaseCurrencyCode : offer.CounterCurrencyCode)
