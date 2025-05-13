@@ -1,21 +1,28 @@
 nav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
     padding: 10px;
-    width: 100%;
+    width: calc(100dvw - 28px);
     display: flex;
-    justify-content: center;
+    justify-content: space-between;
     align-items: center;
-    background-color: #131313;
-
-    ion-icon {
-    }
+    background-color: #121212;
+    border-radius: 100px;
+    height: 61px;
+    position: absolute;
+    bottom: 14px;
+    left: 14px;
 
     ::deep .nav-link {
-        margin-right: 16px;
-        /*margin-right: 24px;*/
         color: #fff;
+        height: 41px;
+        width: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        .nav-icon {
+            height: 24px;
+            width: 24px;
+        }
 
         &:last-child {
             margin-right: 0;
@@ -23,8 +30,12 @@ nav {
     }
 
     ::deep .active {
-        /*border-bottom: 2px solid #bbc3cb;*/
-        border-bottom: 2px solid #fff;
+        background-color: #fff;
+        border-radius: 40px;
+
+        .nav-icon {
+            filter: invert(1) !important;
+        }
     }
 }
 

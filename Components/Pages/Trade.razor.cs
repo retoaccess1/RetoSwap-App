@@ -16,6 +16,8 @@ public partial class Trade : ComponentBase, IDisposable
     [Parameter]
     [SupplyParameterFromQuery]
     public string TradeId { get; set; } = string.Empty;
+    [Parameter]
+    public string Id { get; set; } = string.Empty;
     public TradeInfo TradeInfo { get; set; } = default!;
     public PaymentMethod? PaymentMethod { get; set; }
     [Inject]
@@ -301,7 +303,7 @@ public partial class Trade : ComponentBase, IDisposable
 
     public async Task GoToDisputeAsync()
     {
-        NavigationManager.NavigateTo($"/chat?disputeTradeId={TradeInfo.TradeId}&title=Trade%20{TradeInfo.ShortId}%20chat&arbitrator={TradeInfo.ArbitratorNodeAddress.Split(".")[0]}&tradePeer={TradeInfo.TradePeerNodeAddress.Split(".")[0]}&myAddress={TradeInfo.Offer.OwnerNodeAddress.Split(".")[0]}");
+        NavigationManager.NavigateTo($"trades/{TradeInfo.TradeId}/chat?disputeTradeId={TradeInfo.TradeId}&title=Trade%20{TradeInfo.ShortId}%20chat&arbitrator={TradeInfo.ArbitratorNodeAddress.Split(".")[0]}&tradePeer={TradeInfo.TradePeerNodeAddress.Split(".")[0]}&myAddress={TradeInfo.Offer.OwnerNodeAddress.Split(".")[0]}");
     }
 
     public void Dispose()

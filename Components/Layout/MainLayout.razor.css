@@ -2,17 +2,18 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  /*padding: 0 20px 20px;*/
   padding: 0 14px 0;
+  height: 100dvh;
 }
 
 main {
-  /*flex: 1;*/
-  height: calc(100dvh - 62px - 58px);
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 75px;
 }
 
 /*line breaks do not work*/
-/*::deep .install-modal {
+::deep .install-modal {
   word-break: keep-all;
   overflow-wrap: normal;
   white-space: nowrap;
@@ -21,4 +22,3 @@ main {
   white-space: nowrap;
   margin-bottom: 10px;
 }
-*/

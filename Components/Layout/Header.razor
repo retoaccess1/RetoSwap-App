@@ -1,23 +1,10 @@
 ﻿@implements IDisposable
 
 <div class="header-main">
-    @*     @if (true)
-    {
-        <ion-icon name="arrow-back-outline" @onclick="GoBack"></ion-icon>
-    } *@
     <h3>@_headerTitle</h3>
-    <i @onclick="() => IsMenuOpen = !IsMenuOpen" class="bi bi-three-dots-vertical"></i>
-    @if (IsMenuOpen)
-    {
-        <div class="settings-menu-wrapper" @onclick="() => IsMenuOpen = false">
-            <div class="settings-menu">
-                <NavLink class="nav-link" href="settings">
-                    <ion-icon name="settings-outline" style="margin-right:0;"></ion-icon>
-                    <p>Settings</p>
-                </NavLink>
-            </div>
-        </div>
-    }
+    <NavLink class="dots-wrapper" href="settings" Match="NavLinkMatch.Prefix">
+        <i class="bi bi-three-dots"></i>
+    </NavLink>
 </div>
 
 @code {
@@ -58,6 +45,11 @@
         else
         {
             _headerTitle = e.Location.Replace(NavigationManager.BaseUri, "");
+
+            if (_headerTitle == "buysell")
+            {
+                _headerTitle = "Buy & Sell";
+            }
         }
 
         StateHasChanged();

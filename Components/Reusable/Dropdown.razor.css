@@ -1,6 +1,7 @@
 ﻿.dropdown-main {
   position: relative;
   box-shadow: 10px 10px 20px -8px rgba(0, 0, 0, 0.75);
+  width: 85px;
 }
 .dropdown-main .text {
   font-weight: bold;
@@ -18,15 +19,15 @@
   vertical-align: -0.125em;
   -webkit-font-smoothing: antialiased;
   position: absolute;
-  top: 11px;
-  right: 10px;
-  color: #000;
+  top: 12px;
+  right: 8px;
+  color: #fff;
   transition: transform 0.2s;
 }
 .dropdown-main .list {
   position: absolute;
-  background-color: #fff;
-  color: #000;
+  background-color: #121212;
+  color: #fff;
   padding: 10px;
   border-bottom-left-radius: 8px;
   border-end-end-radius: 8px;
@@ -51,6 +52,9 @@
 .in-visible {
   border-end-end-radius: 0;
   border-bottom-left-radius: 0;
+  border-top-left-radius: 12px;
+  border-start-end-radius: 12px;
+  border: none;
 }
 
 .rotate::before {

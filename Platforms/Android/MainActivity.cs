@@ -41,7 +41,7 @@ public class MainActivity : MauiAppCompatActivity
         if (Intent is not null)
             HandleIntent(Intent);
 
-        Window?.SetNavigationBarColor(Android.Graphics.Color.ParseColor("#131313"));
+        Window?.SetNavigationBarColor(Android.Graphics.Color.ParseColor("#000000"));
 
         if (Intent is null)
             return;

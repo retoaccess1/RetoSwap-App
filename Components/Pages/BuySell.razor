@@ -2,7 +2,11 @@
 
 <div class="buysell-main">
     <div class="top">
-        <p class="bold-p">@(Direction == "BUY" ? "Buy XMR with" : "Sell XMR for")</p>
+        <p class="bold-p">
+            @(Direction == "BUY" ? "Buy XMR" : "Sell XMR")
+            <div class="xmr-icon"></div>
+            @(Direction == "BUY" ? "with" : "for")
+        </p>
         @if (string.IsNullOrEmpty(PreferredCurrency) || string.IsNullOrEmpty(CurrentMarketPrice))
         {
             <p class="bold-p price">Loading price...</p>
@@ -14,7 +18,11 @@
     </div>
     <div class="account-type">
         <Tabs @bind-SelectedTabIndex="OfferPaymentType" TabNames="@(["Fiat", "Crypto", "Other"])"></Tabs>
-        <Toggle @bind-IsToggled="IsToggled" Text="@Direction" />
+        <div class="toggle-container">
+            <p class="buy-txt">Buy</p>
+            <Toggle @bind-IsToggled="IsToggled"/>
+            <p class="sell-txt">Sell</p>
+        </div>
         <div class="collapse">
             <ion-icon @onclick="() => IsCollapsed = !IsCollapsed" name=@(IsCollapsed ? "chevron-down-outline" : "chevron-up-outline")></ion-icon>
         </div>
@@ -58,7 +66,7 @@
                             <div class="offer-top">
                                 <div class="offer-currency">
                                     @(Direction == "SELL" ? offer.BaseCurrencyCode : offer.CounterCurrencyCode)
-                                    <ion-icon name="arrow-forward-outline"></ion-icon>
+                                    <img src="icons/arrow-right.svg" />
                                     @(Direction == "SELL" ? offer.CounterCurrencyCode : offer.BaseCurrencyCode)
                                     |
                                     @(Math.Round(double.Parse(offer.Price), 2))
@@ -68,11 +76,11 @@
                                 @if (!offer.IsMyOffer)
                                 {
                                     <div class="card">
-                                        @offer.PaymentMethodShortName
+                                        <p>@offer.PaymentMethodShortName</p>
                                     </div>
                                 }
                             </div>
-                            <div>
+                            <div class="amounts">
                                 @{
                                     var minVolume = double.Parse(offer.MinVolume);
                                     var volume = double.Parse(offer.Volume);
@@ -94,7 +102,7 @@
             </ul>
         }
         <div class="buttons">
-            <button class="create-offer-button" @onclick="() => IsCreatingOffer = !IsCreatingOffer">@(Direction == "BUY" ? "Create offer to buy XMR" : "Create offer to sell XMR")</button>
+            <button class="create-offer-button button-green" @onclick="() => IsCreatingOffer = !IsCreatingOffer">@(Direction == "BUY" ? "Create offer to buy XMR" : "Create offer to sell XMR")</button>
             <button @onclick="NavigateToMyOffers">View my offers</button>
         </div>
     }

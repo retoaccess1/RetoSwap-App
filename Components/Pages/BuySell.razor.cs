@@ -271,7 +271,7 @@ public partial class BuySell : ComponentBase, IDisposable
 
     public void NavigateToMyOffers()
     {
-        NavigationManager.NavigateTo("/myoffers?title=My%20Offers");
+        NavigationManager.NavigateTo("buysell/myoffers?title=My%20Offers");
     }
 
     public void Dispose()

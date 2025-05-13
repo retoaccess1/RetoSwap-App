@@ -60,6 +60,8 @@ public class DaemonConnectionSingleton
                     IsConnected = true;
                     OnConnectionChanged?.Invoke(IsConnected);
                 }
+
+                //accountClient.IsAppInitializedAsync
             }
             catch (Exception e)
             {

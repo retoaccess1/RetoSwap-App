@@ -46,18 +46,7 @@ public partial class Account : ComponentBase
     public string? AccountToCreate { get; set; }
 
     public string? AccountToDelete { get; set; }
-    public bool ShowDeleteAccountModal 
-    { 
-        get; 
-        set 
-        { 
-            field = value;
-            if (!field)
-            {
-                AccountToDelete = null;
-            }
-        } 
-    }
+    public bool ShowDeleteAccountModal { get; set; }
 
     public int SelectedTabIndex 
     { 
@@ -189,7 +178,7 @@ public partial class Account : ComponentBase
                     .Select(x => x.Id);
 
                 TraditionalPaymentMethodStrings = PaymentMethodsHelper.PaymentMethodsDictionary
-                    .Where(x => filteredPaymentMethodIds.Contains(x.Key)).ToDictionary();
+                    .Where(x => filteredPaymentMethodIds.Contains(x.Key)).OrderBy(x => x.Value).ToDictionary();
 
                 if (!string.IsNullOrEmpty(AccountToCreate))
                 {
@@ -344,7 +333,7 @@ public partial class Account : ComponentBase
                 .Select(x => x.Id);
 
             TraditionalPaymentMethodStrings = PaymentMethodsHelper.PaymentMethodsDictionary
-                .Where(x => filteredPaymentMethodIds.Contains(x.Key)).ToDictionary();
+                .Where(x => filteredPaymentMethodIds.Contains(x.Key)).OrderBy(x => x.Value).ToDictionary();
 
             SelectedPaymentAccount = null;
             PaymentAccountForm = null;

@@ -12,5 +12,14 @@ function scrollToEnd(id) {
     }
 }
 
+function getSizeOfElement(element) {
+    if (!element)
+        return null;
+
+    const rect = element.getBoundingClientRect();
+    return { width: rect.width, height: rect.height };
+}
+
+window.GetSizeOfElement = getSizeOfElement;
 window.ScrollToEnd = scrollToEnd;
 window.addEventListener('resize', detectKeyboard);

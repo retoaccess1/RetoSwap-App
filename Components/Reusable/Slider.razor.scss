@@ -1,0 +1,41 @@
+﻿.slider-main {
+    height: 40px;
+    width: 100%;
+    border: 1px solid #fff;
+    border-radius: 40px;
+    position: relative;
+    background-color: #fff;
+    color: #000;
+
+    .circle {
+        /*background-color: #808080;*/
+        height: calc(100% - 8px);
+        aspect-ratio: 1;
+        border-radius: 100%;
+        position: absolute;
+        top: 4px;
+        cursor: move;
+        z-index: 10;
+        touch-action: none;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        &:before{
+            content: url("../icons/arrow-right.svg");
+            height: 16px;
+            width: 16px;
+        }
+    }
+
+    .not-dragging-anim {
+        transition: left ease 0.5s;
+    }
+
+    .center-text {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+    }
+}

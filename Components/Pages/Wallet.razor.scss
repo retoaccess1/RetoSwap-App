@@ -6,12 +6,16 @@
     .top {
 
         .monero-card {
-            height: 200px;
+            height: 186px;
             max-width: 380px;
-            background-image: linear-gradient(to right bottom, #4d4d4d, #f26822);
+            /*background-image: url(../img/wallet-background.png), linear-gradient(90deg, rgba(0,0,0,0.01) 0%, rgba(255,255,255,0.01) 100%);*/
+            background-image: url(../img/wallet-background.svg);
+            background-size: cover;
             border-radius: 20px;
-            padding: 16px;
+            padding: 14px;
             display: flex;
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
             flex-direction: column;
 
             .monero-card-top {
@@ -19,20 +23,20 @@
                 align-items: center;
 
                 .logo {
-                    background-image: url("../img/monero-logo-black.webp");
+                    background-image: url(../img/monero-wallet-icon.png);
                     background-position: center;
                     background-repeat: no-repeat;
                     background-size: contain;
-                    filter: invert(100%);
-                    height: 50px;
+                    /*filter: invert(100%);*/
+                    height: 44px;
                     aspect-ratio: 1;
                 }
 
                 .wallet-title {
-                    font-size: 22px;
-                    font-weight: 600;
+                    font-weight: 500;
+                    font-size: 18px;
                     text-align: center;
-                    margin-left: 20px;
+                    margin-left: 12px;
                 }
             }
 
@@ -48,31 +52,32 @@
                     margin: 10px 0 6px;
 
                     .wallet-balance-fiat {
-                        font-size: 32px;
-                        line-height: 32px;
-                        font-weight: 700;
-                        margin-right: 10px;
+                        font-size: 18px;
+                        line-height: 22px;
+                        font-weight: 500;
+                        margin-bottom: 4px;
                     }
 
                     .wallet-pending-balance-fiat {
                         opacity: 0.8;
-                        line-height: 20px;
+                        line-height: 14px;
+                        font-size: 12px;
                     }
                 }
 
                 .monero-card-bottom-pending {
 
                     .wallet-balance-crypto {
-                        font-size: 22px;
-                        font-weight: 400;
-                        margin-right: 10px;
+                        font-size: 18px;
+                        font-weight: 500;
                         margin-top: 10px;
                         line-height: 22px;
-                        /*white-space: nowrap;*/
                     }
 
                     .wallet-pending-balance-crypto {
                         opacity: 0.8;
+                        line-height: 14px;
+                        font-size: 12px;
                         display: inline-block;
                     }
                 }
@@ -93,6 +98,10 @@
         margin-bottom: 20px;
     }
 
+    .slider-wrapper {
+        margin-bottom: 10px;
+    }
+
     ul {
         margin-top: 10px;
         overflow-y: auto;
@@ -103,27 +112,31 @@
 
         .transaction-card {
             display: flex;
-            background-color: #d3d3d3;
+            background-color: #121212;
+            border: 1px solid #414141;
             padding: 10px;
-            border-radius: 8px;
+            padding-left: 16px;
+            border-radius: 40px;
             position: relative;
-            color: #000;
+            color: #fff;
             align-items: center;
 
-            ion-icon {
+            img {
                 margin-right: 8px;
             }
 
             .in {
-                /*color: #509944;*/
             }
 
             .out {
-                /*color: #e95454;*/
+                transform: rotate(180deg);
             }
 
             .transaction-amount {
                 margin-right: 10px;
+                width: 80px;
+                white-space: nowrap;
+                font-weight: 400;
             }
         }
     }
@@ -139,7 +152,7 @@
         display: flex;
 
         input {
- /*           border-end-end-radius: 0;
+            /*           border-end-end-radius: 0;
             border-start-end-radius: 0;*/
         }
 

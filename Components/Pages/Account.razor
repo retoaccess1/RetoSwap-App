@@ -1,7 +1,7 @@
 ﻿@page "/Account"
 
-<Modal IsOpen="ShowDeleteAccountModal" Title="Delete account" OnOkPressed="async () => { await DeleteAccountAsync(AccountToDelete ?? string.Empty); AccountToDelete = null; }">
-    <p>Are you sure you want to delete this account?</p>
+<Modal @bind-IsOpen="ShowDeleteAccountModal" Title="Delete account" OnOkPressed="async () => { await DeleteAccountAsync(AccountToDelete ?? string.Empty); AccountToDelete = null; }">
+    <p class="regular-p-grey">Are you sure you want to delete this account?</p>
 </Modal>
 <div class="account-main">
     <p class="accounts-text">My accounts</p>
@@ -17,9 +17,9 @@
             foreach (var account in PaymentAccounts)
             {
                 <div class=@(account.PaymentMethod.Id == SelectedPaymentAccount?.PaymentMethod.Id ? "account active-account" : "account") @onclick="() => HandleAccountClick(account)">
-                    <p>@PaymentMethodsHelper.PaymentMethodsDictionary[@account.PaymentMethod.Id]: </p>
-                    <p>@account.AccountName</p>
-                    <ion-icon name="close-circle-outline" @onclick:stopPropagation="true" @onclick:preventDefault="true" @onclick="() => { AccountToDelete = account.Id; ShowDeleteAccountModal = true; }"></ion-icon>
+                    <p>@PaymentMethodsHelper.PaymentMethodsDictionary[account.PaymentMethod.Id]</p>
+                    @* <p>@account.AccountName</p> *@
+                    <img src="icons/x.svg" @onclick:stopPropagation="true" @onclick:preventDefault="true" @onclick="() => { AccountToDelete = account.Id; ShowDeleteAccountModal = true; }" />
                 </div>
             }
         }
@@ -101,15 +101,17 @@
                     case Protobuf.PaymentAccountFormField.Types.FieldId.TradeCurrencies:
                         @if (SupportedCurrencyCodes.Count != 0)
                         {
-                            <p class="supported-currencies-text">Supported currencies</p>
-                            <div class="supported-currencies">
-                                @foreach (var supportedCurrencyCode in SupportedCurrencyCodes)
-                                {
-                                    <div class="checkbox-container">
-                                        <InputCheckbox @bind-Value="@supportedCurrencyCode.IsSelected" />
-                                        <label>@supportedCurrencyCode.Code</label>
-                                    </div>
-                                }
+                            <div class="checkbox-list-wrapper">
+                                <div class="checkbox-list">
+                                    <p class="checkbox-list-text ">Supported currencies</p>
+                                    @foreach (var supportedCurrencyCode in SupportedCurrencyCodes)
+                                    {
+                                        <div class="checkbox-container">
+                                            <InputCheckbox @bind-Value="@supportedCurrencyCode.IsSelected" />
+                                            <label>@supportedCurrencyCode.Code</label>
+                                        </div>
+                                    }
+                                </div>
                             </div>
                         }
                         break;
@@ -139,28 +141,32 @@
                     case Protobuf.PaymentAccountFormField.Types.FieldId.AcceptedCountryCodes:
                         @if (AcceptedEUSEPACountries.Count != 0)  // Should probably be a component
                         {
-                            <p class="supported-currencies-text">Accept trades from these EU countries</p>
-                            <div class="supported-currencies">
-                                @foreach (var acceptedCountry in AcceptedEUSEPACountries)
-                            {
-                                <div class="checkbox-container">
-                                    <InputCheckbox @bind-Value="@acceptedCountry.IsSelected" />
-                                    <label>@acceptedCountry.Code</label>
+                            <div class="checkbox-list-wrapper">
+                                <div class="checkbox-list">
+                                    <p class="checkbox-list-text">Accept trades from these EU countries</p>
+                                    @foreach (var acceptedCountry in AcceptedEUSEPACountries)
+                                    {
+                                        <div class="checkbox-container">
+                                            <InputCheckbox @bind-Value="@acceptedCountry.IsSelected" />
+                                            <label>@acceptedCountry.Code</label>
+                                        </div>
+                                    }
                                 </div>
-                            }
                             </div>
                         }
                         @if (AcceptedNonEUSEPACountries.Count != 0)
                         {
-                            <p class="supported-currencies-text">Accept trades from these non-EU countries</p>
-                            <div class="supported-currencies">
-                            @foreach (var acceptedCountry in AcceptedNonEUSEPACountries)
-                            {
-                                <div class="checkbox-container">
-                                    <InputCheckbox @bind-Value="@acceptedCountry.IsSelected" />
-                                    <label>@acceptedCountry.Code</label>
+                            <div class="checkbox-list-wrapper">
+                                <div class="checkbox-list">
+                                    <p class="checkbox-list-text">Accept trades from these non-EU countries</p>
+                                    @foreach (var acceptedCountry in AcceptedNonEUSEPACountries)
+                                    {
+                                        <div class="checkbox-container">
+                                            <InputCheckbox @bind-Value="@acceptedCountry.IsSelected" />
+                                            <label>@acceptedCountry.Code</label>
+                                        </div>
+                                    }
                                 </div>
-                            }
                             </div>
                         }
                         break;
@@ -174,7 +180,7 @@
                 }
             }
             <div class="field">
-                <InfoRow Label="Limitations" Value="@($"{MaxTradeLimit}, {MaxTradePeriod}")"></InfoRow>
+                <InfoRow Label="Limitations" Value="@($"Max {((ulong)MaxTradeLimit).ToMonero()} XMR / Max trade duration: {TimeHelper.FormatDuration(MaxTradePeriod)}")"></InfoRow>
             </div>
             <button type="submit">Save new account</button>
         </EditForm>

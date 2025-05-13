@@ -11,26 +11,33 @@
         if (FilteredTradeInfos.Count != 0)
         {
             <ul class="trades-list">
-            @foreach (var tradeInfo in FilteredTradeInfos)
-            {
-                <li class="trade-card">
-                    @* if this is a completed or canceled trade this should open a modal instead TODO *@
-                    <a href=@($"trade?tradeId={tradeInfo.TradeId}&title=Trade%20{@tradeInfo.ShortId}")>
+                @foreach (var tradeInfo in FilteredTradeInfos)
+                {
+                    <li class="trade-card">
+                        @* if this is a completed or canceled trade this should open a modal instead TODO *@
                         <div class="trade-card-top">
                             <p class="short-id">@tradeInfo.ShortId</p>
-                            <p>@(tradeInfo.Date.ToDateTime().ToLocalTime().ToString("yyyy/MM/dd"))</p>
+                            <p class="date">@(tradeInfo.Date.ToDateTime().ToLocalTime().ToString("yyyy/MM/dd"))</p>
                             @if (SelectedTabIndex == 1)
                             {
                                 <p class="status">@(tradeInfo.IsCompleted ? "Completed" : "") </p>
                             }
-                            <div class="icon-container">
-                                @* <ion-icon name="information-circle"></ion-icon> *@
-                                <a href=@($"/chat?tradeId={tradeInfo.TradeId}&title=Trade%20{tradeInfo.ShortId}%20chat&arbitrator={tradeInfo.ArbitratorNodeAddress.Split(".")[0]}&tradePeer={tradeInfo.TradePeerNodeAddress.Split(".")[0]}&myAddress={tradeInfo.Offer.OwnerNodeAddress.Split(".")[0]}")>
-                                    <ion-icon name="chatbubble-ellipses-sharp"></ion-icon>
-                                </a>
-                            </div>
                         </div>
-                    </a>
+                        <div class="middle">
+                            <p class="xmr-amount">XMR Amount: @tradeInfo.Amount.ToMonero() XMR</p>
+                            <p>@tradeInfo.Offer.CounterCurrencyCode: @tradeInfo.TradeVolume</p>
+                        </div>
+                        <div class="buttons">
+                            @if (SelectedTabIndex == 0)
+                            {
+                                <button class="button-green" onclick="@(() => NavigationManager.NavigateTo($"trades/{tradeInfo.TradeId}/trade?tradeId={tradeInfo.TradeId}&title=Trade%20{@tradeInfo.ShortId}"))">Go to trade</button>
+                            }
+                            else
+                            {
+                                <button onclick="@(() => NavigationManager.NavigateTo($"trades/{tradeInfo.TradeId}/trade?tradeId={tradeInfo.TradeId}&title=Trade%20{@tradeInfo.ShortId}"))">View details</button>
+                            }
+                        @* <button>Cancel</button> *@
+                    </div>
                 </li>
             }
             </ul>
@@ -48,14 +55,17 @@
             {
                 var weAreBuyer = (dispute.DisputeOpenerIsBuyer && dispute.IsOpener) || (!dispute.DisputeOpenerIsBuyer && !dispute.IsOpener);
 
-                <li class="dispute-card">
-                    <a href=@($"/chat?disputeTradeId={dispute.TradeId}&disputeId={dispute.Id}&title=Dispute%20for%20trade%20{dispute.TradeId.Split("-")[0]}&arbitrator={dispute.Contract.ArbitratorNodeAddress.HostName.Split(".")[0]}&tradePeer={(weAreBuyer ? dispute.Contract.SellerNodeAddress.HostName.Split(".")[0] : dispute.Contract.BuyerNodeAddress.HostName.Split(".")[0])}&myAddress={(weAreBuyer ? dispute.Contract.BuyerNodeAddress.HostName.Split(".")[0] : dispute.Contract.SellerNodeAddress.HostName.Split(".")[0])}")>
-                        <div>
-                            <p class="short-id">@dispute.TradeId.Split("-")[0]</p>
-                            <p>@dispute.OpeningDate.ToDateTime().ToLocalTime().ToString("yyyy/MM/dd")</p>
-                        </div>    
-                        <p>@dispute.State</p>
-                    </a>
+                <li class="trade-card">
+                    <div class="trade-card-top">
+                        <p class="short-id short-id-dispute">@dispute.TradeId.Split("-")[0]</p>
+                        <p class="short-id short-id-dispute">@dispute.State</p>
+                        <p class="date">@dispute.OpeningDate.ToDateTime().ToLocalTime().ToString("yyyy/MM/dd")</p>
+                    </div>
+                    <div class="middle">
+                        <p class="xmr-amount">XMR Amount: @(((ulong)dispute.Contract.TradeAmount).ToMonero()) XMR</p>
+                        <p>@dispute.Contract.OfferPayload.CounterCurrencyCode: @(Math.Round((dispute.Contract.TradePrice / 100_000_000) * ((ulong)dispute.Contract.TradeAmount).ToMonero()))</p>
+                    </div>
+                    <button onclick="@(() => NavigationManager.NavigateTo($"trades/{dispute.TradeId}/chat?disputeTradeId={dispute.TradeId}&disputeId={dispute.Id}&title=Dispute%20for%20trade%20{dispute.TradeId.Split("-")[0]}&arbitrator={dispute.Contract.ArbitratorNodeAddress.HostName.Split(".")[0]}&tradePeer={(weAreBuyer ? dispute.Contract.SellerNodeAddress.HostName.Split(".")[0] : dispute.Contract.BuyerNodeAddress.HostName.Split(".")[0])}&myAddress={(weAreBuyer ? dispute.Contract.BuyerNodeAddress.HostName.Split(".")[0] : dispute.Contract.SellerNodeAddress.HostName.Split(".")[0])}"))">View Dispute</button>
                 </li>
             }
             </ul>

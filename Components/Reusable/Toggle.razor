@@ -2,12 +2,15 @@
     <div class="toggle-wrapper" @onclick="@(async (e) => { if (Disabled) return; IsToggled = !IsToggled; await OnToggledChanged.InvokeAsync(IsToggled); })">
         <div class=@(IsToggled ? "toggle active" : "toggle inactive")></div>
     </div>
-    <p>@Text.ToLower()</p>
+    @if (!string.IsNullOrEmpty(Text))
+    {
+        <p>@Text.ToLower()</p>
+    }
 </div>
 
 @code {
     [Parameter]
-    public string Text { get; set; } = string.Empty;
+    public string? Text { get; set; } = string.Empty;
 
     [Parameter]
     public bool Disabled { get; set; }

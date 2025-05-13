@@ -4,7 +4,7 @@
     align-items: center;
     position: sticky;
     top: 0;
-    background-color: #131313;
+    background-color: #000000;
     z-index: 500;
     justify-content: space-between;
 
@@ -14,11 +14,28 @@
 
     h3 {
         text-transform: capitalize;
+        font-weight: 600;
     }
 
-    i {
+    ::deep .dots-wrapper {
+        width: 30px;
+        height: 30px;
         margin-left: auto;
-        font-size: 18px;
+        background-color: #121212;
+        border: 1px solid #414141;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        border-radius: 20px;
+
+        i {
+            font-size: 18px;
+        }
+    }
+
+    ::deep .active {
+        background-color: #fff;
+        color: #000;
     }
 
     .settings-menu-wrapper {
@@ -27,7 +44,6 @@
         left: 0;
         width: 100%;
         height: calc(100% - 58px);
-        /*background-color: #808080;*/
 
         .settings-menu {
             position: absolute;

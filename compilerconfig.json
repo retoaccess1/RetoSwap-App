@@ -98,5 +98,13 @@
   {
     "outputFile": "Components/Reusable/Dropdown.razor.css",
     "inputFile": "Components/Reusable/Dropdown.razor.scss"
+  },
+  {
+    "outputFile": "Components/Reusable/Slider.razor.css",
+    "inputFile": "Components/Reusable/Slider.razor.scss"
+  },
+  {
+    "outputFile": "Components/Reusable/Attention.razor.css",
+    "inputFile": "Components/Reusable/Attention.razor.scss"
   }
 ]

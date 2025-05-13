@@ -1,7 +1,7 @@
 ﻿.trade-main {
   display: flex;
   flex-direction: column;
-  padding-bottom: 58px;
+  padding-bottom: 10px;
 }
 .trade-main .trade-main-top {
   display: flex;
@@ -74,7 +74,6 @@
   font-weight: bold;
 }
 
-.blue-button {
-  background-color: cornflowerblue;
-  color: #fff;
+.slider-wrapper {
+  margin-bottom: 10px;
 }

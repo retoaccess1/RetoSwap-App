@@ -1,13 +1,16 @@
 ﻿@page "/settings"
 
 <Modal Title="Backup" ModalButtonOptions="ModalButtonOptions.NONE" @bind-IsOpen="IsBackingUp">
-    <p>Please wait</p>
+    <p class="regular-p-grey">Please wait</p>
+</Modal>
+<Modal Title="Restore account" ModalButtonOptions="ModalButtonOptions.OK_CANCEL" @bind-IsOpen="ShowRestoreModal" OnOkPressed="RestoreFromBackupAsync" OkButtonText="Restore">
+    <p class="regular-p-grey">Warning! This will delete your current account. Make sure you have made a backup</p>
 </Modal>
 <Modal Title="Connecting to remote node" ModalButtonOptions="ModalButtonOptions.CANCEL" @bind-IsOpen="IsConnecting" OnCancelPressed="CancelConnectToRemoteNode">
-    <p>Make sure you have Orbot installed and "power user mode" enabled in settings to enable the proxy</p>
+    <p class="regular-p-grey">Make sure you have Orbot installed and "power user mode" enabled in settings to enable the proxy</p>
 </Modal>
 <Modal Title="Error" ModalButtonOptions="ModalButtonOptions.OK" IsOpen="@(!string.IsNullOrEmpty(ConnectionError))" IsOpenChanged="(e) => { if (!e) { ConnectionError = null; } }">
-    <p>@ConnectionError</p>
+    <p class="regular-p-grey">@ConnectionError</p>
 </Modal>
 <div class="settings-main">
     <div class="info-container">
@@ -24,11 +27,14 @@
     <div class="dropdown">
         <SearchableDropdown InitialValue="@PreferredCurrency" Items="Currencies" Text="Preferred currency" Placeholder="Choose currency" OnSubmit="HandlePreferredCurrencySubmit"></SearchableDropdown>
     </div>
-    <button class="backup-btn" @onclick="BackupAsync">Backup app data</button>
+    <div class="backup-buttons">
+        <button class="backup-btn button-green" @onclick="BackupAsync">Backup account</button>
+        @* <button class="backup-btn" @onclick="() => ShowRestoreModal = true">Restore account</button> *@
+    </div>
     @* <SearchableDropdown Items="" Text="Country" Placeholder="Choose country"></SearchableDropdown> *@
     <Toggle OnToggledChanged="HandleToggle" @bind-IsToggled="IsToggled" Text="Notifications" />
     <Toggle Disabled="DaemonInstallOption == DaemonInstallOptions.RemoteNode" OnToggledChanged="HandleWakeLockToggle" @bind-IsToggled="IsWakeLockToggled" Text="Keep offers open in background" />
-    <p>Note: this uses more battery</p>
+    <p>Note: This uses more battery</p>
 
     <p class="bold-p remote-node-txt">Remote node configuration</p>
     <div class="@(IsRemoteNodeToggled ? "remote-node-section" : "remote-node-section remote-node-disabled")">

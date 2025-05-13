@@ -1,8 +1,7 @@
 ﻿.create-offer-main {
   display: flex;
   flex-direction: column;
-  /*    height: calc(100dvh - 62px - 58px);*/
-  padding-bottom: 58px;
+  padding-bottom: 78px;
 }
 .create-offer-main .buttons {
   margin-top: 20px;

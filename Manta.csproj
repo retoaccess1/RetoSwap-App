@@ -48,16 +48,16 @@
     <DebugSymbols>false</DebugSymbols>
   </PropertyGroup>
 
-  <PropertyGroup>
+  <!--<PropertyGroup>
     <UseNativeHttpHandler>false</UseNativeHttpHandler>
-  </PropertyGroup>
+  </PropertyGroup>-->
 
   <ItemGroup>
     <!-- App Icon -->
-    <MauiIcon Include="Resources\AppIcon\havenologo.png" ForegroundFile="Resources\AppIcon\havenologo.png" Color="#131313" />
+    <MauiIcon Include="Resources\AppIcon\havenologo.png" ForegroundFile="Resources\AppIcon\havenologo.png" Color="#000000" />
 
     <!-- Splash Screen -->
-    <MauiSplashScreen Include="Resources\Splash\havenologo.svg" Color="#131313" BaseSize="512,256" />
+    <MauiSplashScreen Include="Resources\Splash\havenologo.svg" Color="#000000" BaseSize="512,256" />
 
     <!-- Images -->
     <MauiImage Include="Resources\Images\*" />
@@ -106,6 +106,7 @@
 
   <ItemGroup>
     <Folder Include="Enums\" />
+    <Folder Include="wwwroot\fonts\" />
   </ItemGroup>
 
   <ItemGroup>

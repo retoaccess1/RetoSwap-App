@@ -1,7 +1,7 @@
 ﻿@page "/wallet"
 
 <Modal @bind-IsOpen="@VerifyModalIsOpen" Title="Verify withdrawal" OnOkPressed="WithdrawAsync" OkButtonText="Withdraw">
-    <div class="modal-content">
+    <div class="modal-content regular-p-grey">
         <p>Sending @Amount XMR</p>
         <p class="withdrawal-address">To address: @WithdrawalAddress</p>
         <p>Fee: @(ulong.Parse(Transaction?.Fee ?? "0").ToMonero()) XMR</p>
@@ -9,10 +9,10 @@
 </Modal>
 <Modal @bind-IsOpen="@CreatingTxModalIsOpen" Title="Creating transaction" OnOkPressed="WithdrawAsync">
     <Spinner IsFullscreen="false"></Spinner>
-    <p>Please wait</p>
+    <p class="regular-p-grey">Please wait</p>
 </Modal>
 <Modal @bind-IsOpen="@ShowWalletSeed" Title="Wallet seed" CancelButtonText="Close" OkButtonText="Copy" OnOkPressed="async() => await Clipboard.Default.SetTextAsync(WalletSeed)">
-    <p>@WalletSeed</p>
+    <p class="regular-p-grey">@WalletSeed</p>
 </Modal>
 <div class="wallet-main">
     <div class="top">
@@ -27,8 +27,8 @@
                     <p class="wallet-pending-balance-fiat">@(PendingFiat.ToString("C", PreferredCurrencyFormat)) pending</p>
                 </div>
                 <div class="monero-card-bottom-pending">
-                    <p class="wallet-balance-crypto">XMR @(Balance?.AvailableXMRBalance.ToMonero()) </p>
-                    <p class="wallet-pending-balance-crypto">XMR @(Balance?.PendingXMRBalance.ToMonero()) pending</p>
+                    <p class="wallet-balance-crypto">XMR @(Balance?.AvailableXMRBalance.ToMonero().ToString("0.0000")) </p>
+                    <p class="wallet-pending-balance-crypto">XMR @(Balance?.PendingXMRBalance.ToMonero().ToString("0.0000")) pending</p>
                 </div>
                 @*<div class="monero-card-bottom-reserved">
                     <p class="wallet-balance-crypto">XMR @(((Balance?.ReservedTradeBalance ?? 0) + (Balance?.ReservedOfferBalance ?? 0)).ToMonero()) reserved</p>
@@ -45,7 +45,9 @@
             <ul>
                 @if (Addresses.Count == 0)
                 {
-                    <li>No addresses</li>
+                    <li>
+                        <InfoRow Value="Loading..."></InfoRow>
+                    </li>
                 }
                 else
                 {
@@ -58,7 +60,10 @@
                 }
             </ul>
             <div>
-                <button @onclick="GetXmrSeedAsync">Show wallet seed</button>
+                <div class="slider-wrapper">
+                    <Slider OnReachedEnd="GetXmrSeedAsync" Text="Show wallet seed" />
+                </div>
+                <Attention/>
             </div>
             break;
         case 1:
@@ -95,14 +100,14 @@
                         <li class="transaction-card">
                             @if (transaction.IncomingTransfers?.Count > 0)
                             {
-                                <ion-icon name="arrow-forward-circle-outline" class="in"></ion-icon>
+                                <img src="icons/arrow-right.svg" class="in" />
                                 <p class="transaction-amount">
                                     XMR @transaction.IncomingTransfers.Aggregate(ulong.MinValue, (x, y) => x + ulong.Parse(y.Amount)).ToMonero().ToString("0.000")
                                 </p>
                             }
                             else
                             {
-                                <ion-icon name="arrow-back-circle-outline" class="out"></ion-icon>
+                                <img src="icons/arrow-right.svg" class="out" />
                                 <p class="transaction-amount">
                                     XMR @ulong.Parse(transaction.OutgoingTransfer.Amount).ToMonero().ToString("0.000")
                                 </p>

@@ -1,17 +1,17 @@
 ﻿<div class="info-row">
     <p class="info-text">@Label</p>
-    <div class="inner-container">
+    <div class=@(IsExpandable && _isExpanded ? "inner-container inner-expanded" : "inner-container")>
         <p class=@(IsExpandable && _isExpanded ? "data expanded" : "data")>@Value</p>
         <div class="right">
             @if (IsExpandable)
             {
-                <ion-icon class="eye" @onclick="() => _isExpanded = !_isExpanded" name=@(_isExpanded ? "eye-sharp" : "eye-outline")></ion-icon>
+                <img class="eye" @onclick="() => _isExpanded = !_isExpanded" src=@(_isExpanded ? "icons/eye-fill.svg" : "icons/eye.svg") />
             }
-            <ion-icon @onclick="@OnCopy" name="copy-outline"></ion-icon>
+            <img @onclick="@OnCopy" src="icons/copy.svg" />
             @if (_displayCopied)
             {
                 <div class="copied">
-                    Copied!
+                    Copied
                 </div>
             }
         </div>

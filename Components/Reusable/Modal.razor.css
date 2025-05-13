@@ -17,9 +17,8 @@
 .generic-modal .verify-modal {
   background-color: white;
   width: 90%;
-  /*border-radius: 20px;*/
-  border-radius: 10px;
-  padding: 10px;
+  border-radius: 12px;
+  padding: 24px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -64,7 +63,7 @@
   display: flex;
 }
 .generic-modal .verify-modal .buttons button:first-child {
-  margin-right: 6px;
+  margin-right: 10px;
 }
 .generic-modal .verify-modal .buttons button:last-child {
   margin-right: 0;
@@ -76,8 +75,4 @@
 }
 .generic-modal .verify-modal .buttons .verify-modal-button:disabled {
   opacity: 0.8;
-}
-.generic-modal .verify-modal .buttons .ok-button {
-  background-color: cornflowerblue;
-  color: #fff;
 }

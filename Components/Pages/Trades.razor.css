@@ -1,25 +1,4 @@
-﻿.trades-list .trade-card {
-  border: 1px solid #fff;
-  margin-bottom: 10px;
-  padding: 10px;
-  border-radius: 10px;
-}
-.trades-list .trade-card .trade-card-top {
-  display: flex;
-  width: 100%;
-}
-.trades-list .trade-card .trade-card-top .short-id {
-  width: 90px;
-}
-.trades-list .trade-card .trade-card-top .status {
-  margin-left: auto;
-  margin-right: auto;
-}
-.trades-list .trade-card .trade-card-top .icon-container {
-  margin-left: auto;
-}
-
-.tabs {
+﻿.tabs {
   margin-bottom: 20px;
 }
 
@@ -38,4 +17,48 @@
   display: flex;
   width: 100%;
   justify-content: space-between;
+}
+
+.trade-card {
+  margin-bottom: 10px;
+  padding: 14px;
+  border-radius: 12px;
+  background-color: #121212;
+  font-size: 12px;
+  line-height: 17px;
+}
+.trade-card .trade-card-top {
+  display: flex;
+  width: 100%;
+  margin-bottom: 14px;
+}
+.trade-card .trade-card-top .short-id {
+  background-color: rgba(185, 90, 12, 0.5019607843);
+  border-radius: 4px;
+  padding: 2px 4px 2px;
+  margin-right: 4px;
+}
+.trade-card .trade-card-top .short-id-dispute {
+  background-color: rgba(214, 55, 55, 0.5019607843);
+}
+.trade-card .trade-card-top .date {
+  margin-left: auto;
+  color: #626262;
+}
+.trade-card .trade-card-top .status {
+  margin-left: auto;
+  margin-right: auto;
+}
+.trade-card .trade-card-top .icon-container {
+  margin-left: auto;
+}
+.trade-card .middle {
+  margin-bottom: 14px;
+}
+.trade-card .middle p {
+  line-height: 32px;
+  padding-left: 14px;
+}
+.trade-card .middle .xmr-amount {
+  background-color: #303030;
 }

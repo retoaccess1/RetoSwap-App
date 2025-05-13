@@ -22,24 +22,46 @@
   color: #808080;
 }
 .account-type .collapse {
-  background-color: #808080;
+  background-color: #121212;
   border-radius: 100px;
-  height: 28px;
-  width: 28px;
-  min-width: 28px;
+  border: 1px solid #414141;
+  height: 24px;
+  width: 24px;
+  min-width: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin-left: 10px;
 }
-.account-type .collapse ion-icon {
-  font-size: 22px;
+.account-type .collapse img {
+  height: 22px;
+  width: 22px;
+}
+.account-type .toggle-container {
+  display: flex;
+}
+.account-type .toggle-container .buy-txt {
+  margin-right: 6px;
+}
+.account-type .toggle-container .sell-txt {
+  margin-left: 6px;
 }
 
 .top {
   display: flex;
   justify-content: space-between;
   margin-bottom: 10px;
+}
+.top p {
+  display: flex;
+  align-items: center;
+}
+.top .xmr-icon {
+  width: 16px;
+  height: 16px;
+  background-image: url("../img/monero-icon-small.png");
+  background-size: contain;
+  margin: 0 6px 0;
 }
 
 .dropdown {
@@ -59,13 +81,18 @@
 
 .offers {
   overflow: auto;
-  height: calc(100dvh - 62px - 18px - 40px - 176px);
+  height: 100%;
 }
 .offers .offer {
   background-color: grey;
   margin-bottom: 10px;
-  padding: 6px;
-  border-radius: 8px;
+  padding: 14px;
+  border-radius: 12px;
+  background-color: #1F1F1F;
+  height: 105px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 17px;
 }
 .offers .offer .offer-link {
   color: #fff;
@@ -81,15 +108,14 @@
 .offers .offer .offer-link .offer-top .offer-currency {
   display: flex;
   align-items: center;
-  background-color: darkgray;
+  background-color: #343434;
   width: fit-content;
-  padding: 4px;
   border-radius: 4px;
-  margin-bottom: 4px;
   overflow-x: hidden;
   white-space: nowrap;
+  padding: 2px 4px 2px;
 }
-.offers .offer .offer-link .offer-top .offer-currency ion-icon {
+.offers .offer .offer-link .offer-top .offer-currency img {
   margin: 0 2px 0;
 }
 .offers .offer .offer-link .card {
@@ -97,9 +123,16 @@
   align-items: center;
   background-color: darkgray;
   width: fit-content;
-  padding: 4px;
+  padding: 2px 4px 2px;
   border-radius: 4px;
   margin-bottom: 4px;
+  background-color: #343434;
+}
+.offers .offer .amounts {
+  margin-top: 10px;
+}
+.offers .offer .amounts p {
+  margin-bottom: 12px;
 }
 
 .create-offer-button {
@@ -107,6 +140,6 @@
 }
 
 .buttons {
-  background-color: #131313;
+  background-color: #000000;
   padding: 10px 0 10px;
 }

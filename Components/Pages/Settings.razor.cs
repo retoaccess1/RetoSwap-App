@@ -58,6 +58,56 @@ public partial class Settings : ComponentBase, IDisposable
     public CancellationTokenSource RemoteNodeConnectCts { get; set; } = new();
     public string? ConnectionError { get; set; }
 
+    public bool ShowRestoreModal { get; set; }
+
+    public async Task DeleteAccountAsync()
+    {
+        using var grpcChannelHelper = new GrpcChannelHelper();
+        var accountClient = new AccountClient(grpcChannelHelper.Channel);
+
+        await accountClient.DeleteAccountAsync(new DeleteAccountRequest());
+
+//#if ANDROID
+//        var a = await TermuxSetupSingleton.ExecuteUbuntuCommandAsync("cat haveno/output.log");
+//#endif
+
+        while (true)
+        {
+            try
+            {
+                var res = await accountClient.AccountExistsAsync(new AccountExistsRequest());
+                break;
+            }
+            catch (Exception e)
+            {
+
+            }
+
+            await Task.Delay(2_000);
+        }
+    }
+
+    public async Task RestoreFromBackupAsync()
+    {
+        //var backupZip = await FilePicker.PickAsync();
+        //if (backupZip is null)
+        //    return;
+
+        //using var fileStream = File.Open(backupZip.FullPath, FileMode.Open);
+
+        //using MemoryStream memoryStream = new();
+        //fileStream.CopyTo(memoryStream);
+
+        //var zipBytes = await Google.Protobuf.ByteString.FromStreamAsync(memoryStream);
+
+        await DeleteAccountAsync();
+
+        //using var grpcChannelHelper = new GrpcChannelHelper(disableMessageSizeLimit: true);
+        //var accountClient = new AccountClient(grpcChannelHelper.Channel);
+
+        //var response = await accountClient.RestoreAccountAsync(new RestoreAccountRequest { ZipBytes = zipBytes, TotalLength = (ulong)zipBytes.Length, HasMore = false, Offset = 0 });
+    }
+
     public async Task BackupAsync()
     {
         IsBackingUp = true;

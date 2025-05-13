@@ -20,10 +20,10 @@
     <button @onclick="Cancel">Cancel</button>
 </div>
 
-<Modal IsOpen="IsTakingOffer" Title="Taking offer" ModalButtonOptions="ModalButtonOptions.CANCEL" OnCancelPressed="() => CancelOfferCts.Cancel()">
-    <p>Please wait</p>
+<Modal IsOpen="IsTakingOffer" Title="Taking offer" ModalButtonOptions="ModalButtonOptions.NONE" OnCancelPressed="() => CancelOfferCts.Cancel()">
+    <p class="regular-p-grey">Please wait</p>
     @* <Spinner IsVisible="true"></Spinner> *@
 </Modal>
 <Modal Title="No payment account" IsOpen="UserDoesNotHaveAccount" ModalButtonOptions="ModalButtonOptions.OK" OkButtonText="Create account" OnOkPressed="@NavigateToAccount">
-    <p>You do not have an account of this type.</p>
+    <p class="regular-p-grey">You do not have an account of this type.</p>
 </Modal>

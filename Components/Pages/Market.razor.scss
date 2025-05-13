@@ -34,7 +34,7 @@
             width: 100%;
 
             .head th {
-                background-color: #131313;
+                background-color: #000000;
                 text-align: left;
             }
 
@@ -42,9 +42,12 @@
             }
 
             td, th {
-                border-bottom: 1px solid #808080;
-                height: 30px;
-                max-height: 30px;
+                height: 37px;
+                max-height: 37px;
+            }
+
+            tr:nth-child(odd) {
+                background-color: #141414;
             }
 
             td {
@@ -53,23 +56,23 @@
             th {
                 position: sticky;
                 top: 0;
+                border-bottom: 1px solid #4c4c4c;
             }
         }
     }
 }
 
 .chart-container {
-    background-color: #fff;
+    background-color: #121212;
     border-radius: 10px;
     padding: 6px;
     margin-bottom: 10px;
-    fill: #808080 !important;
+    fill: #7d7d7d !important;
     height: 200px;
     min-height: 200px;
     position: relative;
 
     .y-label {
-        /*color: #808080;*/
         color: #000;
         font-size: 10px;
         position: absolute;
@@ -106,6 +109,7 @@
     display: flex;
     justify-content: center;
     align-items:center;
+    height: 100%;
 }
 
 .nav-buttons{
@@ -114,6 +118,7 @@
     width: 100%;
     justify-content: center;
     margin-top: 10px;
+    margin-bottom: 10px;
 
     p {
         margin: 0 10px 0;

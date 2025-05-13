@@ -1,4 +1,52 @@
-﻿*, *::before, *::after {
+﻿@font-face {
+  font-family: "Fixel";
+  src: url("/fonts/FixelDisplay-Thin.woff2") format("woff2");
+  font-weight: 100;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Fixel";
+  src: url("/fonts/FixelDisplay-ExtraLight.woff2") format("woff2");
+  font-weight: 200;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Fixel";
+  src: url("/fonts/FixelDisplay-Light.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Fixel";
+  src: url("/fonts/FixelDisplay-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Fixel";
+  src: url("/fonts/FixelDisplay-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Fixel";
+  src: url("/fonts/FixelDisplay-SemiBold.woff2") format("woff2");
+  font-weight: 600;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Fixel";
+  src: url("/fonts/FixelDisplay-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+}
+@font-face {
+  font-family: "Fixel";
+  src: url("/fonts/FixelDisplay-ExtraBold.woff2") format("woff2");
+  font-weight: 800;
+  font-style: normal;
+}
+*, *::before, *::after {
   box-sizing: border-box;
 }
 
@@ -8,9 +56,10 @@
 }
 
 html, body {
-  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  background-color: #131313;
+  font-family: "Fixel", sans-serif;
+  background-color: #000000;
   color: #fff;
+  /*font-size: 16px;*/
 }
 
 main {
@@ -103,31 +152,36 @@ h1:focus {
 select {
   outline: none;
   border: none;
-  /*border: 2px solid red;*/
   border: none;
   border-radius: 8px;
   height: 40px;
   font: inherit;
   padding-left: 8px;
   padding-right: 8px;
-  /*margin-bottom: 8px;*/
   width: 100%;
 }
 
 button {
   outline: none;
-  border-radius: 8px;
-  /*border: 2px solid red;*/
+  border-radius: 100px;
   border: none;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  /*background-color: #3e52e0;*/
   cursor: pointer;
-  height: 40px;
+  height: 39px;
+  font-size: 12px;
   width: 100%;
   transition: border-color 0.25s;
+}
+
+.button-green {
+  background-color: #0CB952;
+  color: #fff;
+}
+
+.button-grey {
+  background-color: #b3b3b3;
+  color: #fff;
 }
 
 ul {
@@ -137,18 +191,19 @@ ul {
 input {
   outline: none;
   border: none;
-  /*border: 2px solid rgb(65, 64, 97);*/
-  border-radius: 8px;
+  border-radius: 20px;
   height: 40px;
+  border: 1px solid #414141;
+  background-color: #121212;
   font: inherit;
-  padding-left: 10px;
+  padding-left: 16px;
   width: 100%;
+  color: #fff;
 }
 input:read-only {
   opacity: 0.5;
 }
 
-/*dont think blazor marks text inputs as text...*/
 input[type=checkbox]:read-only {
   opacity: 1;
 }
@@ -161,39 +216,19 @@ input[type=checkbox] {
   color: #000;
   width: 16px;
   height: 16px;
-  border: 2px solid #fff;
-  border-radius: 2px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  margin: 0;
+  padding: 0;
+  border-radius: 4px;
   position: relative;
 }
 
 input[type=checkbox]:checked:before {
   content: url(bootstrap-icons-1.11.3/check-lg.svg);
-  left: -2px;
+  left: -1px;
   top: -1px;
   position: absolute;
 }
 
-/*::-webkit-scrollbar {
-    width: 8px;
-    border-radius: 8px;
-}
-
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 8px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: 8px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #555;
-}*/
 .loader-container {
   display: flex;
   justify-content: center;
@@ -213,7 +248,7 @@ input[type=checkbox]:checked:before {
 }
 
 .bold-p {
-  font-weight: bold;
+  font-weight: 600;
 }
 
 ion-icon {
@@ -227,4 +262,17 @@ ion-icon {
 
 * {
   -webkit-tap-highlight-color: transparent;
+}
+
+.regular-p {
+  font-weight: 500;
+  line-height: 17px;
+  font-size: 12px;
+}
+
+.regular-p-grey {
+  font-weight: 500;
+  color: #666666;
+  line-height: 17px;
+  font-size: 12px;
 }

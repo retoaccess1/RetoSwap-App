@@ -9,7 +9,7 @@ using AndroidX.Core.Content;
 using Haveno.Proto.Grpc;
 using Manta.Helpers;
 using Manta.Services;
-
+using static Haveno.Proto.Grpc.Account;
 using static Haveno.Proto.Grpc.GetVersion;
 
 namespace Manta.Singletons;
@@ -115,6 +115,41 @@ public class TermuxSetupSingleton
         return false;
     }
 
+    public async Task<bool> IsHavenoInitializedAsync(CancellationToken cancellationToken = default)
+    {
+        for (int i = 0; i < 5; i++)
+        {
+            try
+            {
+                using var grpcChannelHelper = new GrpcChannelHelper();
+                var client = new AccountClient(grpcChannelHelper.Channel);
+                var response = await client.IsAppInitializedAsync(new IsAppInitializedRequest(), cancellationToken: cancellationToken);
+
+                if (response.IsAppInitialized)
+                    return true;
+            }
+            catch (TaskCanceledException)
+            {
+                throw;
+            }
+            catch (Exception e)
+            {
+
+            }
+
+            try
+            {
+                await Task.Delay(1000, cancellationToken: cancellationToken);
+            }
+            catch (TaskCanceledException)
+            {
+                throw;
+            }
+        }
+
+        return false;
+    }
+
     public async Task CloseTermux()
     {
         await ExecuteTermuxCommandAsync("am stopservice --user 0 -n com.termux/.app.TermuxService");
@@ -130,6 +165,21 @@ public class TermuxSetupSingleton
         }
 
         await Task.Delay(_termuxStartWaitTime);
+    }
+
+    public async Task InitializeHavenoAccountAsync()
+    {
+        using var grpcChannelHelper = new GrpcChannelHelper();
+        var client = new AccountClient(grpcChannelHelper.Channel);
+
+        while (!await IsHavenoDaemonRunningAsync()) ;
+        while (!await IsHavenoInitializedAsync()) ;
+
+        var accountExistsResponse = await client.AccountExistsAsync(new AccountExistsRequest());
+        if (accountExistsResponse.AccountExists)
+            return;
+
+        var createAccountResponse = await client.CreateAccountAsync(new CreateAccountRequest());
     }
 
     public async Task<bool> TryStartLocalHavenoDaemonAsync(string password, string host)
@@ -164,6 +214,13 @@ public class TermuxSetupSingleton
             await ExecuteTermuxCommandAsync("am start -a android.intent.action.VIEW -d \"manta://termux_callback\"");
 
             await StopLocalHavenoDaemonAsync();
+
+            string baseCurrencyNetwork;
+#if DEBUG
+            baseCurrencyNetwork = "XMR_STAGENET";
+#else
+            baseCurrencyNetwork = "XMR_MAINNET";
+#endif
 
             _ = Task.Run(() => ExecuteUbuntuCommandAsync($"tor"));
             _ = Task.Run(() => ExecuteUbuntuCommandAsync($"cd haveno && ./haveno-daemon --baseCurrencyNetwork=XMR_STAGENET --useLocalhostForP2P=false --useDevPrivilegeKeys=false --nodePort=9999 --appName=haveno-XMR_STAGENET_user1 --apiPassword={password} --apiPort=3201 --passwordRequired=false --useNativeXmrWallet=false --torControlHost=127.0.0.1 --torControlPort=9051"));

@@ -6,7 +6,7 @@
     <Application.Resources>
         <ResourceDictionary>
 
-            <Color x:Key="PageBackgroundColor">#131313</Color>
+            <Color x:Key="PageBackgroundColor">#000000</Color>
             <Color x:Key="PrimaryTextColor">White</Color>
 
             <Style TargetType="NavigationPage">
@@ -21,12 +21,12 @@
             <Style TargetType="Button">
                 <Setter Property="TextColor" Value="{DynamicResource PrimaryTextColor}" />
                 <Setter Property="FontFamily" Value="OpenSansRegular" />
-                <Setter Property="BackgroundColor" Value="#131313" />
+                <Setter Property="BackgroundColor" Value="#000000" />
                 <Setter Property="Padding" Value="14,10" />
             </Style>
 
             <Style TargetType="BlazorWebView">
-                <Setter Property="Background" Value="#131313" />
+                <Setter Property="Background" Value="#000000" />
             </Style>
 
         </ResourceDictionary>

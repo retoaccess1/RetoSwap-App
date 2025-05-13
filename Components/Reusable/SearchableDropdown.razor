@@ -11,14 +11,16 @@
     @bind="_searchTerm"
     @oninput="OnSearchTermChange"
     class=@(_visibleItems.Count == 0 || !_isActive ? "in-hidden" : "in-visible") />
-    <ul class=@(_visibleItems.Count == 0 || !_isActive ? "list hidden" : "list visible")>
-        @foreach (var item in _visibleItems)
-        {
-            <li @onclick="() => OnItemClick(item.Key)" class="item-li">
-                <p>@item.Value</p>
-            </li>
-        }
-    </ul>
+    <div class="list-wrapper">
+        <ul class=@(_visibleItems.Count == 0 || !_isActive ? "list hidden" : "list visible")>
+            @foreach (var item in _visibleItems)
+            {
+                <li @onclick="() => OnItemClick(item.Key)" class="item-li">
+                    <p>@item.Value</p>
+                </li>
+            }
+        </ul>
+    </div>
 </div>
 
 @code {

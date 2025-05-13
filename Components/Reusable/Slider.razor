@@ -1,0 +1,10 @@
+﻿<div class="slider-main" @ref="containerElement">
+    <p class="regular-p center-text">@Text</p>
+    <div @ref="dragElement"
+         class="@(IsDragging ? "circle button-green" : "circle not-dragging-anim button-green")"
+         @onpointerdown="OnPointerDown"
+         @onpointermove="OnPointerMove"
+         @onpointerup="OnPointerUp"
+         style="left: @LeftPx;">
+    </div>
+</div>

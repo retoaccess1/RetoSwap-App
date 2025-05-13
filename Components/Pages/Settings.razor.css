@@ -1,7 +1,7 @@
 ﻿.settings-main {
   display: flex;
   flex-direction: column;
-  padding-bottom: 58px;
+  padding-bottom: 10px;
 }
 .settings-main .info-container {
   margin-bottom: 10px;
@@ -29,4 +29,10 @@
 }
 .settings-main ::deep .toggle-main {
   margin-top: 10px;
+}
+.settings-main .backup-buttons {
+  display: flex;
+}
+.settings-main .backup-buttons button:first-child {
+  /*margin-right: 10px;*/
 }

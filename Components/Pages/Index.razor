@@ -11,8 +11,8 @@
         <p>Please choose an installation type.</p>
 
         <div class="buttons">
-            <button class="verify-modal-button" @onclick="@(async (e) => { IsInstallTypeModalOpen = false; await HandleInstall(DaemonInstallOptions.TermuxAutomatic); })">Standalone</button>
-            <button class="verify-modal-button" @onclick="@(async (e) => { IsInstallTypeModalOpen = false; await HandleInstall(DaemonInstallOptions.RemoteNode); })">Remote node</button>
+            <button class="verify-modal-button button-green" @onclick="@(async (e) => { IsInstallTypeModalOpen = false; await HandleInstall(DaemonInstallOptions.TermuxAutomatic); })">Standalone</button>
+            <button class="verify-modal-button button-green" @onclick="@(async (e) => { IsInstallTypeModalOpen = false; await HandleInstall(DaemonInstallOptions.RemoteNode); })">Remote node</button>
         </div>
     </div>
 </Modal>
@@ -22,20 +22,20 @@
         case TermuxSetupState.InstallingTermux:
             <div class="installing">
                 <span class="loader"></span>
-                <p>Downloading Termux...</p>
+                <p class="regular-p-grey">Downloading Termux...</p>
             </div>
             @* <p>@($"Downloaded {ProgressPercentage:F2}%")</p> *@
             break;
         case TermuxSetupState.SettingUpTermux:
-            <p>Setting up Haveno...</p>
+            <p class="regular-p-grey">Setting up Haveno...</p>
             break;
         case TermuxSetupState.Finished:
-            <p>Finished setting up Haveno. Daemon is starting...</p>
+            <p class="regular-p-grey">Finished setting up Haveno. Daemon is starting...</p>
             break;
          default: break;
     }
 </Modal>
 <Modal IsOpen="InstallationErrorMessage is not null" Title="Installation error" ModalButtonOptions="ModalButtonOptions.NONE" IsCloseable="false">
     <p>@InstallationErrorMessage</p>
-    <p>Try restarting the app</p>
+    <p class="regular-p-grey">Try restarting the app</p>
 </Modal>

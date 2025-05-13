@@ -1,4 +1,4 @@
-﻿@page "/chat"
+﻿@page "/trades/{id}/chat"
 
 <div class="chat-main">
 @if (Messages.Count == 0)
@@ -29,7 +29,7 @@ else
     <div class="input-container">
         <input @oninput="HandleMessageChanged" @bind="Message" type="text" placeholder="Type message" />
         <button @onclick="SendMessageAsync" disabled="@(string.IsNullOrEmpty(Message))">
-            <ion-icon name="send-sharp"></ion-icon>
+            <img src="icons/send.svg" />
         </button>
     </div>
 </div>

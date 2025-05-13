@@ -3,25 +3,23 @@
   align-items: center;
 }
 .toggle-main .toggle-wrapper {
-  /*border: 2px solid rgb(65, 64, 97);*/
-  border: 2px solid #fff;
+  /*border: 2px solid #fff;*/
   border-radius: 20px;
-  height: 30px;
+  height: 24px;
   font: inherit;
-  width: 60px;
+  width: 40px;
   padding: 2px;
   position: relative;
   transition: background-color 0.25s;
+  background-color: #2D2D2D;
 }
 .toggle-main .toggle-wrapper .toggle {
-  /*background-color: #414061;*/
   background-color: #fff;
-  height: 22px;
+  height: calc(100% - 4px);
   aspect-ratio: 1;
   border-radius: 20px;
   position: absolute;
-  transition: left 0.25s;
-  /*left: 2px;*/
+  transition: left 0.15s;
 }
 .toggle-main p {
   margin-left: 10px;
@@ -33,7 +31,7 @@
 }
 
 .active {
-  left: 32px;
+  left: 18px;
 }
 
 .disabled {

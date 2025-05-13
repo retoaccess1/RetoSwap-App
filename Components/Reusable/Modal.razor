@@ -4,7 +4,7 @@
         <div class="verify-modal" @onclick:stopPropagation="true" @onclick:preventDefault="true">
             <div class="top">
                 <div class="top-icons">
-                    <i class="bi-exclamation-circle info"></i>
+                    <img src="icons/info.svg" class="info" />
                     <p class="verify-title">@Title</p>
                     @if (IsCloseable)
                     {
@@ -18,11 +18,11 @@
                 <div class="buttons">
                     @if (ModalButtonOptions == ModalButtonOptions.OK || ModalButtonOptions == ModalButtonOptions.OK_CANCEL)
                     {
-                        <button class="verify-modal-button ok-button" @onclick:stopPropagation="true" @onclick:preventDefault="true" @onclick="@(async (e) => { IsOpen = false; await OnOkPressed.InvokeAsync(); })">@OkButtonText</button>
+                        <button class="verify-modal-button button-green" @onclick:stopPropagation="true" @onclick:preventDefault="true" @onclick="@(async (e) => { IsOpen = false; await OnOkPressed.InvokeAsync(); })">@OkButtonText</button>
                     }
                     @if (ModalButtonOptions == ModalButtonOptions.CANCEL || ModalButtonOptions == ModalButtonOptions.OK_CANCEL)
                     {
-                        <button class="verify-modal-button" @onclick:stopPropagation="true" @onclick:preventDefault="true" @onclick="@((e) => { IsOpen = false; OnCancelPressed.InvokeAsync();})">@CancelButtonText</button>
+                        <button class="verify-modal-button button-grey" @onclick:stopPropagation="true" @onclick:preventDefault="true" @onclick="@((e) => { IsOpen = false; OnCancelPressed.InvokeAsync(); })">@CancelButtonText</button>
                     }
                 </div>                
             }

@@ -1,0 +1,27 @@
+﻿.attention-main {
+    display: flex;
+    flex-direction: column;
+    background-color: #121212;
+    border-radius: 12px;
+    height: 75px;
+    padding: 14px;
+
+    .top {
+        margin-bottom: 10px;
+        display: flex;
+
+        img {
+            margin-right: 10px;
+        }
+
+        p {
+        }
+    }
+
+    .confirm-txt {
+        color: #7d7d7d;
+        line-height: 17px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+}

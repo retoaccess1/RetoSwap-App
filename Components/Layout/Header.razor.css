@@ -4,7 +4,7 @@
   align-items: center;
   position: sticky;
   top: 0;
-  background-color: #131313;
+  background-color: #000000;
   z-index: 500;
   justify-content: space-between;
 }
@@ -13,10 +13,25 @@
 }
 .header-main h3 {
   text-transform: capitalize;
+  font-weight: 600;
 }
-.header-main i {
+.header-main ::deep .dots-wrapper {
+  width: 30px;
+  height: 30px;
   margin-left: auto;
+  background-color: #121212;
+  border: 1px solid #414141;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 20px;
+}
+.header-main ::deep .dots-wrapper i {
   font-size: 18px;
+}
+.header-main ::deep .active {
+  background-color: #fff;
+  color: #000;
 }
 .header-main .settings-menu-wrapper {
   position: fixed;
@@ -24,7 +39,6 @@
   left: 0;
   width: 100%;
   height: calc(100% - 58px);
-  /*background-color: #808080;*/
 }
 .header-main .settings-menu-wrapper .settings-menu {
   position: absolute;

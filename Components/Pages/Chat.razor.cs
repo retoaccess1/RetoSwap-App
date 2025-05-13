@@ -12,6 +12,9 @@ namespace Manta.Components.Pages;
 
 public partial class Chat : ComponentBase, IDisposable
 {
+    // TODO update to use route
+    [Parameter]
+    public string Id { get; set; } = string.Empty;
     [Parameter]
     [SupplyParameterFromQuery]
     public string TradeId { get; set; } = string.Empty;

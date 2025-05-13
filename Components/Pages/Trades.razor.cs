@@ -12,6 +12,8 @@ public partial class Trades : ComponentBase, IDisposable
 {
     [Inject]
     public NotificationSingleton NotificationSingleton { get; set; } = default!;
+    [Inject]
+    public NavigationManager NavigationManager { get; set; } = default!;
 
     [Parameter]
     [SupplyParameterFromQuery]

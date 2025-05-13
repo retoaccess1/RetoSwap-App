@@ -1,1 +1,1 @@
-﻿.page{position:relative;display:flex;flex-direction:column;padding:0 14px 0;}main{height:calc(100dvh - 62px - 58px);}::deep .install-modal{word-break:keep-all;overflow-wrap:normal;white-space:nowrap;}::deep .install-modal p{white-space:nowrap;margin-bottom:10px;}
+﻿.page{position:relative;display:flex;flex-direction:column;padding:0 14px 0;height:100dvh;}main{flex:1;overflow-y:auto;padding-bottom:75px;}::deep .install-modal{word-break:keep-all;overflow-wrap:normal;white-space:nowrap;}::deep .install-modal p{white-space:nowrap;margin-bottom:10px;}

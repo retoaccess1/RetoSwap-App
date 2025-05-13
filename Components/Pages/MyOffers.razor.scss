@@ -1,47 +1,79 @@
-﻿.offers {
+﻿.my-offers-main {
+
+    .tab-container{
+        margin-bottom: 20px;
+    }
+
+}
+
+.xmr-icon {
+    width: 14px;
+    height: 14px;
+    background-image: url("../img/monero-icon-small.png");
+    background-size: contain;
+    margin: 0 6px 0;
+}
+
+.offers {
     /*color: #000;*/
 
     .offer {
-        background-color: grey;
+        background-color: #1f1f1f;
         margin-bottom: 10px;
-        padding: 6px;
+        padding: 14px;
         border-radius: 8px;
+        font-size: 14px;
+        font-weight: 500;
 
-        .offer-link {
-            color: #fff;
+        &:last-child {
+            margin-bottom: 0;
+        }
 
-            &:last-child {
-                margin-bottom: 0;
-            }
+        .offer-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
 
-            .offer-top {
+            .offer-top-left {
                 display: flex;
-                justify-content: space-between;
+                /*align-items: center;*/
+                align-items: flex-start;
+                flex-direction: column;
 
-                .offer-currency {
+                .base-amounts {
+                    display: flex;
+                    /*margin-bottom: 10px;*/
+                }
+
+                img {
+                    margin: 0 6px 0;
+                }
+
+                .counter-amounts {
                     display: flex;
                     align-items: center;
-                    background-color: darkgray;
-                    width: fit-content;
-                    padding: 4px;
-                    border-radius: 4px;
-                    margin-bottom: 4px;
-
-                    ion-icon {
-                        margin: 0 4px 0;
-                    }
                 }
             }
+        }
 
-            .card {
+        .offer-top-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+
+            .amounts {
                 display: flex;
-                align-items: center;
-                background-color: darkgray;
-                /*background-color: #4BB543;*/
-                width: fit-content;
-                padding: 4px;
-                border-radius: 4px;
-                margin-bottom: 4px;
+                background-color: #323232;
+                border-radius:4px;
+                padding: 2px 4px 2px;
+                color: #6f6f6f;
+
+                .amounts-left {
+                }
+
+                .amounts-right {
+                    margin-left: auto;
+                }
             }
         }
     }
@@ -50,9 +82,11 @@
 .buttons {
     display: flex;
     margin-top: 10px;
+    border-top: 1px solid #353535;
+    padding-top: 14px;
 
     button {
-        &:first-child{
+        &:first-child {
             margin-right: 6px;
         }
     }

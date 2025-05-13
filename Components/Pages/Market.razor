@@ -19,13 +19,12 @@
     <div class="chart-container">
         @if (TradeStatistics.Count == 0)
         {
-            <div class="graph-spinner">
+@*             <div class="graph-spinner">
                 <Spinner IsVisible="true"></Spinner>
-            </div>
+            </div> *@
         }
         else
         {
-            <p class="y-label">Volume in XMR</p>
             <MudChart ChartOptions="_options"
                       ChartType="ChartType.Bar"
                       ChartSeries="@_series"
@@ -68,7 +67,7 @@
                         @(((decimal)trade.Price / 100_000_000).ToString("0.0000"))
                     </td>
                     <td>
-                        @(((ulong)trade.Amount).ToMonero())
+                        @(((ulong)trade.Amount).ToMonero().ToString("0.0000"))
                     </td>
                 </tr>
             }

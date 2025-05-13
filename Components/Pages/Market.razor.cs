@@ -30,7 +30,7 @@ public partial class Market : ComponentBase, IDisposable
         ShowLegendLabels = false,
         ShowToolTips = false,
         YAxisLabelPosition = YAxisLabelPosition.Left,
-        ChartPalette = ["#bee8c2"]
+        ChartPalette = ["#0cb952"]
     };
 
     private List<ChartSeries> _series = [];

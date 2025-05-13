@@ -1,5 +1,4 @@
 ﻿::deep .buttons {
-  margin-top: 20px;
   display: flex;
   flex-direction: column;
 }
@@ -7,7 +6,6 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background-color: cornflowerblue;
   color: #fff;
   margin-top: 6px;
 }
@@ -17,6 +15,8 @@
 
 .install-modal p {
   margin-bottom: 10px;
+  white-space: normal;
+  line-break: normal;
 }
 
 .installing {

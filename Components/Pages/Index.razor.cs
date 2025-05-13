@@ -101,12 +101,15 @@ public partial class Index : ComponentBase
                 var password = Guid.NewGuid().ToString();
 
                 var successfullyStarted = await TermuxSetupSingleton.TryStartLocalHavenoDaemonAsync(password, host);
+
+                //await TermuxSetupSingleton.InitializeHavenoAccountAsync();
+
                 if (successfullyStarted)
                 {
                     NavigationManager.NavigateTo("/Market");
                 }
-                else
-                {
+            else
+            {
 
                 }
             }
@@ -164,6 +167,9 @@ public partial class Index : ComponentBase
                         }
 
                         var successfullyStarted = await TermuxSetupSingleton.TryStartLocalHavenoDaemonAsync(Guid.NewGuid().ToString(), "http://127.0.0.1:3201");
+
+                        //await TermuxSetupSingleton.InitializeHavenoAccountAsync();
+
                         if (successfullyStarted)
                         {
                             NavigationManager.NavigateTo("/Market");
