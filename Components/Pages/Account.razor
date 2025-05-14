@@ -127,7 +127,7 @@
                         </div>
                         break;
                     case Protobuf.PaymentAccountFormField.Types.FieldId.Salt:
-@*                         <div class="field">
+                        @*                         <div class="field">
                             <label>@field.Label</label>
                             <InputText readonly="true" @bind-Value="field.Value"></InputText>
                             <ValidationMessage For="() => field.Label" />
@@ -135,7 +135,14 @@
                         break;
                     case Protobuf.PaymentAccountFormField.Types.FieldId.Country:
                         <div class="field">
-                            <SearchableDropdown OnSubmit="HandleCountryChanged" Placeholder="Select country" Text="@field.Label" Items="@(field.SupportedCountries.ToDictionary(x => x.Code, x => $"{x.Name} ({x.Code})"))"></SearchableDropdown>
+                            @if (SelectedPaymentMethodId == "F2F" || SelectedPaymentMethodId == "MONEY_GRAM")
+                            {
+                                <SearchableDropdown OnSubmit="HandleCountryChanged" Placeholder="Select country" Text="@field.Label" Items="@(CountryCodeHelper.CountryCodeDictionary)"/>
+                            }
+                            else
+                            {
+                                <SearchableDropdown OnSubmit="HandleCountryChanged" Placeholder="Select country" Text="@field.Label" Items="@(field.SupportedCountries.ToDictionary(x => x.Code, x => $"{x.Name} ({x.Code})"))"/>
+                            }
                         </div>
                         break;
                     case Protobuf.PaymentAccountFormField.Types.FieldId.AcceptedCountryCodes:

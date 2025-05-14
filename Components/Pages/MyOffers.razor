@@ -19,7 +19,7 @@
                         <div class="offer-top-left">
                             <div class="base-amounts">
                                 <p>
-                                    @(offer.Direction == "SELL" ? offer.BaseCurrencyCode : offer.CounterCurrencyCode)
+                                    @offer.CounterCurrencyCode
                                     @(" ")
                                     @{
                                         var minVolume = double.Parse(offer.MinVolume);
@@ -40,7 +40,7 @@
                             @* <img src="icons/arrow-right.svg" /> *@
 
                             <div class="counter-amounts">
-                                <p>@(offer.Direction == "SELL" ? offer.CounterCurrencyCode : offer.BaseCurrencyCode)</p>
+                                <p>@offer.BaseCurrencyCode</p>
                                 <div class="xmr-icon"></div>
                                 <p>@(offer.Amount == offer.MinAmount ? $"{offer.Amount.ToMonero()}" : $"{offer.MinAmount.ToMonero()} - {offer.Amount.ToMonero()}")</p>
                             </div>
