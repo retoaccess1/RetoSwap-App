@@ -29,7 +29,7 @@
         </div>
 
         <div class="price-toggle">
-            <Toggle Text="@(UseFixedPrice ? "Using fixed price" : "Using market %")" @bind-IsToggled="UseFixedPrice"></Toggle>
+            <Toggle Disabled="NoMarketPrice" Text="@(UseFixedPrice ? "Using fixed price" : "Using market %")" @bind-IsToggled="UseFixedPrice"></Toggle>
         </div>
 
         <label>Fixed price in @(SelectedCurrencyCode) for 1 XMR</label>

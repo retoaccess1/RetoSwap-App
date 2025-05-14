@@ -61,12 +61,19 @@ public partial class CreateOffer : ComponentBase
     public List<PaymentAccount> ProtoPaymentAccounts { get; set; } = [];
     public Dictionary<string, string> PaymentAccounts { get; set; } = [];
 
+    public bool NoMarketPrice { get; set; }
+
     public string SelectedCurrencyCode
     {
         get;
         set
         {
             field = value;
+            if (NoMarketPrice = !BalanceSingleton.MarketPriceInfoDictionary.TryGetValue(field, out var _))
+            {
+                UseFixedPrice = true;
+            }
+
             Clear();
         }
     } = string.Empty;
@@ -143,10 +150,17 @@ public partial class CreateOffer : ComponentBase
         {
             case "MoneroAmount":
                 {
-                    var adjustedPrices = GetAdjustedPrices(value, priceForOneXMR, MarketPriceMarginPct);
+                    if (NoMarketPrice)
+                    {
+                        MoneroAmount = value;
+                    }
+                    else
+                    {
+                        var adjustedPrices = GetAdjustedPrices(value, priceForOneXMR, MarketPriceMarginPct);
 
-                    MoneroAmount = adjustedPrices.MoneroAmount;
-                    FiatPrice = adjustedPrices.FiatPrice;
+                        MoneroAmount = adjustedPrices.MoneroAmount;
+                        FiatPrice = adjustedPrices.FiatPrice;
+                    }
 
                     if (MoneroAmount < MinimumMoneroAmount || MinimumMoneroAmount == 0m)
                     {
@@ -156,9 +170,16 @@ public partial class CreateOffer : ComponentBase
                 break;
             case "MinimumMoneroAmount":
                 {
-                    var adjustedPrices = GetAdjustedPrices(value, priceForOneXMR, MarketPriceMarginPct);
+                    if (NoMarketPrice)
+                    {
+                        MinimumMoneroAmount = value;
+                    }
+                    else
+                    {
+                        var adjustedPrices = GetAdjustedPrices(value, priceForOneXMR, MarketPriceMarginPct);
 
-                    MinimumMoneroAmount = adjustedPrices.MoneroAmount;
+                        MinimumMoneroAmount = adjustedPrices.MoneroAmount;
+                    }
 
                     if (MinimumMoneroAmount > MoneroAmount)
                     {
@@ -170,6 +191,11 @@ public partial class CreateOffer : ComponentBase
                 {
                     if (!UseFixedPrice)
                         return;
+
+                    if (NoMarketPrice)
+                    {
+                        priceForOneXMR = value;
+                    }
 
                     if (value == 0)
                         return;
@@ -238,6 +264,11 @@ public partial class CreateOffer : ComponentBase
             case "FiatPrice":
                 {
                     var fiatPrice = Math.Round(FiatPrice);
+
+                    if (NoMarketPrice)
+                    {
+                        priceForOneXMR = FixedPrice;
+                    }
 
                     decimal adjustedMktPrice;
                     var percent = MarketPriceMarginPct / 100m;
@@ -337,7 +368,7 @@ public partial class CreateOffer : ComponentBase
 
             var response = await offersClient.PostOfferAsync(request);
 
-            NavigationManager.NavigateTo("/myoffers?title=My%20Offers");
+            NavigationManager.NavigateTo("buysell/myoffers?title=My%20Offers");
         }
         catch
         {
