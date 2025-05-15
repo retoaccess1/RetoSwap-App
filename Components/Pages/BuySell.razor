@@ -2,18 +2,18 @@
 
 <div class="buysell-main">
     <div class="top">
-        <p class="bold-p">
+        <p>
             @(Direction == "BUY" ? "Buy XMR" : "Sell XMR")
             <div class="xmr-icon"></div>
             @(Direction == "BUY" ? "with" : "for")
         </p>
         @if (string.IsNullOrEmpty(PreferredCurrency) || string.IsNullOrEmpty(CurrentMarketPrice))
         {
-            <p class="bold-p price">Loading price...</p>
+            <p class="price">Loading price...</p>
         }
         else
         {
-            <p class="bold-p price">XMR/@PreferredCurrency: @CurrentMarketPrice</p>
+            <p class="price">XMR/@PreferredCurrency: @CurrentMarketPrice</p>
         }
     </div>
     <div class="account-type">

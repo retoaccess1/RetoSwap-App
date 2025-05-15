@@ -132,11 +132,11 @@ public partial class Account : ComponentBase
             if (acceptedCountriesField is not null)
             {
                 AcceptedEUSEPACountries = acceptedCountriesField.SupportedSepaEuroCountries
-                    .Select(x => new SelectedAcceptedCountry { Code = x.Code, IsSelected = true })
+                    .Select(x => new SelectedAcceptedCountry { Code = x.Code, CodeWithCountry = $"{x.Name} ({x.Code})", IsSelected = true })
                     .ToList();
 
                 AcceptedNonEUSEPACountries = acceptedCountriesField.SupportedSepaNonEuroCountries
-                    .Select(x => new SelectedAcceptedCountry { Code = x.Code, IsSelected = true })
+                    .Select(x => new SelectedAcceptedCountry { Code = x.Code, CodeWithCountry = $"{x.Name} ({x.Code})", IsSelected = true })
                     .ToList();
             }
 

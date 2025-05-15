@@ -16,7 +16,16 @@
         margin-bottom: 6px;
     }
 
+    .note {
+        font-size: 14px;
+        color: #9c9c9c;
+    }
+
     .remote-node-section {
+
+        .note {
+            margin-bottom: 8px;
+        }
     }
 
     .backup-btn {
@@ -47,6 +56,5 @@
         button:first-child {
             /*margin-right: 10px;*/
         }
-
     }
 }

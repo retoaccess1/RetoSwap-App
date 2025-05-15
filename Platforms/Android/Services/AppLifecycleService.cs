@@ -1,6 +1,4 @@
-﻿#if ANDROID
-
-using Android.App;
+﻿using Android.App;
 using Android.OS;
 using Manta.Helpers;
 
@@ -35,5 +33,3 @@ public class AppLifecycleService : Java.Lang.Object, Android.App.Application.IAc
         }
     }
 }
-
-#endif

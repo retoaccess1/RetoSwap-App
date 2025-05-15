@@ -13,6 +13,13 @@
   margin-top: 20px;
   margin-bottom: 6px;
 }
+.settings-main .note {
+  font-size: 14px;
+  color: #9c9c9c;
+}
+.settings-main .remote-node-section .note {
+  margin-bottom: 8px;
+}
 .settings-main .backup-btn {
   /*margin-bottom: 10px;*/
 }

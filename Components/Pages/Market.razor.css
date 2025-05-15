@@ -13,6 +13,7 @@
 .market-main .year-price-container {
   display: flex;
   margin-bottom: 10px;
+  align-items: center;
 }
 .market-main .year-price-container select {
   height: 28px;
@@ -36,6 +37,7 @@
 .market-main .table-wrapper .trades td, .market-main .table-wrapper .trades th {
   height: 37px;
   max-height: 37px;
+  font-weight: 500;
 }
 .market-main .table-wrapper .trades tr:nth-child(odd) {
   background-color: #141414;
@@ -71,7 +73,6 @@
 }
 
 .price {
-  margin-bottom: 10px;
   margin-left: auto;
 }
 

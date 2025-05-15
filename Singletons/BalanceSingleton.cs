@@ -21,6 +21,20 @@ public class BalanceSingleton
         Task.Run(PollBalance);
     }
 
+    public decimal GetPriceWithFallback(string currency)
+    {
+        // Check if initialized?
+
+        try
+        {
+            return MarketPriceInfoDictionary[currency];
+        }
+        catch (KeyNotFoundException)
+        {
+            return MarketPriceInfoDictionary[CurrencyCultureInfo.FallbackCurrency];
+        }
+    }
+
     public decimal ConvertMoneroToFiat(decimal moneroAmount, string currencyCode)
     {
         try

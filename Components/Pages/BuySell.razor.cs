@@ -178,10 +178,20 @@ public partial class BuySell : ComponentBase, IDisposable
                 CryptoPaymentMethods = PaymentMethodsHelper.PaymentMethodsDictionary
                     .Where(x => filteredCryptoPaymentMethodIds.Contains(x.Key)).ToDictionary();
 
-                PreferredCurrency = await LocalStorage.GetItemAsStringAsync("preferredCurrency") ?? "USD";
-                PreferredCurrencyFormat = CurrencyCultureInfo.GetFormatForCurrency((Currency)Enum.Parse(typeof(Currency), PreferredCurrency));
+                PreferredCurrency = await LocalStorage.GetItemAsStringAsync("preferredCurrency") ?? CurrencyCultureInfo.FallbackCurrency;
+                PreferredCurrencyFormat = CurrencyCultureInfo.GetFormatForCurrency((Currency)Enum.Parse(typeof(Currency), PreferredCurrency))!;
 
-                CurrentMarketPrice = BalanceSingleton.MarketPriceInfoDictionary[PreferredCurrency].ToString("0.00");
+                try
+                {
+                    // If there is no price data for this currency then fallback to USD
+                    CurrentMarketPrice = BalanceSingleton.MarketPriceInfoDictionary[PreferredCurrency].ToString("0.00");
+                }
+                catch (KeyNotFoundException)
+                {
+                    CurrentMarketPrice = BalanceSingleton.MarketPriceInfoDictionary[CurrencyCultureInfo.FallbackCurrency].ToString("0.00");
+                    PreferredCurrency = CurrencyCultureInfo.FallbackCurrency;
+                    PreferredCurrencyFormat = CurrencyCultureInfo.GetFormatForCurrency((Currency)Enum.Parse(typeof(Currency), PreferredCurrency))!;
+                }
 
                 VisiblePaymentMethods = TraditionalPaymentMethods;
                 VisibleCurrencyCodes = TraditionalCurrencyCodes;

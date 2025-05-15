@@ -69,8 +69,8 @@ public partial class Wallet : ComponentBase, IDisposable
         { 
             try
             {
-                PreferredCurrency = await LocalStorage.GetItemAsStringAsync("preferredCurrency") ?? "USD";
-                PreferredCurrencyFormat = CurrencyCultureInfo.GetFormatForCurrency((Currency)Enum.Parse(typeof(Currency), PreferredCurrency));
+                PreferredCurrency = await LocalStorage.GetItemAsStringAsync("preferredCurrency") ?? CurrencyCultureInfo.FallbackCurrency;
+                PreferredCurrencyFormat = CurrencyCultureInfo.GetFormatForCurrency((Currency)Enum.Parse(typeof(Currency), PreferredCurrency))!;
 
                 Balance = BalanceSingleton.WalletInfo;
 

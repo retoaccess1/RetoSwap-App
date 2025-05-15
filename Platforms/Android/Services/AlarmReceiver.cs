@@ -1,5 +1,4 @@
-﻿#if ANDROID
-using Android.App;
+﻿using Android.App;
 using Android.Content;
 using Android.OS;
 using Manta.Singletons;
@@ -31,7 +30,10 @@ public static class AlarmUtils
     {
         if (Build.VERSION.SdkInt >= BuildVersionCodes.S && !AlarmManagerCanScheduleExactAlarms(context))
         {
-            Intent intent = new Intent(Settings.ActionRequestScheduleExactAlarm);
+#if !ANDROID31_0_OR_GREATER
+            return;
+#endif
+            var intent = new Intent(Settings.ActionRequestScheduleExactAlarm);
             intent.SetData(Android.Net.Uri.Parse("package:" + context.PackageName));
             context.StartActivity(intent);
         }
@@ -45,7 +47,11 @@ public static class AlarmUtils
             if (alarmManager is null)
                 return false;
 
+#if ANDROID31_0_OR_GREATER
             return alarmManager.CanScheduleExactAlarms();
+#else
+            return false;
+#endif
         }
 
         return true;
@@ -80,8 +86,11 @@ public static class AlarmUtils
 [BroadcastReceiver(Enabled = true, Exported = true)]
 public class AlarmReceiver : BroadcastReceiver
 {
-    public override void OnReceive(Context context, Intent intent)
+    public override void OnReceive(Context? context, Intent? intent)
     {
+        if (context is null) 
+            return;
+
         Console.WriteLine("Alarm triggered");
 
         var serviceProvider = IPlatformApplication.Current?.Services;
@@ -98,5 +107,3 @@ public class AlarmReceiver : BroadcastReceiver
         AlarmUtils.ScheduleExactAlarm(context);
     }
 }
-
-#endif

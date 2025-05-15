@@ -8,11 +8,11 @@
         </div>
         @if (string.IsNullOrEmpty(PreferredCurrency) || string.IsNullOrEmpty(CurrentMarketPrice))
         {
-            <p class="bold-p price">Loading price...</p>
+            <p class="price">Loading price...</p>
         }
         else
         {
-            <p class="bold-p price">XMR/@PreferredCurrency: @CurrentMarketPrice</p>
+            <p class="price">XMR/@PreferredCurrency: @CurrentMarketPrice</p>
         }
     </div>
 

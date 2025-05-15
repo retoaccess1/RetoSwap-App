@@ -34,7 +34,7 @@
     @* <SearchableDropdown Items="" Text="Country" Placeholder="Choose country"></SearchableDropdown> *@
     <Toggle OnToggledChanged="HandleToggle" @bind-IsToggled="IsToggled" Text="Notifications" />
     <Toggle Disabled="DaemonInstallOption == DaemonInstallOptions.RemoteNode" OnToggledChanged="HandleWakeLockToggle" @bind-IsToggled="IsWakeLockToggled" Text="Keep offers open in background" />
-    <p>Note: This uses more battery</p>
+    <p class="note">Note: This uses more battery</p>
 
     <p class="bold-p remote-node-txt">Remote node configuration</p>
     <div class="@(IsRemoteNodeToggled ? "remote-node-section" : "remote-node-section remote-node-disabled")">
@@ -44,7 +44,7 @@
         <input @bind="Host" type="text"/>
         <label class="bold-p">Password</label>
         <input @bind="Password" type="password" />
-        <p>Note: you need to have Orbot installed</p>
+        <p class="note">Note: you need to have Orbot installed</p>
         <button @onclick="ConnectToRemoteNode">Connect to remote node</button>
     </div>
     <Toggle OnToggledChanged="HandleRemoteNodeToggle" @bind-IsToggled="IsRemoteNodeToggled" Text="Use remote node" />

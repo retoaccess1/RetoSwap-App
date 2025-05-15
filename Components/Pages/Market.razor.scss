@@ -14,6 +14,7 @@
     .year-price-container {
         display: flex;
         margin-bottom: 10px;
+        align-items: center;
 
         select {
             height: 28px;
@@ -44,6 +45,7 @@
             td, th {
                 height: 37px;
                 max-height: 37px;
+                font-weight: 500;
             }
 
             tr:nth-child(odd) {
@@ -88,7 +90,6 @@
 }
 
 .price {
-    margin-bottom: 10px;
     margin-left: auto;
 }
 

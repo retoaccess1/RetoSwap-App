@@ -2,7 +2,7 @@
   position: relative;
 }
 .searchable-dropdown-main .text {
-  font-weight: bold;
+  /*font-weight: bold;*/
 }
 .searchable-dropdown-main::before {
   content: "\f282";

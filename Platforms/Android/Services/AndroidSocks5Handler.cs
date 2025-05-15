@@ -1,6 +1,4 @@
-﻿#if ANDROID
-using Java.IO;
-using Java.Net;
+﻿using Java.Net;
 using System.Net;
 
 namespace Manta.Helpers;
@@ -71,5 +69,3 @@ public class AndroidSocks5Handler : HttpClientHandler
         });
     }
 }
-#endif
-

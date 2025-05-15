@@ -119,8 +119,17 @@ public partial class Market : ComponentBase, IDisposable
 
                 await BalanceSingleton.InitializedTCS.Task;
 
-                PreferredCurrency = await LocalStorage.GetItemAsStringAsync("preferredCurrency") ?? "USD";
-                CurrentMarketPrice = BalanceSingleton.MarketPriceInfoDictionary[PreferredCurrency].ToString("0.00");
+                PreferredCurrency = await LocalStorage.GetItemAsStringAsync("preferredCurrency") ?? CurrencyCultureInfo.FallbackCurrency;
+
+                try
+                {
+                    CurrentMarketPrice = BalanceSingleton.MarketPriceInfoDictionary[PreferredCurrency].ToString("0.00");
+                }
+                catch (KeyNotFoundException)
+                {
+                    CurrentMarketPrice = BalanceSingleton.MarketPriceInfoDictionary[CurrencyCultureInfo.FallbackCurrency].ToString("0.00");
+                    PreferredCurrency = CurrencyCultureInfo.FallbackCurrency;
+                }
 
                 break;
             }

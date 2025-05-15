@@ -107,8 +107,17 @@
                                     @foreach (var supportedCurrencyCode in SupportedCurrencyCodes)
                                     {
                                         <div class="checkbox-container">
-                                            <InputCheckbox @bind-Value="@supportedCurrencyCode.IsSelected" />
+                                        <InputCheckbox @bind-Value="@supportedCurrencyCode.IsSelected" />
+
+                                        @if (Enum.TryParse(typeof(Currency), supportedCurrencyCode.Code, out var currency))
+                                        {
+                                            <label>@CurrencyCultureInfo.GetCurrencyFullName((Currency)currency)</label>
+                                        }
+                                        else
+                                        {
                                             <label>@supportedCurrencyCode.Code</label>
+                                        }
+
                                         </div>
                                     }
                                 </div>
@@ -155,7 +164,7 @@
                                     {
                                         <div class="checkbox-container">
                                             <InputCheckbox @bind-Value="@acceptedCountry.IsSelected" />
-                                            <label>@acceptedCountry.Code</label>
+                                            <label>@acceptedCountry.CodeWithCountry</label>
                                         </div>
                                     }
                                 </div>
@@ -170,7 +179,7 @@
                                     {
                                         <div class="checkbox-container">
                                             <InputCheckbox @bind-Value="@acceptedCountry.IsSelected" />
-                                            <label>@acceptedCountry.Code</label>
+                                            <label>@acceptedCountry.CodeWithCountry</label>
                                         </div>
                                     }
                                 </div>

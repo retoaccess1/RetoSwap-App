@@ -19,15 +19,19 @@
                 @for (int i = 0; i < BuyerSteps.Length; i++)
                 {
                     <li class="process-step">
+                        @{
+                            var stepCompletedOrCurrent = i < SellerState;
+                        }
+
                         @if (i + 1 < BuyerState)
                         {
-                            <i class="bi bi-check-circle-fill"></i>
+                            <i class=@($"bi bi-check-circle-fill + {(stepCompletedOrCurrent ? "completed-step" : "")}")></i>
                         }
                         else
                         {
-                            <i class=@($"bi bi-{i+1}-circle" + (i < BuyerState ? "-fill" : ""))></i>
+                            <i class=@($"bi bi-{i+1}-circle" + (stepCompletedOrCurrent ? "-fill completed-step" : ""))></i>
                         }
-                        <p>@BuyerSteps[i]</p>
+                        <p class="@(stepCompletedOrCurrent ? "completed-step" : "")">@BuyerSteps[i]</p>
                         @if (i + 1 == BuyerState && i + 1 < BuyerSteps.Length)
                         {
                             <span class="loader"></span>
@@ -71,15 +75,19 @@
                 @for (int i = 0; i < SellerSteps.Length; i++)
                 {
                     <li class="process-step">
+                        @{
+                            var stepCompletedOrCurrent = i < SellerState;
+                        }
+
                         @if (i + 1 < SellerState)
                         {
-                            <i class="bi bi-check-circle-fill"></i>
+                            <i class=@($"bi bi-check-circle-fill + {(stepCompletedOrCurrent ? "completed-step" : "")}")></i>
                         }
                         else
                         {
-                            <i class=@($"bi bi-{i+1}-circle" + (i < SellerState ? "-fill" : ""))></i>
+                            <i class=@($"bi bi-{i+1}-circle" + (stepCompletedOrCurrent ? "-fill completed-step" : ""))></i>
                         }
-                        <p>@SellerSteps[i]</p>
+                        <p class="@(stepCompletedOrCurrent ? "completed-step" : "")">@SellerSteps[i]</p>
                         @if (i + 1 == SellerState && i + 1 < SellerSteps.Length)
                         {
                             <span class="loader"></span>
@@ -110,14 +118,16 @@
         }
         <div class="info">
             <p class="bold-p info-txt">Trade info</p>
-            <div class="price-info">
-                @(TradeInfo.Offer.Direction == "SELL" ? TradeInfo.Offer.BaseCurrencyCode : TradeInfo.Offer.CounterCurrencyCode)
-                <ion-icon name="arrow-forward-outline"></ion-icon>
-                @(TradeInfo.Offer.Direction == "SELL" ? TradeInfo.Offer.CounterCurrencyCode : TradeInfo.Offer.BaseCurrencyCode)
-            </div>
-            <div class="amount-info">
-                <p>Amount: @TradeInfo.Amount.ToMonero() XMR / @TradeInfo.TradeVolume @TradeInfo.Offer.CounterCurrencyCode</p>
-                <p>Price: @decimal.Parse(TradeInfo.Price).ToString("0.0000") @TradeInfo.Offer.CounterCurrencyCode</p>
+            <div class="amount-price-info">
+                <div class="price-info">
+                    @(TradeInfo.Offer.Direction == "SELL" ? TradeInfo.Offer.BaseCurrencyCode : TradeInfo.Offer.CounterCurrencyCode)
+                    <img src="icons/arrow-right.svg" />
+                    @(TradeInfo.Offer.Direction == "SELL" ? TradeInfo.Offer.CounterCurrencyCode : TradeInfo.Offer.BaseCurrencyCode)
+                </div>
+                <div class="amount-info">
+                    <p>Amount: @TradeInfo.Amount.ToMonero() XMR / @TradeInfo.TradeVolume @TradeInfo.Offer.CounterCurrencyCode</p>
+                    <p>Price: @decimal.Parse(TradeInfo.Price).ToString("0.0000") @TradeInfo.Offer.CounterCurrencyCode</p>
+                </div>
             </div>
             <InfoRow IsExpandable="true" Label="Taker deposit transaction ID" Value="@TradeInfo.TakerDepositTxId"></InfoRow>
             <InfoRow IsExpandable="true" Label="Maker deposit transaction ID" Value="@TradeInfo.MakerDepositTxId"></InfoRow>

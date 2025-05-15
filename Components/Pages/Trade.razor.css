@@ -13,6 +13,10 @@
 .trade-main .process .process-step {
   display: flex;
   margin-bottom: 10px;
+  color: #737373;
+}
+.trade-main .process .process-step .completed-step {
+  color: #fff;
 }
 .trade-main .process .process-step i {
   margin-right: 10px;
@@ -50,18 +54,19 @@
 .info .info-txt {
   margin-bottom: 10px;
 }
-.info .price-info {
+.info .amount-price-info {
+  background-color: #121212;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 10px;
+}
+.info .amount-price-info .price-info {
   display: flex;
   align-items: center;
-  margin-bottom: 10px;
 }
-.info .price-info ion-icon {
-  margin: 0 6px 0;
+.info .amount-price-info .price-info img {
+  margin: 0 4px 0;
 }
-.info .amount-info {
-  margin-bottom: 10px;
-}
-
 .dispute-container {
   margin-bottom: 10px;
   display: flex;

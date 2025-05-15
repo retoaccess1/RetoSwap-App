@@ -67,10 +67,6 @@ public partial class Settings : ComponentBase, IDisposable
 
         await accountClient.DeleteAccountAsync(new DeleteAccountRequest());
 
-//#if ANDROID
-//        var a = await TermuxSetupSingleton.ExecuteUbuntuCommandAsync("cat haveno/output.log");
-//#endif
-
         while (true)
         {
             try

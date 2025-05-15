@@ -17,6 +17,11 @@
         .process-step {
             display: flex;
             margin-bottom: 10px;
+            color: #737373;
+
+            .completed-step {
+                color: #fff;
+            }
 
             i {
                 margin-right: 10px;
@@ -62,18 +67,24 @@
         margin-bottom: 10px;
     }
 
-    .price-info {
-        display: flex;
-        align-items: center;
+    .amount-price-info {
+        background-color: #121212;
+        border-radius: 12px;
+        padding: 14px;
         margin-bottom: 10px;
 
-        ion-icon {
-            margin: 0 6px 0;
+        .price-info {
+            display: flex;
+            align-items: center;
+
+            img {
+                margin: 0 4px 0;
+            }
         }
-    }
 
-    .amount-info {
-        margin-bottom: 10px;
+        .amount-info {
+
+        }
     }
 }
 
