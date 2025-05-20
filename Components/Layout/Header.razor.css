@@ -27,7 +27,11 @@
   border-radius: 20px;
 }
 .header-main ::deep .dots-wrapper i {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   font-size: 18px;
+  height: 18px;
 }
 .header-main ::deep .active {
   background-color: #fff;

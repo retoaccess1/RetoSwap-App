@@ -7,7 +7,7 @@ using AndroidX.Core.App;
 
 namespace Manta.Services;
 
-public class NotificationManagerService : INotificationManagerService
+public class AndroidNotificationManagerService : INotificationManagerService
 {
     private readonly NotificationManagerCompat _compatManager;
 
@@ -23,9 +23,9 @@ public class NotificationManagerService : INotificationManagerService
 
     public event EventHandler? NotificationReceived;
 
-    public static NotificationManagerService? Instance { get; private set; }
+    public static AndroidNotificationManagerService? Instance { get; private set; }
 
-    public NotificationManagerService()
+    public AndroidNotificationManagerService()
     {
         CreateNotificationChannel();
         _compatManager = NotificationManagerCompat.From(Platform.AppContext);
@@ -144,12 +144,12 @@ public class AlarmHandler : BroadcastReceiver
     {
         if (intent?.Extras is not null)
         {
-            var title = intent.GetStringExtra(NotificationManagerService.TitleKey);
-            var message = intent.GetStringExtra(NotificationManagerService.MessageKey);
+            var title = intent.GetStringExtra(AndroidNotificationManagerService.TitleKey);
+            var message = intent.GetStringExtra(AndroidNotificationManagerService.MessageKey);
             if (title is null || message is null)
                 return;
 
-            NotificationManagerService manager = NotificationManagerService.Instance ?? new NotificationManagerService();
+            AndroidNotificationManagerService manager = AndroidNotificationManagerService.Instance ?? new AndroidNotificationManagerService();
             manager.Show(title, message);
         }
     }

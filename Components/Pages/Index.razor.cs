@@ -4,6 +4,7 @@ using Manta.Services;
 using Microsoft.AspNetCore.Components;
 using Manta.Singletons;
 using Manta.Helpers;
+using Microsoft.Extensions.Hosting;
 
 namespace Manta.Components.Pages;
 
@@ -26,6 +27,8 @@ public partial class Index : ComponentBase
     [Inject]
     public TermuxSetupSingleton TermuxSetupSingleton { get; set; } = default!;
 #endif
+    [Inject]
+    public IHavenoDaemonService HavenoDaemonService { get; set; } = default!;
     [Inject]
     public NotificationSingleton NotificationSingleton { get; set; } = default!;
 
@@ -208,6 +211,25 @@ public partial class Index : ComponentBase
                 default: throw new Exception("Invalid DaemonInstallOption");
             }
         }
+#elif WINDOWS
+        var isInstalled = await HavenoDaemonService.GetIsDaemonInstalledAsync();
+        if (isInstalled)
+        {
+            //await HavenoDaemonService.TryStartLocalHavenoDaemonAsync("", "http://127.0.0.1:3201");
+
+            await SecureStorageHelper.SetAsync("password", "");
+            await SecureStorageHelper.SetAsync("host", "http://127.0.0.1:3201");
+
+            GrpcChannelHelper.Password = "";
+            GrpcChannelHelper.Host = "http://127.0.0.1:3201";
+
+            NavigationManager.NavigateTo("/Market");
+        }
+        else
+        {
+
+        }
+
 #endif
 
         IsInitializing = false;

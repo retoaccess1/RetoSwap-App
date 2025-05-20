@@ -40,8 +40,12 @@ public static class MauiProgram
         builder.Services.AddScoped<ISetupService, SetupService>();
 
 #if ANDROID
-        builder.Services.AddTransient<INotificationManagerService, NotificationManagerService>();
+        builder.Services.AddTransient<INotificationManagerService, AndroidNotificationManagerService>();
         builder.Services.AddSingleton<TermuxSetupSingleton>();
+        builder.Services.AddScoped<IHavenoDaemonService, AndroidHavenoDaemonService>();
+#elif WINDOWS
+        builder.Services.AddTransient<INotificationManagerService, WindowsNotificationManagerService>();
+        builder.Services.AddScoped<IHavenoDaemonService, WindowsHavenoDaemonService>();
 #endif
 
 #if DEBUG

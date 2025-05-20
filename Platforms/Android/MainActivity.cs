@@ -68,8 +68,8 @@ public class MainActivity : MauiAppCompatActivity
     {
         if (intent?.Extras != null)
         {
-            var title = intent.GetStringExtra(NotificationManagerService.TitleKey);
-            var message = intent.GetStringExtra(NotificationManagerService.MessageKey);
+            var title = intent.GetStringExtra(AndroidNotificationManagerService.TitleKey);
+            var message = intent.GetStringExtra(AndroidNotificationManagerService.MessageKey);
             if (title is null || message is null)
                 return;
 
