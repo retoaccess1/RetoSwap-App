@@ -52,10 +52,10 @@
                     <div class="payment-instructions">
                         <p class="bold-p start-payment">Start payment using @TradeInfo.Offer.PaymentMethodShortName</p>
 
-                        <InfoRow Label="Amount to transfer" Value="@(TradeInfo.TradeVolume + " " + TradeInfo.Offer.CounterCurrencyCode)"></InfoRow>
+                        <InfoRow Label="Amount to transfer" Value="@(TradeInfo.TradeVolume + " " + (IsFiat ? TradeInfo.Offer.CounterCurrencyCode : TradeInfo.Offer.BaseCurrencyCode))"></InfoRow>
                         @foreach (var keyVal in TradeInfo.Offer.IsMyOffer ? TradeInfo.Contract.TakerPaymentAccountPayload.Convert() : TradeInfo.Contract.MakerPaymentAccountPayload.Convert())
                         {
-                            <InfoRow Label="@keyVal.Key" Value="@keyVal.Value"></InfoRow>
+                            <InfoRow IsExpandable="true" Label="@keyVal.Key" Value="@keyVal.Value"></InfoRow>
                         }
                     </div>
                     <div class="slider-wrapper">
@@ -120,13 +120,30 @@
             <p class="bold-p info-txt">Trade info</p>
             <div class="amount-price-info">
                 <div class="price-info">
-                    @(TradeInfo.Offer.Direction == "SELL" ? TradeInfo.Offer.BaseCurrencyCode : TradeInfo.Offer.CounterCurrencyCode)
-                    <img src="icons/arrow-right.svg" />
-                    @(TradeInfo.Offer.Direction == "SELL" ? TradeInfo.Offer.CounterCurrencyCode : TradeInfo.Offer.BaseCurrencyCode)
+                    @if (TradeInfo.Offer.BaseCurrencyCode == "XMR")
+                    {
+                        @(TradeInfo.Offer.Direction == "SELL" ? TradeInfo.Offer.CounterCurrencyCode : TradeInfo.Offer.BaseCurrencyCode)
+                        <img src="icons/arrow-right.svg" />
+                        @(TradeInfo.Offer.Direction == "SELL" ? TradeInfo.Offer.BaseCurrencyCode : TradeInfo.Offer.CounterCurrencyCode)
+                    }
+                    else
+                    {
+                        @*                @(TradeInfo.Offer.Direction == "SELL" ? "XMR" : TradeInfo.Offer.BaseCurrencyCode)
+                        <img src="icons/arrow-right.svg" />
+                        @(TradeInfo.Offer.Direction == "SELL" ? TradeInfo.Offer.BaseCurrencyCode : "XMR") *@
+                    }
                 </div>
                 <div class="amount-info">
-                    <p>Amount: @TradeInfo.Amount.ToMonero() XMR / @TradeInfo.TradeVolume @TradeInfo.Offer.CounterCurrencyCode</p>
-                    <p>Price: @decimal.Parse(TradeInfo.Price).ToString("0.0000") @TradeInfo.Offer.CounterCurrencyCode</p>
+                    @if (TradeInfo.Offer.BaseCurrencyCode == "XMR")
+                    {
+                        <p>Amount: @TradeInfo.Amount.ToMonero() @(IsFiat ? "XMR" : TradeInfo.Offer.BaseCurrencyCode) / @TradeInfo.TradeVolume @TradeInfo.Offer.CounterCurrencyCode</p>
+                        <p>Price: @decimal.Parse(TradeInfo.Price).ToString("0.0000") @TradeInfo.Offer.CounterCurrencyCode</p>
+                    }
+                    else
+                    {
+                        <p>Amount: @TradeInfo.Amount.ToMonero() @(IsFiat ? "XMR" : TradeInfo.Offer.CounterCurrencyCode) / @TradeInfo.TradeVolume @TradeInfo.Offer.BaseCurrencyCode</p>
+                        <p>Price: @decimal.Parse(TradeInfo.Price).ToString("0.0000") @TradeInfo.Offer.CounterCurrencyCode</p>
+                    }
                 </div>
             </div>
             <InfoRow IsExpandable="true" Label="Taker deposit transaction ID" Value="@TradeInfo.TakerDepositTxId"></InfoRow>

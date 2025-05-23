@@ -1,21 +1,21 @@
 ﻿using Grpc.Core;
-using Haveno.Proto.Grpc;
+using HavenoSharp.Extensions;
+using HavenoSharp.Models;
+using HavenoSharp.Models.Requests;
+using HavenoSharp.Services;
 using Manta.Components.Reusable;
-using Manta.Extensions;
 using Manta.Helpers;
 using Manta.Models;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Protobuf;
-
-using static Haveno.Proto.Grpc.PaymentAccounts;
 
 namespace Manta.Components.Pages;
 
-
-// Bug where delete account modal keeps popping up
 public partial class Account : ComponentBase
 {
+    [Inject]
+    public IHavenoPaymentAccountService PaymentAccountService { get; set; } = default!;
+
     private ValidationMessageStore? _messageStore;
     private EditContext? _editContext;
 
@@ -107,28 +107,19 @@ public partial class Account : ComponentBase
                 .SupportedAssetCodes.Select(x => new SelectedCurrency { Code = x, IsSelected = false })
                 .ToList();
 
-            using var payChannelHelper = new GrpcChannelHelper();
-            var paymentAccountsClient = new PaymentAccountsClient(payChannelHelper.Channel);
-
             // TODO cache this and clear when daemon version changes
-            var getPaymentAccountFormResponse = Task.Run(() =>
-            {
-                return paymentAccountsClient.GetPaymentAccountForm(new GetPaymentAccountFormRequest
-                {
-                    PaymentMethodId = SelectedPaymentMethodId
-                });
-            }).GetAwaiter().GetResult();
+            var paymentAccountForm = Task.Run(() => PaymentAccountService.GetPaymentAccountFormAsync(SelectedPaymentMethodId)).GetAwaiter().GetResult();
 
             // Add a default account name
-            var accountNameField = getPaymentAccountFormResponse.PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == PaymentAccountFormField.Types.FieldId.AccountName);
+            var accountNameField = paymentAccountForm.Fields.FirstOrDefault(x => x.Id == FieldId.ACCOUNT_NAME);
             if (accountNameField is not null)
             {
                 accountNameField.Value = SelectedPaymentMethodId;
             }
 
-            PaymentAccountForm = getPaymentAccountFormResponse.PaymentAccountForm;
+            PaymentAccountForm = paymentAccountForm;
 
-            var acceptedCountriesField = PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == PaymentAccountFormField.Types.FieldId.AcceptedCountryCodes);
+            var acceptedCountriesField = PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == FieldId.ACCEPTED_COUNTRY_CODES);
             if (acceptedCountriesField is not null)
             {
                 AcceptedEUSEPACountries = acceptedCountriesField.SupportedSepaEuroCountries
@@ -165,16 +156,10 @@ public partial class Account : ComponentBase
         {
             try
             {
-                using var paymentAccountChannel = new GrpcChannelHelper();
-                var paymentAccountsClient = new PaymentAccountsClient(paymentAccountChannel.Channel);
+                PaymentAccounts = await PaymentAccountService.GetPaymentAccountsAsync();
+                TraditionalPaymentMethods = await PaymentAccountService.GetPaymentMethodsAsync();
 
-                var paymentAccounts = await paymentAccountsClient.GetPaymentAccountsAsync(new GetPaymentAccountsRequest());
-                PaymentAccounts = [.. paymentAccounts.PaymentAccounts];
-
-                var paymentMethodsResponse = await paymentAccountsClient.GetPaymentMethodsAsync(new GetPaymentMethodsRequest());
-                TraditionalPaymentMethods = [.. paymentMethodsResponse.PaymentMethods];
-
-                var filteredPaymentMethodIds = paymentMethodsResponse.PaymentMethods
+                var filteredPaymentMethodIds = TraditionalPaymentMethods
                     .Select(x => x.Id);
 
                 TraditionalPaymentMethodStrings = PaymentMethodsHelper.PaymentMethodsDictionary
@@ -187,12 +172,12 @@ public partial class Account : ComponentBase
 
                 break;
             }
-            catch (Exception e)
+            catch (Exception)
             {
 
             }
 
-            await Task.Delay(5_000);
+            await Task.Delay(2_000);
         }
 
         await base.OnInitializedAsync();
@@ -203,7 +188,7 @@ public partial class Account : ComponentBase
         if (PaymentAccountForm is null)
             return;
 
-        var countryField = PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == PaymentAccountFormField.Types.FieldId.Country);
+        var countryField = PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == FieldId.COUNTRY);
         if (countryField is not null)
         {
             countryField.Value = country;
@@ -211,16 +196,13 @@ public partial class Account : ComponentBase
     }
 
     // Does not work to validate crypto addresses. Only max/mins
-    public async Task ValidateField(PaymentAccountFormField.Types.FieldId fieldId, string value)
+    public async Task ValidateField(FieldId fieldId, string value)
     {
         try
         {
-            using var payChannelHelper = new GrpcChannelHelper();
-            var paymentAccountsClient = new PaymentAccountsClient(payChannelHelper.Channel);
-
-            var response = await paymentAccountsClient.ValidateFormFieldAsync(new ValidateFormFieldRequest
+            var response = await PaymentAccountService.ValidateFormFieldAsync(new ValidateFormFieldRequest
             { 
-                FieldId = PaymentAccountFormField.Types.FieldId.Address,
+                FieldId = FieldId.ADDRESS,
                 Form = PaymentAccountForm,
                 Value = value
             });
@@ -248,13 +230,9 @@ public partial class Account : ComponentBase
         if (e.FieldIdentifier.Model is not PaymentAccountFormField field)
             return;
 
-        using var payChannelHelper = new GrpcChannelHelper();
-        var paymentAccountsClient = new PaymentAccountsClient(payChannelHelper.Channel);
-
         try
         {
-
-            var response = Task.Run(() => paymentAccountsClient.ValidateFormField(new ValidateFormFieldRequest
+            var response = Task.Run(() => PaymentAccountService.ValidateFormFieldAsync(new ValidateFormFieldRequest
             {
                 FieldId = field.Id,
                 Form = PaymentAccountForm,
@@ -271,13 +249,7 @@ public partial class Account : ComponentBase
 
     public async Task DeleteAccountAsync(string paymentAccountId)
     {
-        using var payChannelHelper = new GrpcChannelHelper();
-        var paymentAccountsClient = new PaymentAccountsClient(payChannelHelper.Channel);
-
-        var response = await paymentAccountsClient.DeletePaymentAccountAsync(new DeletePaymentAccountRequest
-        {
-            PaymentAccountId = paymentAccountId
-        });
+        await PaymentAccountService.DeletePaymentAccountAsync(paymentAccountId);
 
         PaymentAccounts = [.. PaymentAccounts.Where(x => x.Id != paymentAccountId)];
         SelectedPaymentAccount = null;
@@ -286,11 +258,8 @@ public partial class Account : ComponentBase
 
     public async Task CreateCryptoPaymentAccountAsync()
     {
-        using var payChannelHelper = new GrpcChannelHelper();
-        var paymentAccountsClient = new PaymentAccountsClient(payChannelHelper.Channel);
-
-        var response = await paymentAccountsClient.CreateCryptoCurrencyPaymentAccountAsync(CreateCryptoCurrencyPaymentAccountRequest);
-        PaymentAccounts = [.. PaymentAccounts, response.PaymentAccount];
+        var createdCryptoAccount = await PaymentAccountService.CreateCryptoCurrencyPaymentAccountAsync(CreateCryptoCurrencyPaymentAccountRequest);
+        PaymentAccounts = [.. PaymentAccounts, createdCryptoAccount];
 
         CreateCryptoCurrencyPaymentAccountRequest = null;
         PaymentAccountForm = null;
@@ -306,28 +275,34 @@ public partial class Account : ComponentBase
 
         try
         {
-            using var payChannelHelper = new GrpcChannelHelper();
-            var paymentAccountsClient = new PaymentAccountsClient(payChannelHelper.Channel);
-
             var request = new CreatePaymentAccountRequest
             {
                 PaymentAccountForm = PaymentAccountForm
             };
 
-            var currenciesField = request.PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == PaymentAccountFormField.Types.FieldId.TradeCurrencies);
+            var currenciesField = request.PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == FieldId.TRADE_CURRENCIES);
             if (currenciesField is not null)
             {
                 currenciesField.Value = string.Join(",", SupportedCurrencyCodes.Where(x => x.IsSelected).Select(x => x.Code));
             }
 
-            var acceptedCountriesField = request.PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == PaymentAccountFormField.Types.FieldId.AcceptedCountryCodes);
+            var acceptedCountriesField = request.PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == FieldId.ACCEPTED_COUNTRY_CODES);
             if (acceptedCountriesField is not null)
             {
                 acceptedCountriesField.Value = string.Join(",", [..AcceptedEUSEPACountries.Where(x => x.IsSelected).Select(x => x.Code), ..AcceptedNonEUSEPACountries.Where(x => x.IsSelected).Select(x => x.Code)]);
             }
 
-            var response = await paymentAccountsClient.CreatePaymentAccountAsync(request);
-            PaymentAccounts = [.. PaymentAccounts, response.PaymentAccount];
+            if (SelectedPaymentMethodId == "F2F" || SelectedPaymentMethodId == "MONEY_GRAM") 
+            {
+                var countriesField = request.PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == FieldId.COUNTRY);
+                if (countriesField is not null)
+                {
+
+                }            
+            }
+
+            var createdPaymentAccount = await PaymentAccountService.CreatePaymentAccountAsync(request);
+            PaymentAccounts = [.. PaymentAccounts, createdPaymentAccount];
 
             var filteredPaymentMethodIds = TraditionalPaymentMethods
                 .Select(x => x.Id);

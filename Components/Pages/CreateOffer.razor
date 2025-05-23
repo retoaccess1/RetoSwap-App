@@ -4,6 +4,20 @@
     <Modal Title="Creating offer" ModalButtonOptions="ModalButtonOptions.NONE" @bind-IsOpen="IsFetching">
         <p class="regular-p-grey">Please wait</p>
     </Modal>
+    <Modal Title="Review offer" ModalButtonOptions="ModalButtonOptions.OK_CANCEL" @bind-IsOpen="IsConfirmModalOpen" OnOkPressed="PostOfferAsync" OkButtonText="Post offer">
+        @if (IsFiat)
+        {
+            <p class="regular-p-grey">You are creating an offer to @(Direction.ToLower()) XMR</p>
+        }
+        else
+        {
+            <p class="regular-p-grey">You are creating an offer to @(Direction.ToLower()) @(SelectedCurrencyCode)</p>
+        }
+        <p class="regular-p-grey">Min: @MinimumMoneroAmount XMR</p>
+        <p class="regular-p-grey">Max: @MoneroAmount XMR</p>
+
+        <p class="regular-p-grey">Price: @FixedPrice (distance from market price: @MarketPriceMarginPct%)</p>
+    </Modal>
 
     @if (PaymentAccounts.Count == 0)
     {
@@ -22,7 +36,7 @@
         <div>
             <label>Amount of XMR to @Direction.ToLower()</label>
             <input class="no-margin" type="number" max="@MaxTradeLimit" @bind="MoneroAmount" @onblur="@(() => Calculate(MoneroAmount, "MoneroAmount"))" placeholder="Enter amount in XMR" />
-            <p class="margin">Note: max trade limit is @MaxTradeLimit XMR</p>
+            <p class="margin note">Note: max trade limit is @MaxTradeLimit XMR</p>
 
             <label>Minimum amount of XMR</label>
             <input type="number" @bind="MinimumMoneroAmount" @onblur="@(() => Calculate(MinimumMoneroAmount, "MinimumMoneroAmount"))" placeholder="Enter amount in XMR" />
@@ -32,10 +46,18 @@
             <Toggle Disabled="NoMarketPrice" Text="@(UseFixedPrice ? "Using fixed price" : "Using market %")" @bind-IsToggled="UseFixedPrice"></Toggle>
         </div>
 
-        <label>Fixed price in @(SelectedCurrencyCode) for 1 XMR</label>
+        @if (IsFiat)
+        {
+            <label>Fixed price in @(SelectedCurrencyCode) for 1 XMR</label>
+        }
+        else
+        {
+            <label>Fixed price in XMR for 1 @(SelectedCurrencyCode)</label>
+        }
+
         <input readonly="@(!UseFixedPrice)" type="number" @bind="FixedPrice" @onblur="@(() => Calculate(FixedPrice, "FixedPrice"))" />
 
-        <label>@(Direction == "BUY" ? "Below" : "Above") % from market price</label>
+        <label>@(IsFiat ? (Direction == "BUY" ? "Below" : "Above") : (Direction == "BUY" ? "Above" : "Below")) % from market price</label>
         <input readonly="@(UseFixedPrice)" type="number" @bind="MarketPriceMarginPct" @onblur="@(() => Calculate(MarketPriceMarginPct, "MarketPriceMarginPct"))" />
 
 
@@ -56,7 +78,7 @@
         </div>
 
         <div class="buttons">
-            <button class="button-green" @onclick="PostOfferAsync">Create offer</button>
+            <button class="button-green" disabled="@(MoneroAmount < 0.15m || MinimumMoneroAmount < 0.15m)" @onclick="() => IsConfirmModalOpen = true">Review offer</button>
             <button class="button-grey" @onclick="OnCloseCreateOffer">Cancel</button>
         </div>
     }

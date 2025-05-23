@@ -109,6 +109,7 @@
 
 .withdraw input {
   margin-bottom: 10px;
+  text-overflow: ellipsis;
 }
 .withdraw .amount-container {
   display: flex;

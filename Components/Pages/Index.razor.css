@@ -19,22 +19,27 @@
   line-break: normal;
 }
 
-.installing {
-  display: flex;
-}
-.installing .loader {
+.loader {
   width: 16px;
   height: 16px;
   border-radius: 50%;
   display: inline-block;
-  border-top: 3px solid #000;
+  border-top: 3px solid #666666;
   border-right: 3px solid transparent;
   box-sizing: border-box;
   animation: spin 1s linear infinite;
   margin-right: 10px;
 }
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
+}
+.loader-text-container {
+  display: flex;
+}
+
+.init-text {
+  margin-bottom: 10px;
 }

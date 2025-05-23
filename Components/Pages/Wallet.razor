@@ -81,8 +81,8 @@
                         <input id="amount" name="amount" type="number" @bind="Amount" />
                         @* <p class="send-all" @onclick="() => _piconeroAmount = Balance.AvailableXMRBalance">Send all</p> *@
                     </div>
-                    <label for="memo">Memo</label>
-                    <input id="memo" name="memo" @bind="Memo" placeholder="Optional" />
+@*                     <label for="memo">Memo</label>
+                    <input id="memo" name="memo" @bind="Memo" placeholder="Optional" /> *@
                     <button @onclick="CreateTransaction" disabled="@(string.IsNullOrEmpty(WithdrawalAddress) || Amount == 0m || WithdrawalAddress.Length != 95)">Withdraw</button>                    
                 }
             </div>

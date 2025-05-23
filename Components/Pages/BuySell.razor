@@ -61,13 +61,21 @@
                 @foreach (var offer in FilteredOffers)
                 {
                     <li class="offer">
-                        @* check that payment method also supports currency *@
                         <a class="offer-link" href=@($"buysell/offer?OfferId={offer.Id}&title=Offer")>
                             <div class="offer-top">
                                 <div class="offer-currency">
-                                    @(Direction == "SELL" ? offer.BaseCurrencyCode : offer.CounterCurrencyCode)
-                                    <img src="icons/arrow-right.svg" />
-                                    @(Direction == "SELL" ? offer.CounterCurrencyCode : offer.BaseCurrencyCode)
+                                    @if (offer.BaseCurrencyCode == "XMR")
+                                    {
+                                        @(Direction == "SELL" ? offer.BaseCurrencyCode : offer.CounterCurrencyCode)
+                                        <img src="icons/arrow-right.svg" />
+                                        @(Direction == "SELL" ? offer.CounterCurrencyCode : offer.BaseCurrencyCode)                                        
+                                    }
+                                    else 
+                                    {
+                                        @(Direction == "SELL" ? "XMR" : offer.BaseCurrencyCode)
+                                        <img src="icons/arrow-right.svg" />
+                                        @(Direction == "SELL" ? offer.BaseCurrencyCode : "XMR")
+                                    }
                                     |
                                     @(Math.Round(double.Parse(offer.Price), 2))
                                     @offer.CounterCurrencyCode
@@ -85,13 +93,27 @@
                                     var minVolume = double.Parse(offer.MinVolume);
                                     var volume = double.Parse(offer.Volume);
 
-                                    if (minVolume == volume)
+                                    @if (offer.BaseCurrencyCode == "XMR")
                                     {
-                                        <p>Min/max: @(Math.Round(volume, 2) + " ") @offer.CounterCurrencyCode</p>
+                                        if (minVolume == volume)
+                                        {
+                                            <p>Min/max: @(Math.Round(volume, 2) + " ") @offer.CounterCurrencyCode</p>
+                                        }
+                                        else
+                                        {
+                                            <p>Min/max: @($"{Math.Round(minVolume, 2)} - {Math.Round(volume, 2)} ") @offer.CounterCurrencyCode</p>
+                                        }
                                     }
                                     else
                                     {
-                                        <p>Min/max: @($"{Math.Round(minVolume, 2)} - {Math.Round(volume, 2)} ") @offer.CounterCurrencyCode</p>
+                                        if (minVolume == volume)
+                                        {
+                                            <p>Min/max: @(Math.Round(volume, 8) + " ") @offer.BaseCurrencyCode</p>
+                                        }
+                                        else
+                                        {
+                                            <p>Min/max: @($"{Math.Round(minVolume, 8)} - {Math.Round(volume, 8)} ") @offer.BaseCurrencyCode</p>
+                                        }
                                     }
                                 }
                             </div>

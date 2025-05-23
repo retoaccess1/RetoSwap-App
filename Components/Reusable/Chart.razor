@@ -27,14 +27,14 @@
 
         var orderedList = TradeStatistics.OrderBy(x => x.Date).ToList();
 
-        var firstDate = orderedList.First().Date;
+        var firstDate = orderedList.First().Date.ToDateTime();
 
         int timePeriodIndex = 0;
         _tradeStatisticsGroupedByTime.Add([]);
 
         for (int i = 0; i < orderedList.Count; i++)
         {
-            if ((orderedList[i].Date - firstDate).TotalDays < 28)
+            if ((orderedList[i].Date.ToDateTime() - firstDate).TotalDays < 28)
             {
                 _tradeStatisticsGroupedByTime[timePeriodIndex].Add(orderedList[i]);
             }
@@ -52,7 +52,7 @@
 
                 timePeriodIndex++;
                 _tradeStatisticsGroupedByTime.Add([]);
-                firstDate = orderedList[i].Date;
+                firstDate = orderedList[i].Date.ToDateTime();
             }
         }
 

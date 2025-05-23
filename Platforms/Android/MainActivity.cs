@@ -2,10 +2,12 @@
 using Android.Content;
 using Android.Content.PM;
 using Android.OS;
+using AndroidX.Core.View;
+using Manta.Platforms.Android.Services;
 using Manta.Services;
-using Manta.Singletons;
 
 namespace Manta;
+
 [Activity(LaunchMode = LaunchMode.SingleTop, ScreenOrientation = ScreenOrientation.Portrait, Theme = "@style/Maui.SplashTheme", MainLauncher = true, ConfigurationChanges = ConfigChanges.ScreenSize | ConfigChanges.Orientation | ConfigChanges.UiMode | ConfigChanges.ScreenLayout | ConfigChanges.SmallestScreenSize | ConfigChanges.Density)]
 [IntentFilter([Intent.ActionView],
     Categories = new[] { Intent.CategoryDefault, Intent.CategoryBrowsable },
@@ -37,11 +39,18 @@ public class MainActivity : MauiAppCompatActivity
     protected override void OnCreate(Bundle? savedInstanceState)
     {
         base.OnCreate(savedInstanceState);
-        
+
+        Window?.SetNavigationBarColor(Android.Graphics.Color.ParseColor("#000000"));
+
+        var rootView = Window?.DecorView?.RootView;
+        if (rootView != null)
+        {
+            ViewCompat.SetOnApplyWindowInsetsListener(rootView, new InsetsListener());
+        }
+
         if (Intent is not null)
             HandleIntent(Intent);
 
-        Window?.SetNavigationBarColor(Android.Graphics.Color.ParseColor("#000000"));
 
         if (Intent is null)
             return;

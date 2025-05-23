@@ -7,7 +7,7 @@
     readonly="@Disabled"
     placeholder="@Placeholder"
     @onfocusout="() => _isActive = false"
-    @onfocusin="() => _isActive = true"
+    @onfocusin="() => {if(Disabled) return; _isActive = true;}"
     @bind="_searchTerm"
     @oninput="OnSearchTermChange"
     class=@(_visibleItems.Count == 0 || !_isActive ? "in-hidden" : "in-visible") />

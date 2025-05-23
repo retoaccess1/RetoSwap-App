@@ -1,4 +1,4 @@
-﻿using Protobuf;
+﻿using HavenoSharp.Models;
 using System.Text.RegularExpressions;
 
 namespace Manta.Helpers;
@@ -25,9 +25,41 @@ public static partial class PaymentAccountToFieldsHelper
         var properties = val?.GetType().GetProperties()
             .Where(x => x.Name != "Parser" && x.Name != "Descriptor");
 
+        if (properties is null)
+            yield break;
+
         foreach(var property in properties)
         {
-            yield return new KeyValuePair<string, string>(string.Join(' ', property.Name.SplitCamelCase()), property.GetValue(val)?.ToString() ?? "");
+            var value = property.GetValue(val);
+            if (value is null)
+                continue;
+
+            if (property.Name == "AcceptedCountryCodes")
+                continue;
+
+            switch (value)
+            {
+                case string str:
+                    yield return new KeyValuePair<string, string>(string.Join(' ', property.Name.SplitCamelCase()), str);
+                    break;
+                case IEnumerable<string> strList:
+                    yield return new KeyValuePair<string, string>(string.Join(' ', property.Name.SplitCamelCase()), string.Join(", ", strList));
+                    break;
+                case object obj:
+                    {
+                        var innerProperties = obj.GetType().GetProperties();
+                        foreach (var innerProperty in innerProperties)
+                        {
+                            var innerValue = innerProperty.GetValue(obj);
+                            if (innerValue is null)
+                                continue;
+
+                            yield return new KeyValuePair<string, string>(string.Join(' ', innerProperty.Name.SplitCamelCase()), innerValue.ToString() ?? string.Empty);
+                        }
+                    }
+                    break;
+                default: continue;
+            }
         }
     }
 

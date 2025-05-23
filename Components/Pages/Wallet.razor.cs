@@ -1,12 +1,12 @@
 ﻿using Blazored.LocalStorage;
-using Haveno.Proto.Grpc;
+using HavenoSharp.Models;
+using HavenoSharp.Models.Requests;
+using HavenoSharp.Services;
 using Manta.Helpers;
 using Manta.Models;
 using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
 using System.Globalization;
-
-using static Haveno.Proto.Grpc.Wallets;
 
 namespace Manta.Components.Pages;
 
@@ -16,6 +16,8 @@ public partial class Wallet : ComponentBase, IDisposable
     public BalanceSingleton BalanceSingleton { get; set; } = default!;
     [Inject]
     public ILocalStorageService LocalStorage { get; set; } = default!;
+    [Inject]
+    public IHavenoWalletService WalletService { get; set; } = default!;
 
     public WalletInfo? Balance { get; set; }
     public List<string> Addresses { get; set; } = [];
@@ -100,12 +102,7 @@ public partial class Wallet : ComponentBase, IDisposable
 
     private async Task GetTransactionsAsync()
     {
-        using var grpcChannelHelper = new GrpcChannelHelper();
-
-        var walletClient = new WalletsClient(grpcChannelHelper.Channel);
-        var xmrTxsResponse = await walletClient.GetXmrTxsAsync(new GetXmrTxsRequest());
-
-        Transactions = [.. xmrTxsResponse.Txs];
+        Transactions = await WalletService.GetXmrTxsAsync();
     }
 
     private async void HandleBalanceFetch(bool isFetching)
@@ -130,9 +127,6 @@ public partial class Wallet : ComponentBase, IDisposable
         if (Balance is null)
             return;
 
-        using var grpcChannelHelper = new GrpcChannelHelper();
-        var walletsClient = new WalletsClient(grpcChannelHelper.Channel);
-
         try
         {
             CreatingTxModalIsOpen = true;
@@ -144,8 +138,7 @@ public partial class Wallet : ComponentBase, IDisposable
                 Amount = _piconeroAmount.ToString()
             });
 
-            var response = await walletsClient.CreateXmrTxAsync(request);
-            Transaction = response.Tx;
+            Transaction = await WalletService.CreateXmrTxAsync(request);
 
             CreatingTxModalIsOpen = false;
             VerifyModalIsOpen = true;
@@ -162,12 +155,7 @@ public partial class Wallet : ComponentBase, IDisposable
 
     public async Task GetXmrSeedAsync()
     {
-        using var grpcChannelHelper = new GrpcChannelHelper();
-        var walletsClient = new WalletsClient(grpcChannelHelper.Channel);
-
-        var response = await walletsClient.GetXmrSeedAsync(new GetXmrSeedRequest());
-
-        WalletSeed = response.Seed;
+        WalletSeed = await WalletService.GetXmrSeedAsync();
         ShowWalletSeed = true;
     }
 
@@ -176,10 +164,13 @@ public partial class Wallet : ComponentBase, IDisposable
         if (Transaction is null)
             return;
 
-        using var grpcChannelHelper = new GrpcChannelHelper();
-        var walletsClient = new WalletsClient(grpcChannelHelper.Channel);
+        var response = await WalletService.RelayXmrTxAsync(Transaction.Metadata);
 
-        var response = await walletsClient.relayXmrTxAsync(new RelayXmrTxRequest { Metadata = Transaction.Metadata});
+        Amount = 0;
+        WithdrawalAddress = string.Empty;
+        Memo = string.Empty;
+
+        // Subtract amount here?
     }
 
     public void Dispose()

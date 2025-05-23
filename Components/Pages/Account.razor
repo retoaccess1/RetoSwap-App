@@ -16,7 +16,7 @@
         {
             foreach (var account in PaymentAccounts)
             {
-                <div class=@(account.PaymentMethod.Id == SelectedPaymentAccount?.PaymentMethod.Id ? "account active-account" : "account") @onclick="() => HandleAccountClick(account)">
+                <div class=@(account.CreationDate == SelectedPaymentAccount?.CreationDate ? "account active-account" : "account") @onclick="() => HandleAccountClick(account)">
                     <p>@PaymentMethodsHelper.PaymentMethodsDictionary[account.PaymentMethod.Id]</p>
                     @* <p>@account.AccountName</p> *@
                     <img src="icons/x.svg" @onclick:stopPropagation="true" @onclick:preventDefault="true" @onclick="() => { AccountToDelete = account.Id; ShowDeleteAccountModal = true; }" />
@@ -79,7 +79,7 @@
                 <InputText placeholder="" @bind-Value="CreateCryptoCurrencyPaymentAccountRequest.Address"></InputText>
             </div>
             <div class="field">
-                <InfoRow Label="Limitations" Value="@($"{MaxTradeLimit}, {MaxTradePeriod}")"></InfoRow>
+                <InfoRow Label="Limitations" Value="@($"Max {((ulong)MaxTradeLimit).ToMonero()} XMR / Max trade duration: {TimeHelper.FormatDuration(MaxTradePeriod)}")"></InfoRow>
             </div>
             <label>Account name</label>
             <InputText readonly="@(!CustomAccountNameEnabled)" @bind-Value="CreateCryptoCurrencyPaymentAccountRequest.AccountName"></InputText>
@@ -98,7 +98,7 @@
             {
                 switch (field.Id)
                 {
-                    case Protobuf.PaymentAccountFormField.Types.FieldId.TradeCurrencies:
+                    case FieldId.TRADE_CURRENCIES:
                         @if (SupportedCurrencyCodes.Count != 0)
                         {
                             <div class="checkbox-list-wrapper">
@@ -124,7 +124,7 @@
                             </div>
                         }
                         break;
-                    case Protobuf.PaymentAccountFormField.Types.FieldId.AccountName:
+                    case FieldId.ACCOUNT_NAME:
                         <div class="field">
                             <label>@field.Label</label>
                             <InputText readonly="@(!CustomAccountNameEnabled)" @bind-Value="field.Value"></InputText>
@@ -135,14 +135,14 @@
                             <ValidationMessage For="() => field.Label" />
                         </div>
                         break;
-                    case Protobuf.PaymentAccountFormField.Types.FieldId.Salt:
+                    case FieldId.SALT:
                         @*                         <div class="field">
                             <label>@field.Label</label>
                             <InputText readonly="true" @bind-Value="field.Value"></InputText>
                             <ValidationMessage For="() => field.Label" />
                         </div> *@
                         break;
-                    case Protobuf.PaymentAccountFormField.Types.FieldId.Country:
+                    case FieldId.COUNTRY:
                         <div class="field">
                             @if (SelectedPaymentMethodId == "F2F" || SelectedPaymentMethodId == "MONEY_GRAM")
                             {
@@ -154,7 +154,7 @@
                             }
                         </div>
                         break;
-                    case Protobuf.PaymentAccountFormField.Types.FieldId.AcceptedCountryCodes:
+                    case FieldId.ACCEPTED_COUNTRY_CODES:
                         @if (AcceptedEUSEPACountries.Count != 0)  // Should probably be a component
                         {
                             <div class="checkbox-list-wrapper">

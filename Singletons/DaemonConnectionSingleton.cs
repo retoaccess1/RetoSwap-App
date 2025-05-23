@@ -1,12 +1,15 @@
-﻿using Haveno.Proto.Grpc;
-using Manta.Helpers;
-using static Haveno.Proto.Grpc.GetVersion;
-using static Haveno.Proto.Grpc.Wallets;
+﻿using HavenoSharp.Models;
+using HavenoSharp.Models.Requests;
+using HavenoSharp.Services;
 
 namespace Manta.Singletons;
 
 public class DaemonConnectionSingleton
 {
+    private readonly IHavenoVersionService _versionService;
+    private readonly IHavenoWalletService _walletService;
+    private bool _hasCreatedInitializationTransaction;
+
     public string Version { get; private set; } = string.Empty;
     public bool IsConnected { get; private set; }
     public Action<bool>? OnConnectionChanged;
@@ -14,8 +17,12 @@ public class DaemonConnectionSingleton
     public bool IsWalletAvailable { get; private set; }
     public Action<bool>? OnWalletAvailabilityChanged;
 
-    public DaemonConnectionSingleton()
+
+    public DaemonConnectionSingleton(IHavenoVersionService versionService, IHavenoWalletService walletService)
     {
+        _versionService = versionService;
+        _walletService = walletService;
+
         Task.Run(PollDaemon);
         Task.Run(PollWallet);
     }
@@ -26,11 +33,42 @@ public class DaemonConnectionSingleton
         {
             try
             {
+                await _walletService.GetXmrPrimaryAddressAsync();
 
+                if (!IsWalletAvailable)
+                {
+                    IsWalletAvailable = true;
+                    OnWalletAvailabilityChanged?.Invoke(true);
+
+                    // Create transaction to speed up future requests
+                    if (!_hasCreatedInitializationTransaction)
+                    {
+                        var balances = await _walletService.GetBalancesAsync();
+                        if (balances.AvailableXMRBalance > 0)
+                        {
+                            await _walletService.CreateXmrTxAsync(new CreateXmrTxRequest 
+                            { 
+                                Destinations = [
+                                    new XmrDestination {
+                                        // TODO get network type and get corresponding address
+                                        Address = true ? "53piHrKPV5Yj2KYv3CMiLxepGixrtSw3iWNwuBth9bVSHcxE1y2uXhZJRi4aehDaT3L2PC1W1qWrQD1Mfzu8UMxoDoR8bad" : "888tNkZrPN6JsEgekjMnABU4TBzc2Dt29EPAvkRxbANsAnjyPbb3iQ1YBRk1UXcdRsiKc9dhwMVgN5S9cQUiyoogDavup3H",
+                                        Amount = "1"
+                                    }
+                                ]
+                            });
+                        }
+
+                        _hasCreatedInitializationTransaction = true;
+                    }
+                }
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                Console.WriteLine(e);
+                if (IsWalletAvailable)
+                {
+                    IsWalletAvailable = false;
+                    OnWalletAvailabilityChanged?.Invoke(false);
+                }
             }
             finally
             {
@@ -48,29 +86,21 @@ public class DaemonConnectionSingleton
             try
             {
                 // Checks if the daemon is running, it could still be that its not fully initialized so things like wallet won't work.
-                using var grpcChannelHelper = new GrpcChannelHelper();
-                var client = new GetVersionClient(grpcChannelHelper.Channel);
-
-                var response = await client.GetVersionAsync(new GetVersionRequest());
-                Version = response.Version;
+                Version = await _versionService.GetVersionAsync();
 
                 // If connection status has changed
                 if (!IsConnected)
                 {
                     IsConnected = true;
-                    OnConnectionChanged?.Invoke(IsConnected);
+                    OnConnectionChanged?.Invoke(true);
                 }
-
-                //accountClient.IsAppInitializedAsync
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                //Console.WriteLine(e);
-
                 if (IsConnected)
                 {
                     IsConnected = false;
-                    OnConnectionChanged?.Invoke(IsConnected);
+                    OnConnectionChanged?.Invoke(false);
                 }
             }
             finally

@@ -1,4 +1,6 @@
-﻿using Manta.Helpers;
+﻿using HavenoSharp.Singletons;
+using Manta.Helpers;
+using Microsoft.AspNetCore.Components;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
@@ -20,8 +22,11 @@ public class WindowsHavenoDaemonService : IHavenoDaemonService
     private string _os;
     private HavenoInstallationStatus _havenoInstallationStatus;
 
-    public WindowsHavenoDaemonService()
+    private readonly GrpcChannelSingleton _grpcChannelSingleton;
+
+    public WindowsHavenoDaemonService(GrpcChannelSingleton grpcChannelSingleton)
     {
+        _grpcChannelSingleton = grpcChannelSingleton;
         _os = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "windows" : "linux-x86_64";
     }
 
@@ -167,8 +172,7 @@ public class WindowsHavenoDaemonService : IHavenoDaemonService
         await SecureStorageHelper.SetAsync("password", password);
         await SecureStorageHelper.SetAsync("host", host);
 
-        GrpcChannelHelper.Password = password;
-        GrpcChannelHelper.Host = host;
+        _grpcChannelSingleton.CreateChannel(host, password);
 
         var isWindows = RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
 

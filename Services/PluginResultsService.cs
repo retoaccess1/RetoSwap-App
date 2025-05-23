@@ -84,7 +84,6 @@ public class PluginResultsService : IntentService
     public static Task<string?> ExecuteUbuntuCommandAsync(string command)
     {
         return ExecuteTermuxCommandAsync($"bash $PREFIX/bin/ubuntu_exec \"{command}\"");
-        //return ExecuteTermuxCommandAsync($"sh exec \"{command}\"");
     }
 
     protected override void OnHandleIntent(Intent? intent)
@@ -117,8 +116,11 @@ public class PluginResultsService : IntentService
             if (key == "execution_id")
             {
                 executionId = value.ToString();
-                taskCompletionSource = TaskSources[executionId];
-                TaskSources.Remove(executionId, out var _);
+
+                if (TaskSources.TryGetValue(executionId, out taskCompletionSource))
+                {
+                    TaskSources.Remove(executionId, out var _);
+                }
             }
             else if (value is Bundle bundle)
             {
@@ -133,7 +135,7 @@ public class PluginResultsService : IntentService
                     if (innerKey == "stdout")
                     {
                         stdout = bundle.Get(innerKey)?.ToString();
-                        Console.WriteLine($"Stdout: {stdout}");
+                        //Console.WriteLine($"Stdout: {stdout}");
                     }
                 }
             }

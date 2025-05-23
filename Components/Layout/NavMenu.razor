@@ -20,7 +20,6 @@
 }
 
 @code {
-    private static Action<bool>? OnKeyboardChanged;
     private bool _keyboardIsOpen;
     private int _currentRoute = 0;
     private List<string> _routes = ["market", "buysell", "trades", "wallet", "account"];
@@ -28,6 +27,8 @@
     // When navigating without swiping, need to set the correct route - TODO
     [Inject]
     public NavigationManager NavigationManager { get; set; } = default!;
+
+    public static Action<bool>? OnKeyboardChanged;
 
     private void MoveNextRoute()
     {
@@ -52,7 +53,7 @@
     protected override Task OnInitializedAsync()
     {
         SwipeArea.OnSwipe += HandleSwipe;
-        OnKeyboardChanged += HandleKeyboardChanged;
+        KeyboardService.KeyboardStateChanged += HandleKeyboardChanged;
 
         return base.OnInitializedAsync();
     }
@@ -75,11 +76,5 @@
     {
         _keyboardIsOpen = isOpen;
         StateHasChanged();
-    }
-
-    [JSInvokable]
-    public static void KeyboardChanged(bool isOpen)
-    {
-        OnKeyboardChanged?.Invoke(isOpen);
     }
 }

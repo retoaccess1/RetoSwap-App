@@ -38,13 +38,10 @@ public partial class Slider : ComponentBase
 
     [Parameter]
     public string? Text { get; set; }
+    [Parameter]
+    public bool Disabled { get; set; }
 
     public double SliderProgress { get; set; }
-
-    //public string StartColour = "#131313";
-    //public string EndColour = "#ffffff";
-
-    //public string CurrentColour = "#ffffff";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -62,13 +59,16 @@ public partial class Slider : ComponentBase
 
     private void OnPointerDown(Microsoft.AspNetCore.Components.Web.PointerEventArgs e)
     {
+        if (Disabled)
+            return;
+
         IsDragging = true;
         startX = e.ClientX - offsetX;
     }
 
     private async Task OnPointerMove(Microsoft.AspNetCore.Components.Web.PointerEventArgs e)
     {
-        if (!IsDragging) 
+        if (!IsDragging || Disabled) 
             return;
 
         offsetX = e.ClientX - startX;
@@ -92,39 +92,13 @@ public partial class Slider : ComponentBase
                 await OnReachedEnd.InvokeAsync(true);
             }
         }
-
-        //var percentage = (100 / (ContainerWidth - CircleWidth)) * offsetX;
-
-        //percentage = Math.Clamp(percentage / 100.0, 0.0, 1.0);
-
-        //Color start = ColorFromHex(StartColour);
-        //Color end = ColorFromHex(EndColour);
-
-        //byte r = (byte)(start.Red + (end.Red - start.Red) * percentage);
-        //byte g = (byte)(start.Green + (end.Green - start.Green) * percentage);
-        //byte b = (byte)(start.Blue + (end.Blue - start.Blue) * percentage);
-
-        //CurrentColour = $"#{r:X2}{g:X2}{b:X2}";
-    }
-
-    private static Color ColorFromHex(string hex)
-    {
-        hex = hex.Replace("#", "");
-
-        if (hex.Length == 6)
-        {
-            float r = Convert.ToInt32(hex.Substring(0, 2), 16) / 255f;
-            float g = Convert.ToInt32(hex.Substring(2, 2), 16) / 255f;
-            float b = Convert.ToInt32(hex.Substring(4, 2), 16) / 255f;
-
-            return new Color(r, g, b);
-        }
-
-        throw new Exception();
     }
 
     private void OnPointerUp(Microsoft.AspNetCore.Components.Web.PointerEventArgs e)
     {
+        if (Disabled)
+            return;
+
         IsDragging = false;
         offsetX = left;
     }

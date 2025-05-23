@@ -1,10 +1,7 @@
-﻿using Haveno.Proto.Grpc;
-using Manta.Helpers;
+﻿using HavenoSharp.Models;
+using HavenoSharp.Services;
 using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
-using Protobuf;
-
-using static Haveno.Proto.Grpc.Disputes;
 
 namespace Manta.Components.Pages;
 
@@ -14,6 +11,8 @@ public partial class Trades : ComponentBase, IDisposable
     public NotificationSingleton NotificationSingleton { get; set; } = default!;
     [Inject]
     public NavigationManager NavigationManager { get; set; } = default!;
+    [Inject]
+    public IHavenoDisputeService DisputeService { get; set; } = default!;
 
     [Parameter]
     [SupplyParameterFromQuery]
@@ -37,9 +36,9 @@ public partial class Trades : ComponentBase, IDisposable
             switch(SelectedTabIndex)
             {
                 case 0:
-                    return NotificationSingleton.TradeInfos.Values.Where(x => !x.IsCompleted).ToList();
+                    return NotificationSingleton.TradeInfos.Values.Where(x => !x.IsCompleted).OrderByDescending(x => x.Date).ToList();
                 case 1:
-                    return NotificationSingleton.TradeInfos.Values.Where(x => x.IsCompleted).ToList();
+                    return NotificationSingleton.TradeInfos.Values.Where(x => x.IsCompleted).OrderByDescending(x => x.Date).ToList();
                 case 2:
                     return [];
                 default: 
@@ -76,12 +75,7 @@ public partial class Trades : ComponentBase, IDisposable
 
     public async Task GetDisputesAsync()
     {
-        using var grpcChannelHelper = new GrpcChannelHelper();
-        var disputesClient = new DisputesClient(grpcChannelHelper.Channel);
-
-        var response = await disputesClient.GetDisputesAsync(new GetDisputesRequest());
-
-        Disputes = [.. response.Disputes];
+        Disputes = await DisputeService.GetDisputesAsync();
     }
 
     public void GetDisputes()

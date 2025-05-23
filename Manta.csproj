@@ -20,7 +20,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <EnableDefaultCssItems>false</EnableDefaultCssItems>
     <Nullable>enable</Nullable>
-    <CoreCompileDependsOn>$(CoreCompileDependsOn);Protobuf_Compile</CoreCompileDependsOn>
 
     <!-- Display name -->
     <ApplicationTitle>Manta</ApplicationTitle>
@@ -71,6 +70,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <AndroidResource Remove="Enums\**" />
+    <Compile Remove="Enums\**" />
+    <Content Remove="Enums\**" />
+    <EmbeddedResource Remove="Enums\**" />
+    <MauiXaml Remove="Enums\**" />
+    <None Remove="Enums\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Remove="compilerconfig.json" />
   </ItemGroup>
 
@@ -87,13 +95,9 @@
   <ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
     <PackageReference Include="CommunityToolkit.Maui" Version="8.0.1" />
-    <PackageReference Include="Google.Protobuf" Version="3.30.0" />
     <PackageReference Include="Grpc.Net.Client" Version="2.67.0" />
     <PackageReference Include="Grpc.Net.Client.Web" Version="2.70.0" />
-    <PackageReference Include="Grpc.Tools" Version="2.70.0">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="HavenoSharp" Version="1.0.9" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.AutoActivation" Version="9.3.0" />
     <PackageReference Include="Microsoft.Maui.Controls" Version="8.0.100" />
     <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="8.0.100" />
@@ -105,17 +109,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Enums\" />
     <Folder Include="wwwroot\fonts\" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="compilerconfig.json" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Protobuf ProtoRoot="Protos" Include="Protos\grpc.proto" GrpcServices="Client" />
-    <Protobuf ProtoRoot="Protos" Include="Protos\pb.proto" GrpcServices="Client" />
   </ItemGroup>
 
   <ItemGroup>

@@ -4,7 +4,13 @@ using Manta.Services;
 using Microsoft.AspNetCore.Components;
 using Manta.Singletons;
 using Manta.Helpers;
-using Microsoft.Extensions.Hosting;
+using HavenoSharp.Singletons;
+using Grpc.Net.Client.Web;
+
+
+#if ANDROID
+using Manta.Platforms.Android.Services;
+#endif
 
 namespace Manta.Components.Pages;
 
@@ -13,7 +19,9 @@ public partial class Index : ComponentBase
     public bool IsInitializing { get; set; }
     public TermuxSetupState TermuxSetupState { get; set; }
     public bool IsInstallTypeModalOpen { get; set; }
+    public bool IsDaemonIntitializingModalOpen { get; set; }
     public int InstallationStep { get; set; }
+    public string TorStartInfo { get; set; } = string.Empty;
     public double ProgressPercentage { get; set; }
     public string? InstallationErrorMessage { get; set; }
 
@@ -31,10 +39,20 @@ public partial class Index : ComponentBase
     public IHavenoDaemonService HavenoDaemonService { get; set; } = default!;
     [Inject]
     public NotificationSingleton NotificationSingleton { get; set; } = default!;
+    [Inject]
+    public GrpcChannelSingleton GrpcChannelSingleton { get; set; } = default!;
+    [Inject]
+    public DaemonConnectionSingleton DaemonConnectionSingleton { get; set; } = default!;
 
     public void HandleInstallationStepChange(int step)
     {
         InstallationStep = step;
+        StateHasChanged();
+    }
+
+    public void HandleTorStartInfoChange(string info)
+    {
+        TorStartInfo = info;
         StateHasChanged();
     }
 
@@ -100,21 +118,28 @@ public partial class Index : ComponentBase
             var accepted = await TermuxPermissionHelper.RequestRunCommandPermissionAsync();
             if (accepted)
             {
-                var host = "http://127.0.0.1:3201";
-                var password = Guid.NewGuid().ToString();
+                // Repeat code
+                TermuxSetupSingleton.OnTorStartInfo += HandleTorStartInfoChange;
+                var successfullyStarted = await TermuxSetupSingleton.TryStartLocalHavenoDaemonAsync(Guid.NewGuid().ToString(), "http://127.0.0.1:3201");
+                TermuxSetupSingleton.OnTorStartInfo -= HandleTorStartInfoChange;
 
-                var successfullyStarted = await TermuxSetupSingleton.TryStartLocalHavenoDaemonAsync(password, host);
-
-                //await TermuxSetupSingleton.InitializeHavenoAccountAsync();
-
-                if (successfullyStarted)
+                if (!successfullyStarted)
                 {
-                    NavigationManager.NavigateTo("/Market");
+                    // Tell user
                 }
-            else
-            {
 
+                TorStartInfo = string.Empty;
+                IsDaemonIntitializingModalOpen = true;
+                StateHasChanged();
+
+                CancellationTokenSource initializingTokenSource = new();
+                var daemonInitialized = await TermuxSetupSingleton.WaitHavenoDaemonInitializedAsync(initializingTokenSource.Token);
+                if (!daemonInitialized)
+                {
+                    // Tell user
                 }
+
+                NavigationManager.NavigateTo("/Market");
             }
             else
             {
@@ -165,22 +190,30 @@ public partial class Index : ComponentBase
                         }
                         else
                         {
-                            GrpcChannelHelper.Password = password;
-                            GrpcChannelHelper.Host = host;
+                            GrpcChannelSingleton.CreateChannel(host, password);
                         }
 
+                        TermuxSetupSingleton.OnTorStartInfo += HandleTorStartInfoChange;
                         var successfullyStarted = await TermuxSetupSingleton.TryStartLocalHavenoDaemonAsync(Guid.NewGuid().ToString(), "http://127.0.0.1:3201");
+                        TermuxSetupSingleton.OnTorStartInfo -= HandleTorStartInfoChange;
 
-                        //await TermuxSetupSingleton.InitializeHavenoAccountAsync();
-
-                        if (successfullyStarted)
+                        if (!successfullyStarted)
                         {
-                            NavigationManager.NavigateTo("/Market");
+                            // Tell user
                         }
-                        else
-                        {
 
+                        TorStartInfo = string.Empty;
+                        IsDaemonIntitializingModalOpen = true;
+                        StateHasChanged();
+
+                        CancellationTokenSource initializingTokenSource = new();
+                        var daemonInitialized = await TermuxSetupSingleton.WaitHavenoDaemonInitializedAsync(initializingTokenSource.Token);
+                        if (!daemonInitialized)
+                        {
+                            // Tell user
                         }
+
+                        NavigationManager.NavigateTo("/Market");
                     }
                     break;
                 case DaemonInstallOptions.RemoteNode:
@@ -194,8 +227,7 @@ public partial class Index : ComponentBase
                         }
                         else
                         {
-                            GrpcChannelHelper.Password = password;
-                            GrpcChannelHelper.Host = host;
+                            GrpcChannelSingleton.CreateChannel(host, password, new HttpClient(new GrpcWebHandler(GrpcWebMode.GrpcWeb, new AndroidSocks5Handler())));
 
                             if (await TermuxSetupSingleton.IsHavenoDaemonRunningAsync())
                             {
@@ -203,6 +235,7 @@ public partial class Index : ComponentBase
                             }
                             else
                             {
+                                // Send param to open modal?
                                 NavigationManager.NavigateTo("/Settings");
                             }
                         }
@@ -220,8 +253,7 @@ public partial class Index : ComponentBase
             await SecureStorageHelper.SetAsync("password", "");
             await SecureStorageHelper.SetAsync("host", "http://127.0.0.1:3201");
 
-            GrpcChannelHelper.Password = "";
-            GrpcChannelHelper.Host = "http://127.0.0.1:3201";
+            GrpcChannelSingleton.CreateChannel("http://127.0.0.1:3201", "");
 
             NavigationManager.NavigateTo("/Market");
         }

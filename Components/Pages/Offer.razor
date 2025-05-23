@@ -2,10 +2,10 @@
 
 <div class="offer-main">
     <div class="dropdown">
-        <SearchableDropdown Disabled="true" InitialValue="@SelectedPaymentAccountId" Text="Trading account" Placeholder="Trading account" Items="@PaymentAccounts" OnSubmit="(val) => SelectedPaymentAccountId = val"></SearchableDropdown>
+        <SearchableDropdown Disabled="@(PaymentAccounts.Count < 2)" InitialValue="@SelectedPaymentAccountId" Text="Trading account" Placeholder="Trading account" Items="@PaymentAccounts" OnSubmit="(val) => SelectedPaymentAccountId = val"></SearchableDropdown>
     </div>
     <label>Amount</label>
-    <input step="0.01" min="@OfferInfo?.MinAmount.ToMonero()" max="@OfferInfo?.Amount.ToMonero()" @bind="@Amount" type="number" />
+    <input disabled="@(UserDoesNotHaveAccount || OfferInfo?.MinAmount == OfferInfo?.Amount)" step="0.01" min="@OfferInfo?.MinAmount.ToMonero()" max="@OfferInfo?.Amount.ToMonero()" @bind="@Amount" type="number" />
     @if (OfferInfo?.MinAmount == OfferInfo?.Amount)
     {
         <p class="range">Min/Max: @OfferInfo?.MinAmount.ToMonero() XMR</p>
@@ -14,9 +14,11 @@
     {
         <p class="range">Min/Max: @OfferInfo?.MinAmount.ToMonero() XMR - @OfferInfo?.Amount.ToMonero() XMR</p>
     }
-    <label>Total in @OfferInfo?.CounterCurrencyCode:</label>
+    <label>Total in @OfferInfo?.CounterCurrencyCode</label>
     <input readonly @bind="@FiatAmount" type="number" step="0.01" />
-    <button class="button-submit" disabled="@UserDoesNotHaveAccount" @onclick="TakeOfferAsync">Take offer</button>
+    <div class="slider-container">
+        <Slider OnReachedEnd="TakeOfferAsync" Disabled="@UserDoesNotHaveAccount" Text="Take offer"></Slider>
+    </div>
     <button class="button-cancel" @onclick="Cancel">Cancel</button>
 </div>
 
@@ -25,5 +27,5 @@
     @* <Spinner IsVisible="true"></Spinner> *@
 </Modal>
 <Modal Title="No payment account" IsOpen="UserDoesNotHaveAccount" ModalButtonOptions="ModalButtonOptions.OK" OkButtonText="Create account" OnOkPressed="@NavigateToAccount">
-    <p class="regular-p-grey">You do not have an account of this type.</p>
+    <p class="regular-p-grey">@AccountErrorMessage</p>
 </Modal>

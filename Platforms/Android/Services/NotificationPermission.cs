@@ -1,7 +1,6 @@
-﻿#if ANDROID
-using Android;
+﻿using Android;
 
-namespace Manta.Helpers;
+namespace Manta.Platforms.Android.Services;
 
 public class NotificationPermission : Permissions.BasePlatformPermission
 {
@@ -17,4 +16,3 @@ public class NotificationPermission : Permissions.BasePlatformPermission
         }
     }
 }
-#endif

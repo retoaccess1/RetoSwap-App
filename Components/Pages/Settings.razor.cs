@@ -1,19 +1,21 @@
 ﻿using Blazored.LocalStorage;
 using CommunityToolkit.Maui.Storage;
-using Grpc.Core;
-using Haveno.Proto.Grpc;
+using HavenoSharp.Services;
+using HavenoSharp.Singletons;
 using Manta.Helpers;
 using Manta.Models;
 using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
+using Grpc.Net.Client.Web;
 
-using static Haveno.Proto.Grpc.Account;
+#if ANDROID
+using Manta.Platforms.Android.Services;
+#endif
 
 namespace Manta.Components.Pages;
 
 public partial class Settings : ComponentBase, IDisposable
 {
-    public List<UrlConnection> UrlConnections { get; private set; } = [];
     public bool XMRNodeIsRunning { get; private set; }
 
     public string Version { get; } = AppInfo.Current.VersionString;
@@ -39,6 +41,10 @@ public partial class Settings : ComponentBase, IDisposable
     public NotificationSingleton NotificationSingleton { get; set; } = default!;
     [Inject]
     public NavigationManager NavigationManager { get; set; } = default!;
+    [Inject]
+    public IHavenoAccountService AccountService { get; set; } = default!;
+    [Inject]
+    public GrpcChannelSingleton GrpcChannelSingleton { get; set; } = default!;
 
     public bool IsFetching { get; set; }
     public bool IsBackingUp { get; set; }
@@ -55,33 +61,11 @@ public partial class Settings : ComponentBase, IDisposable
     public string? Password { get; set; }
     public string? Host { get; set; }
 
-    public CancellationTokenSource RemoteNodeConnectCts { get; set; } = new();
+    public CancellationTokenSource? RemoteNodeConnectCts { get; set; }
+    public CancellationTokenSource? BackupCts { get; set; }
     public string? ConnectionError { get; set; }
 
     public bool ShowRestoreModal { get; set; }
-
-    public async Task DeleteAccountAsync()
-    {
-        using var grpcChannelHelper = new GrpcChannelHelper();
-        var accountClient = new AccountClient(grpcChannelHelper.Channel);
-
-        await accountClient.DeleteAccountAsync(new DeleteAccountRequest());
-
-        while (true)
-        {
-            try
-            {
-                var res = await accountClient.AccountExistsAsync(new AccountExistsRequest());
-                break;
-            }
-            catch (Exception e)
-            {
-
-            }
-
-            await Task.Delay(2_000);
-        }
-    }
 
     public async Task RestoreFromBackupAsync()
     {
@@ -96,7 +80,7 @@ public partial class Settings : ComponentBase, IDisposable
 
         //var zipBytes = await Google.Protobuf.ByteString.FromStreamAsync(memoryStream);
 
-        await DeleteAccountAsync();
+        //await DeleteAccountAsync();
 
         //using var grpcChannelHelper = new GrpcChannelHelper(disableMessageSizeLimit: true);
         //var accountClient = new AccountClient(grpcChannelHelper.Channel);
@@ -121,19 +105,10 @@ public partial class Settings : ComponentBase, IDisposable
                 return;
             }
 
-            using var grpcChannelHelper = new GrpcChannelHelper(disableMessageSizeLimit: true);
-            var accountClient = new AccountClient(grpcChannelHelper.Channel);
+            BackupCts = new();
+            using var backupStream = await AccountService.BackupAccountAsync(BackupCts.Token);
 
-            var backupStream = accountClient.BackupAccount(new BackupAccountRequest());
-
-            using var memoryStream = new MemoryStream();
-
-            while (await backupStream.ResponseStream.MoveNext())
-            {
-                memoryStream.Write(backupStream.ResponseStream.Current.ZipBytes.Memory.Span);
-            }
-
-            var fileSaverResult = await FileSaver.Default.SaveAsync(result.Folder.Path, $"haveno_backup_{DateTime.Now.ToString()}-{Guid.NewGuid()}.zip", memoryStream);
+            var fileSaverResult = await FileSaver.Default.SaveAsync(result.Folder.Path, $"haveno_backup_{DateTime.Now.ToString()}-{Guid.NewGuid()}.zip", backupStream);
             if (fileSaverResult.IsSuccessful)
             {
 
@@ -192,6 +167,9 @@ public partial class Settings : ComponentBase, IDisposable
 
     public async Task CancelConnectToRemoteNode()
     {
+        if (RemoteNodeConnectCts is null)
+            return;
+
         await RemoteNodeConnectCts.CancelAsync();
     }
 
@@ -210,22 +188,22 @@ public partial class Settings : ComponentBase, IDisposable
         await SecureStorageHelper.SetAsync("password", Password);
         await SecureStorageHelper.SetAsync("host", host);
 
-        GrpcChannelHelper.Password = Password;
-        GrpcChannelHelper.Host = host;
-
 #if ANDROID
+        GrpcChannelSingleton.CreateChannel(host, Password, new HttpClient(new GrpcWebHandler(GrpcWebMode.GrpcWeb, new AndroidSocks5Handler())));
+
         await TermuxSetupSingleton.StopLocalHavenoDaemonAsync();
         await TermuxSetupSingleton.CloseTermux();
+
+        RemoteNodeConnectCts = new();
 
         try
         {
             // Try for 2 minutes
-            for (int i = 0; i < 24; i++)
+            for (int i = 0; i < 120; i++)
             {
                 if (await TermuxSetupSingleton.IsHavenoDaemonRunningAsync(RemoteNodeConnectCts.Token))
                 {
                     IsConnecting = false;
-                    await NotificationSingleton.Reset();
                     return;
                 }
             }
@@ -315,7 +293,7 @@ public partial class Settings : ComponentBase, IDisposable
     {
         await InvokeAsync(() => {
             XMRNodeIsRunning = DaemonInfoSingleton.XMRNodeIsRunning;
-            UrlConnections = DaemonInfoSingleton.UrlConnections;
+            //UrlConnections = DaemonInfoSingleton.UrlConnections;
 
             StateHasChanged();
         });

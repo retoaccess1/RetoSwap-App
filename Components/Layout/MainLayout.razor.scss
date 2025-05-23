@@ -20,7 +20,6 @@ main {
 
 }
 
-/*line breaks do not work*/
 ::deep .install-modal {
     word-break: keep-all;
     overflow-wrap: normal; 
@@ -30,4 +29,8 @@ main {
         white-space: nowrap;
         margin-bottom: 10px;
     }
+}
+
+.minimized{
+    padding-bottom: 0;
 }

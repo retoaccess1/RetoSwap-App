@@ -1,16 +1,10 @@
-﻿using Grpc.Core;
-using Haveno.Proto.Grpc;
+﻿using HavenoSharp.Models;
+using HavenoSharp.Services;
+using HavenoSharp.Singletons;
 using Manta.Extensions;
-using Manta.Helpers;
 using Manta.Services;
-using Protobuf;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-
-using static Haveno.Proto.Grpc.GetTradesRequest.Types;
-using static Haveno.Proto.Grpc.NotificationMessage.Types;
-using static Haveno.Proto.Grpc.Notifications;
-using static Haveno.Proto.Grpc.Trades;
 
 namespace Manta.Singletons;
 
@@ -19,6 +13,8 @@ public class NotificationSingleton
     private CancellationTokenSource _cancellationTokenSource = new();
     private DateTime _lastMessageTime = new();
     private readonly INotificationManagerService _notificationManagerService;
+    private readonly IServiceProvider _serviceProvider;
+    private readonly HavenoNotificationSingleton _havenoNotificationSingleton;
 
     public event Action<ChatMessage>? OnChatMessage;
     public event Action<TradeInfo>? OnTradeUpdate;
@@ -27,9 +23,11 @@ public class NotificationSingleton
 
     public TaskCompletionSource<bool> InitializedTCS { get; private set; } = new();
 
-    public NotificationSingleton(INotificationManagerService notificationManagerService)
+    public NotificationSingleton(INotificationManagerService notificationManagerService, IServiceProvider serviceProvider, HavenoNotificationSingleton havenoNotificationSingleton)
     {
+        _serviceProvider = serviceProvider;
         _notificationManagerService = notificationManagerService;
+        _havenoNotificationSingleton = havenoNotificationSingleton;
         Task.Run(FetchInitial);
     }
 
@@ -39,31 +37,28 @@ public class NotificationSingleton
         {
             try
             {
-                using var grpcChannelHelper = new GrpcChannelHelper();
-                var tradesClient = new TradesClient(grpcChannelHelper.Channel);
+                using var scope = _serviceProvider.CreateScope();
+                var tradeService = _serviceProvider.GetRequiredService<IHavenoTradeService>();
 
-                var tradesResponse = await tradesClient.GetTradesAsync(new GetTradesRequest
-                {
-                    Category = Category.Open
-                });
+                var trades = await tradeService.GetTradesAsync(Category.Open);
 
                 List<TradeInfo> updatedTrades = [];
-                foreach (var trade in tradesResponse.Trades)
+                foreach (var trade in trades)
                 {
-                    TradeInfos.AddOrUpdate(trade.TradeId, trade, (key, old) => 
-                    { 
-                        updatedTrades.Add(trade); 
+                    TradeInfos.AddOrUpdate(trade.TradeId, trade, (key, old) =>
+                    {
+                        updatedTrades.Add(trade);
                         return trade;
                     });
                 }
 
                 foreach (var trade in updatedTrades)
                 {
-                    GetChatMessagesReply? response = null;
+                    List<ChatMessage>? chatMessages = null;
 
                     try
                     {
-                        response = await tradesClient.GetChatMessagesAsync(new GetChatMessagesRequest { TradeId = trade.TradeId });
+                        chatMessages = await tradeService.GetChatMessagesAsync(trade.TradeId);
                     }
                     catch (Exception e)
                     {
@@ -71,7 +66,7 @@ public class NotificationSingleton
                         continue;
                     }
 
-                    if (response is null)
+                    if (chatMessages is null)
                     {
                         Debug.WriteLine("response is null");
                         continue;
@@ -79,7 +74,7 @@ public class NotificationSingleton
 
                     var tempLastMessageTime = DateTime.MinValue;
 
-                    foreach (var message in response.Message.Where(x => x.Date.ToDateTime() > _lastMessageTime))
+                    foreach (var message in chatMessages.Where(x => x.Date.ToDateTime() > _lastMessageTime))
                     {
                         var isMyMessage = message.SenderNodeAddress.HostName.Split(".")[0] != trade.TradePeerNodeAddress.Split(".")[0] && message.SenderNodeAddress.HostName.Split(".")[0] != trade.ArbitratorNodeAddress.Split(".")[0];
                         if (isMyMessage)
@@ -116,111 +111,53 @@ public class NotificationSingleton
         {
             try
             {
-                using var grpcChannelHelper = new GrpcChannelHelper();
-                var tradesClient = new TradesClient(grpcChannelHelper.Channel);
+                using var scope = _serviceProvider.CreateScope();
+                var tradeService = _serviceProvider.GetRequiredService<IHavenoTradeService>();
 
-                var tradesResponse = await tradesClient.GetTradesAsync(new GetTradesRequest 
-                {
-                    Category = Category.Open // Does nothing but has to be set
-                });
+                var trades = await tradeService.GetTradesAsync(Category.Open);
 
                 _lastMessageTime = DateTime.UtcNow;
 
-                TradeInfos = new(tradesResponse.Trades.ToDictionary(x => x.TradeId, x => x));
+                TradeInfos = new(trades.ToDictionary(x => x.TradeId, x => x));
 
                 break;
             }
-            catch
-            {
-
-            }
-
-            await Task.Delay(5_000);
-        }
-
-        _ = Task.Run(PollTrades);
-    }
-
-    public async Task Reset()
-    {
-
-    }
-
-    private async Task PollTrades()
-    {
-        start: 
-        var grpcChannelHelper = new GrpcChannelHelper(noTimeout: true);
-        var notificationClient = new NotificationsClient(grpcChannelHelper.Channel);
-        
-        AsyncServerStreamingCall<NotificationMessage> registerResponse;
-
-        while (true)
-        {
-            try
-            {
-                registerResponse = notificationClient.RegisterNotificationListener(new RegisterNotificationListenerRequest(), cancellationToken: _cancellationTokenSource.Token);
-                // Inital fetch has happened, and we have registered so we get updates.
-                // Consumers can now be sure that data is available
-                if (!InitializedTCS.Task.IsCompleted)
-                    InitializedTCS.SetResult(true);
-
-                // TODO parse this, misses first response otherwise
-                var metadata = await registerResponse.ResponseHeadersAsync;
-                break;
-            }
-            catch (TaskCanceledException)
-            {
-                return;
-            }
-            catch
-            {
-
-            }
-
-            await Task.Delay(1_000);
-        }
-
-        while (true)
-        {
-            try
-            {
-                var metadata = await registerResponse.ResponseHeadersAsync;
-
-                await foreach (var response in registerResponse.ResponseStream.ReadAllAsync(_cancellationTokenSource.Token))
-                {
-                    switch (response.Type) 
-                    {
-                        case NotificationType.ChatMessage:
-                            var date = response.ChatMessage.Date.ToDateTime();
-                            if (date > _lastMessageTime)
-                                _lastMessageTime = date;
-
-                            OnChatMessage?.Invoke(response.ChatMessage);
-                            _notificationManagerService.SendNotification($"New message for trade {new string(response.ChatMessage.TradeId.Split('-')[0].ToArray())}", response.ChatMessage.Message);
-                            break;
-                        case NotificationType.TradeUpdate:
-                            TradeInfos.AddOrUpdate(response.Trade.TradeId, response.Trade, (key, old) => response.Trade);
-
-                            OnTradeUpdate?.Invoke(response.Trade);
-                            _notificationManagerService.SendNotification($"Trade {response.Trade.ShortId} updated", response.Message);
-                            break;
-                        default: break;
-                    }
-                }
-            }
-            catch (TaskCanceledException)
-            {
-                registerResponse.Dispose();
-                grpcChannelHelper.Dispose();
-                return;
-            }
-            catch (Exception e) // Don't catch all exceptions...
+            catch (Exception e)
             {
                 Console.WriteLine(e);
-                registerResponse.Dispose();
-                grpcChannelHelper.Dispose();
-                goto start;
             }
+
+            await Task.Delay(2_000);
         }
+
+        await RegisterListener();
+    }
+
+    private void HandleNotificationMessageReceived(NotificationMessage notificationMessage)
+    {
+        switch (notificationMessage.Type)
+        {
+            case NotificationType.ChatMessage:
+                var date = notificationMessage.ChatMessage.Date.ToDateTime();
+                if (date > _lastMessageTime)
+                    _lastMessageTime = date;
+
+                OnChatMessage?.Invoke(notificationMessage.ChatMessage);
+                _notificationManagerService.SendNotification($"New message for trade {new string(notificationMessage.ChatMessage.TradeId.Split('-')[0].ToArray())}", notificationMessage.ChatMessage.Message);
+                break;
+            case NotificationType.TradeUpdate:
+                TradeInfos.AddOrUpdate(notificationMessage.Trade.TradeId, notificationMessage.Trade, (key, old) => notificationMessage.Trade);
+
+                OnTradeUpdate?.Invoke(notificationMessage.Trade);
+                _notificationManagerService.SendNotification($"Trade {notificationMessage.Trade.ShortId} updated", notificationMessage.Message);
+                break;
+            default: break;
+        }
+    }
+
+    private async Task RegisterListener()
+    {
+        _havenoNotificationSingleton.NotificationMessageReceived += HandleNotificationMessageReceived;
+        await _havenoNotificationSingleton.RegisterNotificationListener(_cancellationTokenSource.Token);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using Blazored.LocalStorage;
-using Haveno.Proto.Grpc;
+using HavenoSharp.Models;
+using HavenoSharp.Services;
 using Manta.Components.Reusable;
 using Manta.Helpers;
 using Manta.Singletons;
@@ -7,13 +8,14 @@ using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using System.Globalization;
 
-using static Haveno.Proto.Grpc.Offers;
-using static Haveno.Proto.Grpc.PaymentAccounts;
-
 namespace Manta.Components.Pages;
 
 public partial class BuySell : ComponentBase, IDisposable
 {
+    [Inject]
+    public IHavenoPaymentAccountService PaymentAccountService { get; set; } = default!;
+    [Inject]
+    public IHavenoOfferService OfferService { get; set; } = default!;
     [Inject]
     public ILocalStorageService LocalStorage { get; set; } = default!;
     [Inject]
@@ -159,20 +161,16 @@ public partial class BuySell : ComponentBase, IDisposable
         {
             try
             {
-                using var paymentAccountChannel = new GrpcChannelHelper();
-                var paymentAccountsClient = new PaymentAccountsClient(paymentAccountChannel.Channel);
-
-                var paymentMethodsResponse = await paymentAccountsClient.GetPaymentMethodsAsync(new GetPaymentMethodsRequest());
-
-                var filteredPaymentMethodIds = paymentMethodsResponse.PaymentMethods
+                var paymentMethods = await PaymentAccountService.GetPaymentMethodsAsync();
+                var filteredPaymentMethodIds = paymentMethods
                     .Select(x => x.Id);
 
                 TraditionalPaymentMethods = PaymentMethodsHelper.PaymentMethodsDictionary
                     .Where(x => filteredPaymentMethodIds.Contains(x.Key)).ToDictionary();
 
-                var cryptoPaymentMethodsResponse = await paymentAccountsClient.GetCryptoCurrencyPaymentMethodsAsync(new GetCryptoCurrencyPaymentMethodsRequest());
+                var cryptoPaymentMethods= await PaymentAccountService.GetCryptoCurrencyPaymentMethodsAsync();
 
-                var filteredCryptoPaymentMethodIds = cryptoPaymentMethodsResponse.PaymentMethods
+                var filteredCryptoPaymentMethodIds = cryptoPaymentMethods
                     .Select(x => x.Id);
 
                 CryptoPaymentMethods = PaymentMethodsHelper.PaymentMethodsDictionary
@@ -241,17 +239,7 @@ public partial class BuySell : ComponentBase, IDisposable
             {
                 IsFetching = true;
 
-                using var grpcChannelHelper = new GrpcChannelHelper();
-                var offersClient = new OffersClient(grpcChannelHelper.Channel);
-
-                var offersRequest = new GetOffersRequest
-                {
-                    CurrencyCode = SelectedCurrencyCode,
-                    Direction = Direction == "BUY" ? "SELL" : "BUY"
-                };
-
-                var offers = await offersClient.GetOffersAsync(offersRequest);
-                Offers = [.. offers.Offers];
+                Offers = await OfferService.GetOffersAsync(SelectedCurrencyCode, Direction == "BUY" ? "SELL" : "BUY");
 
                 IsFetching = false;
                 await InvokeAsync(StateHasChanged);

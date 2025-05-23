@@ -17,9 +17,37 @@
                 <li class="offer">
                     <div class="offer-top">
                         <div class="offer-top-left">
-                            <div class="base-amounts">
-                                <p>
-                                    @offer.CounterCurrencyCode
+                            @if (offer.BaseCurrencyCode == "XMR")
+                            {
+                                <div class="base-amounts">
+                                    <p>
+                                        @offer.CounterCurrencyCode
+                                        @(" ")
+                                        @{
+                                            var minVolume = double.Parse(offer.MinVolume);
+                                            var volume = double.Parse(offer.Volume);
+
+                                            if (minVolume == volume)
+                                            {
+                                                @(Math.Round(volume, 8) + " ")
+                                            }
+                                            else
+                                            {
+                                                @($"{Math.Round(minVolume, 8)} - {Math.Round(volume, 8)} ")
+                                            }
+                                        }
+                                    </p>
+                                </div>
+                                <div class="counter-amounts">
+                                    <p>@offer.BaseCurrencyCode</p>
+                                    <div class="xmr-icon"></div>
+                                    <p>@(offer.Amount == offer.MinAmount ? $"{offer.Amount.ToMonero()}" : $"{offer.MinAmount.ToMonero()} - {offer.Amount.ToMonero()}")</p>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="base-amounts">
+                                    <p>@offer.BaseCurrencyCode
                                     @(" ")
                                     @{
                                         var minVolume = double.Parse(offer.MinVolume);
@@ -27,23 +55,21 @@
 
                                         if (minVolume == volume)
                                         {
-                                            @(Math.Round(volume, 2) + " ")
+                                            @(Math.Round(volume, 8) + " ")
                                         }
                                         else
                                         {
-                                            @($"{Math.Round(minVolume, 2)} - {Math.Round(volume, 2)} ")
+                                            @($"{Math.Round(minVolume, 8)} - {Math.Round(volume, 8)} ")
                                         }
                                     }
-                                </p>
-                            </div>
-
-                            @* <img src="icons/arrow-right.svg" /> *@
-
-                            <div class="counter-amounts">
-                                <p>@offer.BaseCurrencyCode</p>
-                                <div class="xmr-icon"></div>
-                                <p>@(offer.Amount == offer.MinAmount ? $"{offer.Amount.ToMonero()}" : $"{offer.MinAmount.ToMonero()} - {offer.Amount.ToMonero()}")</p>
-                            </div>
+                                    </p>
+                                </div>
+                                <div class="counter-amounts">
+                                    <p>@offer.CounterCurrencyCode</p>
+                                    <div class="xmr-icon"></div>
+                                    <p>@(offer.Amount == offer.MinAmount ? $"{offer.Amount.ToMonero()}" : $"{offer.MinAmount.ToMonero()} - {offer.Amount.ToMonero()}")</p>
+                                </div>
+                            }
                         </div>
                         <div class="offer-top-right">
                             <p>@offer.PaymentMethodShortName</p>
@@ -51,6 +77,9 @@
                                 @(Math.Round(double.Parse(offer.Price), 2))
                                 @offer.CounterCurrencyCode
                                 (@Math.Round(offer.MarketPriceMarginPct, 2).ToString("0.00")%)
+                            </div>
+                            <div class="direction">
+                                @(offer.Direction + "ING") @offer.BaseCurrencyCode
                             </div>
                         </div>
                     </div>

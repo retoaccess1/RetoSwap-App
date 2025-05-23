@@ -6,6 +6,8 @@ using CommunityToolkit.Maui;
 using Manta.Services;
 using MudBlazor.Services;
 using ZXing.Net.Maui.Controls;
+using HavenoSharp.Extensions;
+using HavenoSharp.Singletons;
 
 namespace Manta;
 
@@ -38,6 +40,8 @@ public static class MauiProgram
         builder.Services.AddSingleton<DaemonConnectionSingleton>();
 
         builder.Services.AddScoped<ISetupService, SetupService>();
+
+        builder.Services.AddHavenoServices();
 
 #if ANDROID
         builder.Services.AddTransient<INotificationManagerService, AndroidNotificationManagerService>();

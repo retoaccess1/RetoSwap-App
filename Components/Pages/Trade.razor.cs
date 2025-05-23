@@ -1,13 +1,9 @@
-﻿using Haveno.Proto.Grpc;
+﻿using HavenoSharp.Models;
+using HavenoSharp.Services;
 using Manta.Extensions;
-using Manta.Helpers;
 using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
-using Protobuf;
-
-using static Haveno.Proto.Grpc.Disputes;
-using static Haveno.Proto.Grpc.PaymentAccounts;
-using static Haveno.Proto.Grpc.Trades;
+using System.Text.Json;
 
 namespace Manta.Components.Pages;
 
@@ -24,6 +20,12 @@ public partial class Trade : ComponentBase, IDisposable
     public NotificationSingleton NotificationSingleton { get; set; } = default!;
     [Inject]
     public NavigationManager NavigationManager { get; set; } = default!;
+    [Inject]
+    public IHavenoTradeService TradeService { get; set; } = default!;
+    [Inject]
+    public IHavenoPaymentAccountService PaymentAccountService { get; set; } = default!;
+    [Inject]
+    public IHavenoDisputeService DisputeService { get; set; } = default!;
 
     public int SellerState { get; set; }
     public int BuyerState { get; set; }
@@ -32,6 +34,7 @@ public partial class Trade : ComponentBase, IDisposable
     public TimeSpan MaxTradePeriod { get; set; }
     public DateTime TradeExpiresDateUTC { get; set; }
     public bool IsFetching { get; set; }
+    public bool IsFiat { get; set; }
 
     public string[] BuyerSteps { get; set; } = ["Wait for blockchain confirmations", "Start payment", "Wait until payment arrived", "Completed"];
     public string[] SellerSteps { get; set; } = ["Wait for blockchain confirmations", "Wait until payment has been sent", "Confirm payment received", "Completed"];
@@ -54,15 +57,12 @@ public partial class Trade : ComponentBase, IDisposable
                 }
 
                 TradeInfo = tradeInfo!;
+                IsFiat = TradeInfo.Offer.BaseCurrencyCode == "XMR";
 
                 if (PaymentMethod is null)
                 {
-                    using var paymentAccountChannel = new GrpcChannelHelper();
-                    var paymentAccountsClient = new PaymentAccountsClient(paymentAccountChannel.Channel);
-
-                    var paymentMethodsResponse = await paymentAccountsClient.GetPaymentMethodsAsync(new GetPaymentMethodsRequest());
-
-                    PaymentMethod = paymentMethodsResponse.PaymentMethods.FirstOrDefault(x => x.Id == TradeInfo.Offer.PaymentMethodId);
+                    var paymentMethods = await PaymentAccountService.GetPaymentMethodsAsync();
+                    PaymentMethod = paymentMethods.FirstOrDefault(x => x.Id == TradeInfo.Offer.PaymentMethodId);
                 }
 
                 if (PaymentMethod is not null)
@@ -205,18 +205,12 @@ public partial class Trade : ComponentBase, IDisposable
     {
         IsFetching = true;
 
-        using var grpcChannelHelper = new GrpcChannelHelper(noTimeout: true);
-        var tradesClient = new TradesClient(grpcChannelHelper.Channel);
+        await TradeService.ConfirmPaymentReceivedAsync(tradeId);
 
-        var confirmPaymentReceivedResponse = await tradesClient.ConfirmPaymentReceivedAsync(new ConfirmPaymentReceivedRequest
-        {
-            TradeId = tradeId
-        });
+        var trade = await TradeService.GetTradeAsync(tradeId);
 
-        var getTradeResponse = await tradesClient.GetTradeAsync(new GetTradeRequest { TradeId = tradeId });
-
-        NotificationSingleton.TradeInfos.AddOrUpdate(tradeId, getTradeResponse.Trade, (key, old) => getTradeResponse.Trade);
-        TradeInfo = getTradeResponse.Trade;
+        NotificationSingleton.TradeInfos.AddOrUpdate(tradeId, trade, (key, old) => trade);
+        TradeInfo = trade;
 
         UpdateTradeState();
 
@@ -227,30 +221,25 @@ public partial class Trade : ComponentBase, IDisposable
     {
         IsFetching = true;
 
-        using var grpcChannelHelper = new GrpcChannelHelper(noTimeout: true);
-        var tradesClient = new TradesClient(grpcChannelHelper.Channel);
+        await TradeService.ConfirmPaymentSentAsync(tradeId);
 
-        var confirmPaymentReceivedResponse = await tradesClient.ConfirmPaymentSentAsync(new ConfirmPaymentSentRequest
-        {
-            TradeId = tradeId
-        });
+        var trade = await TradeService.GetTradeAsync(tradeId);
+
+        NotificationSingleton.TradeInfos.AddOrUpdate(tradeId, trade, (key, old) => trade);
+        TradeInfo = trade;
+
+        UpdateTradeState();
 
         IsFetching = false;
     }
 
     public async Task CompleteTradeAsync(string tradeId)
     {
-        using var grpcChannelHelper = new GrpcChannelHelper();
-        var tradesClient = new TradesClient(grpcChannelHelper.Channel);
+        await TradeService.CompleteTradeAsync(tradeId);
 
-        var completeTradeResponse = await tradesClient.CompleteTradeAsync(new CompleteTradeRequest
-        {
-            TradeId = tradeId
-        });
 
-        var cloneTradeInfo = TradeInfo.Clone();
+        var cloneTradeInfo = JsonSerializer.Deserialize<TradeInfo>(JsonSerializer.Serialize(TradeInfo))!;
         cloneTradeInfo.IsCompleted = true;
-
         NotificationSingleton.TradeInfos.TryUpdate(TradeId, cloneTradeInfo, TradeInfo);
 
         NavigationManager.NavigateTo("Trades");
@@ -263,17 +252,11 @@ public partial class Trade : ComponentBase, IDisposable
         {
             try
             {
-                using var grpcChannelHelper = new GrpcChannelHelper();
-                var tradesClient = new TradesClient(grpcChannelHelper.Channel);
+                var trade = await TradeService.GetTradeAsync(TradeId, cancellationToken: CancellationTokenSource.Token);
 
-                var getTradeResponse = await tradesClient.GetTradeAsync(new GetTradeRequest
+                if (NotificationSingleton.TradeInfos.TryUpdate(TradeId, trade, TradeInfo))
                 {
-                    TradeId = TradeId
-                }, cancellationToken: CancellationTokenSource.Token);
-
-                if (NotificationSingleton.TradeInfos.TryUpdate(TradeId, getTradeResponse.Trade, TradeInfo))
-                {
-                    TradeInfo = getTradeResponse.Trade;
+                    TradeInfo = trade;
                     UpdateTradeState();
                     StateHasChanged();
                 }
@@ -293,11 +276,7 @@ public partial class Trade : ComponentBase, IDisposable
 
     public async Task OpenDisputeAsync(string tradeId)
     {
-        using var grpcChannelHelper = new GrpcChannelHelper();
-        var disputesClient = new DisputesClient(grpcChannelHelper.Channel);
-
-        var response = await disputesClient.OpenDisputeAsync(new OpenDisputeRequest { TradeId = tradeId });
-
+        await DisputeService.OpenDisputeAsync(tradeId);
         NavigationManager.NavigateTo("trades?title=Trades&SelectedTabIndex=2");
     }
 

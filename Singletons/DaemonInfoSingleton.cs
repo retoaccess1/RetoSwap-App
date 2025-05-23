@@ -1,20 +1,20 @@
-﻿using Manta.Helpers;
-using Haveno.Proto.Grpc;
-
-using static Haveno.Proto.Grpc.XmrConnections;
-using static Haveno.Proto.Grpc.XmrNode;
+﻿using HavenoSharp.Services;
+using Manta.Helpers;
 
 namespace Manta.Singletons;
 
 public class DaemonInfoSingleton
 {
-    public List<UrlConnection> UrlConnections { get; private set; } = [];
+    private readonly IServiceProvider _serviceProvider;
+
+    //public List<UrlConnection> UrlConnections { get; private set; } = [];
     public bool XMRNodeIsRunning { get; private set; }
 
     public event Action<bool>? OnDaemonInfoFetch;
 
-    public DaemonInfoSingleton()
+    public DaemonInfoSingleton(IServiceProvider serviceProvider)
     {
+        _serviceProvider = serviceProvider;
         Task.Run(PollDaemon);
     }
 
@@ -26,18 +26,14 @@ public class DaemonInfoSingleton
             {
                 OnDaemonInfoFetch?.Invoke(true);
 
-                using var grpcChannelHelper = new GrpcChannelHelper();
-                var xmrConnectionsClient = new XmrConnectionsClient(grpcChannelHelper.Channel);
-                var connectionsResponse = await xmrConnectionsClient.GetConnectionsAsync(new GetConnectionsRequest());
+                //var connectionsResponse = await xmrConnectionsClient.GetConnectionsAsync(new GetConnectionsRequest());
 
-                UrlConnections = [.. connectionsResponse.Connections];
+                //UrlConnections = [.. connectionsResponse.Connections];
 
-                var xmrNodeClient = new XmrNodeClient(grpcChannelHelper.Channel);
-                var isXmrNodeOnlineResponse = await xmrNodeClient.IsXmrNodeOnlineAsync(new IsXmrNodeOnlineRequest());
+                using var scope = _serviceProvider.CreateScope();
+                var xmrNodeService = _serviceProvider.GetRequiredService<IHavenoXmrNodeService>();
 
-                XMRNodeIsRunning = isXmrNodeOnlineResponse.IsRunning;
-
-                var settingsResponse = await xmrNodeClient.GetXmrNodeSettingsAsync(new GetXmrNodeSettingsRequest());
+                XMRNodeIsRunning = await xmrNodeService.IsXmrNodeOnlineAsync();
             }
             catch (Exception e)
             {

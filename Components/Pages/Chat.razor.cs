@@ -1,17 +1,18 @@
-﻿using Haveno.Proto.Grpc;
-using Manta.Helpers;
+﻿using HavenoSharp.Models;
+using HavenoSharp.Models.Requests;
+using HavenoSharp.Services;
 using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using Protobuf;
-
-using static Haveno.Proto.Grpc.Trades;
-using static Haveno.Proto.Grpc.Disputes;
 
 namespace Manta.Components.Pages;
 
 public partial class Chat : ComponentBase, IDisposable
 {
+    [Inject]
+    public IHavenoTradeService TradeService { get; set; } = default!;
+    [Inject]
+    public IHavenoDisputeService DisputeService { get; set; } = default!;
     // TODO update to use route
     [Parameter]
     public string Id { get; set; } = string.Empty;
@@ -60,28 +61,17 @@ public partial class Chat : ComponentBase, IDisposable
         {
             if (!string.IsNullOrEmpty(TradeId))
             {
-                using var grpcChannelHelper = new GrpcChannelHelper();
-                var tradesClient = new TradesClient(grpcChannelHelper.Channel);
-
-                var request = new GetChatMessagesRequest
-                {
-                    TradeId = TradeId
-                };
-
-                var messagesResponse = await tradesClient.GetChatMessagesAsync(request);
+                var messages = await TradeService.GetChatMessagesAsync(TradeId);
 
                 // Might be worth caching these
-                Messages = [.. messagesResponse.Message.OrderBy(x => x.Date)];
+                Messages = [.. messages.OrderBy(x => x.Date)];
             }
             else if (!string.IsNullOrEmpty(DisputeTradeId))
             {
-                using var grpcChannelHelper = new GrpcChannelHelper();
-                var disputesClient = new DisputesClient(grpcChannelHelper.Channel);
+                var dispute = await DisputeService.GetDisputeAsync(DisputeTradeId);
 
-                var response = await disputesClient.GetDisputeAsync(new GetDisputeRequest { TradeId = DisputeTradeId });
-
-                Messages = [.. response.Dispute.ChatMessage.OrderBy(x => x.Date)];
-                DisputeId = response.Dispute.Id;
+                Messages = [.. dispute.ChatMessages.OrderBy(x => x.Date)];
+                DisputeId = dispute.Id;
             }
 
             NotificationSingleton.OnChatMessage += HandleChatMessage;
@@ -105,21 +95,11 @@ public partial class Chat : ComponentBase, IDisposable
         {
             if (!string.IsNullOrEmpty(TradeId))
             {
-                using var grpcChannelHelper = new GrpcChannelHelper();
-                var tradesClient = new TradesClient(grpcChannelHelper.Channel);
-
-                await tradesClient.SendChatMessageAsync(new SendChatMessageRequest
-                {
-                    TradeId = TradeId,
-                    Message = Message
-                });
+                await TradeService.SendChatMessageAsync(TradeId, Message);
             }
             else if (!string.IsNullOrEmpty(DisputeId))
             {
-                using var grpcChannelHelper = new GrpcChannelHelper();
-                var disputesClient = new DisputesClient(grpcChannelHelper.Channel);
-
-                await disputesClient.SendDisputeChatMessageAsync(new SendDisputeChatMessageRequest 
+                await DisputeService.SendDisputeChatMessageAsync(new SendDisputeChatMessageRequest 
                 { 
                     DisputeId = DisputeId, 
                     Message = Message 

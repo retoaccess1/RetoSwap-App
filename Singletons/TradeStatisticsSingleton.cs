@@ -1,9 +1,5 @@
-﻿using Haveno.Proto.Grpc;
-using Manta.Extensions;
-using Manta.Helpers;
-using Manta.Models;
-
-using static Haveno.Proto.Grpc.GetTradeStatistics;
+﻿using HavenoSharp.Services;
+using HavenoSharp.Models;
 
 namespace Manta.Singletons;
 
@@ -11,6 +7,7 @@ public class TradeStatisticsSingleton
 {
     private int _delay = 5_000;
     private CancellationTokenSource _cancellationTokenSource = new();
+    private readonly IServiceProvider _serviceProvider;
 
     public event Action<bool>? OnTradeStatisticsFetch;
     public List<TradeStatistic> TradeStatistics { get; private set; } = [];
@@ -18,8 +15,9 @@ public class TradeStatisticsSingleton
 
     public TaskCompletionSource<bool> InitializedTCS { get; private set; } = new();
 
-    public TradeStatisticsSingleton()
+    public TradeStatisticsSingleton(IServiceProvider serviceProvider)
     {
+        _serviceProvider = serviceProvider;
         FetchTradeStatisticsTask = Task.Run(FetchTradeStatisticsAsync);
     }
 
@@ -31,25 +29,11 @@ public class TradeStatisticsSingleton
             {
                 OnTradeStatisticsFetch?.Invoke(true);
 
-                var grpcChannelHelper = new GrpcChannelHelper();
-                var tradeStatisticsClient = new GetTradeStatisticsClient(grpcChannelHelper.Channel);
+                using var scope = _serviceProvider.CreateScope();
+                var tradeStatisticsService = _serviceProvider.GetRequiredService<IHavenoTradeStatisticsService>();
 
                 // Really should be a way to fetch stats after a certain date
-                var response = await tradeStatisticsClient.GetTradeStatisticsAsync(new GetTradeStatisticsRequest(), cancellationToken: _cancellationTokenSource.Token);
-
-                TradeStatistics = response.TradeStatistics.Select(x => new TradeStatistic
-                {
-                    Amount = x.Amount,
-                    Arbitrator = x.Arbitrator,
-                    Currency = x.Currency,
-                    Date = x.Date.ToDateTime(),
-                    ExtraData = x.ExtraData.ToDictionary(),
-                    Hash = x.Hash.ToByteArray(),
-                    MakerDepositTxId = x.MakerDepositTxId,
-                    PaymentMethod = x.PaymentMethod,
-                    Price = x.Price,
-                    TakerDepositTxId = x.TakerDepositTxId
-                }).ToList();
+                TradeStatistics = await tradeStatisticsService.GetTradeStatisticsAsync(cancellationToken: _cancellationTokenSource.Token);
 
                 if (!InitializedTCS.Task.IsCompleted)
                 {

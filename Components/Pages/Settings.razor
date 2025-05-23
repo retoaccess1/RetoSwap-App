@@ -1,7 +1,8 @@
 ﻿@page "/settings"
 
-<Modal Title="Backup" ModalButtonOptions="ModalButtonOptions.NONE" @bind-IsOpen="IsBackingUp">
+<Modal Title="Backup" ModalButtonOptions="ModalButtonOptions.CANCEL" @bind-IsOpen="IsBackingUp" OnCancelPressed="() => { try{ BackupCts?.Cancel(); } catch{} }" IsCloseable="false">
     <p class="regular-p-grey">Please wait</p>
+    <p class="regular-p-grey">Note: This can take a long time when using a remote node</p>
 </Modal>
 <Modal Title="Restore account" ModalButtonOptions="ModalButtonOptions.OK_CANCEL" @bind-IsOpen="ShowRestoreModal" OnOkPressed="RestoreFromBackupAsync" OkButtonText="Restore">
     <p class="regular-p-grey">Warning! This will delete your current account. Make sure you have made a backup</p>

@@ -1,58 +1,31 @@
 ﻿#if ANDROID
 
-using Android.App;
 using Android.Content;
-using Android.Content.PM;
-using Android.OS;
-using AndroidX.Core.App;
-using AndroidX.Core.Content;
-using Haveno.Proto.Grpc;
+using Grpc.Core;
+using HavenoSharp.Services;
+using HavenoSharp.Singletons;
 using Manta.Helpers;
 using Manta.Services;
-using static Haveno.Proto.Grpc.Account;
-using static Haveno.Proto.Grpc.GetVersion;
+using System.Text;
 
 namespace Manta.Singletons;
 
-public static class TermuxPermissionHelper
-{
-    private static TaskCompletionSource<bool> _tcs;
-    private static readonly Activity _activity = Platform.CurrentActivity;
-
-    public static async Task<bool> RequestRunCommandPermissionAsync()
-    {
-        if (ContextCompat.CheckSelfPermission(_activity, "com.termux.permission.RUN_COMMAND") == (int)Permission.Granted)
-            return true;
-
-        _tcs = new TaskCompletionSource<bool>();
-
-        ActivityCompat.RequestPermissions(_activity, ["com.termux.permission.RUN_COMMAND"], 0);
-
-        // Increase
-        return await _tcs.Task.WaitAsync(TimeSpan.FromSeconds(30));
-    }
-
-    public static void HandlePermissionResult(int requestCode, string[] permissions, Permission[] grantResults)
-    {
-        if (requestCode == 0 && _tcs != null)
-        {
-            bool granted = grantResults.Length > 0 && grantResults[0] == Permission.Granted;
-            _tcs.TrySetResult(granted);
-        }
-    }
-}
-
 public class TermuxSetupSingleton
 {
+    private readonly IServiceProvider _serviceProvider;
     private readonly Context _context = Android.App.Application.Context;
 
     private const int _termuxStartWaitTime = 1_100;
 
+    public event Action<string>? OnTorStartInfo;
     public event Action<int>? InstallationStep;
 
-    public TermuxSetupSingleton()
-    {
+    private readonly GrpcChannelSingleton _grpcChannelSingleton;
 
+    public TermuxSetupSingleton(IServiceProvider serviceProvider, GrpcChannelSingleton grpcChannelSingleton)
+    {
+        _grpcChannelSingleton = grpcChannelSingleton;
+        _serviceProvider = serviceProvider;
     }
 
     public Task<bool> GetIsTermuxAndDaemonInstalledAsync()
@@ -62,6 +35,10 @@ public class TermuxSetupSingleton
 
     public async Task StopLocalHavenoDaemonAsync()
     {
+        var intent = _context.PackageManager?.GetLaunchIntentForPackage("com.termux");
+        if (intent is null)
+            return;
+
         await ExecuteUbuntuCommandAsync("killall -9 -e tor");
         await ExecuteUbuntuCommandAsync("killall -9 haveno");
     }
@@ -80,16 +57,18 @@ public class TermuxSetupSingleton
         await ExecuteTermuxCommandAsync("am start -a android.intent.action.VIEW -d \"manta://termux_callback\"");
     }
 
+    // This method should be available to all platforms
     public async Task<bool> IsHavenoDaemonRunningAsync(CancellationToken cancellationToken = default)
     {
-        for (int i = 0; i < 5; i++)
+        using var scope = _serviceProvider.CreateScope();
+        var versionService = _serviceProvider.GetRequiredService<IHavenoVersionService>();
+
+        for (int i = 0; i < 2; i++)
         {
             try
             {
                 // Will tell us its running but not if its initialized
-                using var grpcChannelHelper = new GrpcChannelHelper();
-                var client = new GetVersionClient(grpcChannelHelper.Channel);
-                var response = await client.GetVersionAsync(new GetVersionRequest(), cancellationToken: cancellationToken);
+                await versionService.GetVersionAsync(cancellationToken: cancellationToken);
 
                 return true;
             }
@@ -97,13 +76,22 @@ public class TermuxSetupSingleton
             {
                 throw;
             }
-            catch (Exception e) // Catch correct exception TODO, ignore rate limit exception
+            catch (RpcException)
+            {
+
+            }
+            catch (Exception)
             {
 
             }
 
             try
             {
+                if (i == 1)
+                {
+                    break;
+                }
+
                 await Task.Delay(1000, cancellationToken: cancellationToken);
             }
             catch (TaskCanceledException)
@@ -115,24 +103,29 @@ public class TermuxSetupSingleton
         return false;
     }
 
-    public async Task<bool> IsHavenoInitializedAsync(CancellationToken cancellationToken = default)
+    // This one as well
+    public async Task<bool> WaitHavenoDaemonInitializedAsync(CancellationToken cancellationToken = default)
     {
-        for (int i = 0; i < 5; i++)
+        using var scope = _serviceProvider.CreateScope();
+        var accountService = _serviceProvider.GetRequiredService<IHavenoAccountService>();
+
+        while(!cancellationToken.IsCancellationRequested)
         {
             try
             {
-                using var grpcChannelHelper = new GrpcChannelHelper();
-                var client = new AccountClient(grpcChannelHelper.Channel);
-                var response = await client.IsAppInitializedAsync(new IsAppInitializedRequest(), cancellationToken: cancellationToken);
-
-                if (response.IsAppInitialized)
+                var isAppInitialized = await accountService.IsAppInitializedAsync(cancellationToken: cancellationToken);
+                if (isAppInitialized)
                     return true;
             }
             catch (TaskCanceledException)
             {
-                throw;
+                return false;
             }
-            catch (Exception e)
+            catch (RpcException)
+            {
+
+            }
+            catch (Exception)
             {
 
             }
@@ -143,7 +136,7 @@ public class TermuxSetupSingleton
             }
             catch (TaskCanceledException)
             {
-                throw;
+                return false;
             }
         }
 
@@ -152,6 +145,10 @@ public class TermuxSetupSingleton
 
     public async Task CloseTermux()
     {
+        var intent = _context.PackageManager?.GetLaunchIntentForPackage("com.termux");
+        if (intent is null)
+            return;
+
         await ExecuteTermuxCommandAsync("am stopservice --user 0 -n com.termux/.app.TermuxService");
     }
 
@@ -167,27 +164,48 @@ public class TermuxSetupSingleton
         await Task.Delay(_termuxStartWaitTime);
     }
 
-    public async Task InitializeHavenoAccountAsync()
+    private async Task PollTorStatus()
     {
-        using var grpcChannelHelper = new GrpcChannelHelper();
-        var client = new AccountClient(grpcChannelHelper.Channel);
+        while (true)
+        {
+            var output = await ExecuteUbuntuCommandAsync("cat /data/data/com.termux/files/home/tor.log");
+            if (string.IsNullOrEmpty(output))
+            {
+                continue;
+            }
 
-        while (!await IsHavenoDaemonRunningAsync()) ;
-        while (!await IsHavenoInitializedAsync()) ;
+            StringBuilder stringBuilder = new();
+            var indexOfLastPercent = output.LastIndexOf('%');
+            for (int i = indexOfLastPercent; i > -1; i--)
+            {
+                if (output[i] == ' ')
+                {
+                    for (int j = i; output[j] != '%'; j++)
+                    {
+                        stringBuilder.Append(output[j]);
+                    }
 
-        var accountExistsResponse = await client.AccountExistsAsync(new AccountExistsRequest());
-        if (accountExistsResponse.AccountExists)
-            return;
+                    break;
+                }
+            }
 
-        var createAccountResponse = await client.CreateAccountAsync(new CreateAccountRequest());
+            if (stringBuilder.Length > 0)
+            {
+                var percentage = int.Parse(stringBuilder.ToString());
+                OnTorStartInfo?.Invoke("Bootstrapping: " + percentage.ToString() + "%");
+
+                if (percentage == 100)
+                {
+                    return;
+                }
+            }
+        }
     }
 
     public async Task<bool> TryStartLocalHavenoDaemonAsync(string password, string host)
     {
         try
         {
-            //await ToggleApps();
-
             // Might just need to wake Termux up?
             // Since this is connection based, it could be running but unreachable
             if (await IsHavenoDaemonRunningAsync())
@@ -198,9 +216,7 @@ public class TermuxSetupSingleton
             await SecureStorageHelper.SetAsync("password", password);
             await SecureStorageHelper.SetAsync("host", host);
 
-            // channel helper should probably just pull this itself so we dont have to set it
-            GrpcChannelHelper.Password = password;
-            GrpcChannelHelper.Host = host;
+            _grpcChannelSingleton.CreateChannel(host, password);
 
             var intent = _context.PackageManager?.GetLaunchIntentForPackage("com.termux");
             if (intent is not null)
@@ -222,8 +238,22 @@ public class TermuxSetupSingleton
             baseCurrencyNetwork = "XMR_MAINNET";
 #endif
 
-            _ = Task.Run(() => ExecuteUbuntuCommandAsync($"tor"));
-            _ = Task.Run(() => ExecuteUbuntuCommandAsync($"cd haveno && ./haveno-daemon --baseCurrencyNetwork=XMR_STAGENET --useLocalhostForP2P=false --useDevPrivilegeKeys=false --nodePort=9999 --appName=haveno-XMR_STAGENET_user1 --apiPassword={password} --apiPort=3201 --passwordRequired=false --useNativeXmrWallet=false --torControlHost=127.0.0.1 --torControlPort=9051"));
+            //await ExecuteUbuntuCommandAsync("tor --Log 'notice file /data/data/com.termux/files/home/tor.log'");
+            //_ = Task.Run(() => ExecuteUbuntuCommandAsync("tor --Log 'notice file /data/data/com.termux/files/home/tor.log'"));
+
+            ExecuteUbuntuCommand("rm /data/data/com.termux/files/home/tor.log");
+            await Task.Delay(50);
+
+            ExecuteUbuntuCommand("tor --Log 'notice file /data/data/com.termux/files/home/tor.log'");
+
+            await Task.Delay(100);
+
+            await PollTorStatus();
+
+            ExecuteUbuntuCommand($"cd haveno && ./haveno-daemon --baseCurrencyNetwork=XMR_STAGENET --useLocalhostForP2P=false --useDevPrivilegeKeys=false --nodePort=9999 --appName=haveno-XMR_STAGENET_user1 --apiPassword={password} --apiPort=3201 --passwordRequired=false --useNativeXmrWallet=false --torControlHost=127.0.0.1 --torControlPort=9051");
+
+            //_ = Task.Run(() => ExecuteUbuntuCommandAsync($"tor"));
+            //_ = Task.Run(() => ExecuteUbuntuCommandAsync($"cd haveno && ./haveno-daemon --baseCurrencyNetwork=XMR_STAGENET --useLocalhostForP2P=false --useDevPrivilegeKeys=false --nodePort=9999 --appName=haveno-XMR_STAGENET_user1 --apiPassword={password} --apiPort=3201 --passwordRequired=false --useNativeXmrWallet=false --torControlHost=127.0.0.1 --torControlPort=9051"));
 
             //_ = Task.Run(() => ExecuteUbuntuCommandAsync($"cd haveno && sh start.sh XMR_STAGENET XMR_STAGENET_user1 {password}"));
 
@@ -242,22 +272,8 @@ public class TermuxSetupSingleton
 
     }
 
-    public async Task SetupTermuxAsync()
-    {
-        var intent = _context.PackageManager?.GetLaunchIntentForPackage("com.termux");
-        if (intent is not null)
-        {
-            intent.AddFlags(ActivityFlags.NewTask);
-            _context.StartActivity(intent);
-        }
-
-        await ExecuteTermuxCommandAsync("am start -a android.intent.action.VIEW -d \"manta://termux_callback\"");
-    }
-
     public async Task<bool> RequestEnableWakeLockAsync()
     {
-        //await CloseTermux();
-
         var intent = _context.PackageManager?.GetLaunchIntentForPackage("com.termux");
         if (intent is not null)
         {
@@ -292,42 +308,27 @@ public class TermuxSetupSingleton
         return PluginResultsService.ExecuteUbuntuCommandAsync(command);
     }
 
-    //public Task<string?> ExecuteTermuxCommandAsync(string command)
-    //{
-    //    var intent = new Intent("com.termux.RUN_COMMAND");
-    //    intent.SetClassName("com.termux", "com.termux.app.RunCommandService");
+    public void ExecuteUbuntuCommand(string command)
+    {
+        ExecuteTermuxCommand($"bash $PREFIX/bin/ubuntu_exec \"{command}\"");
+    }
 
-    //    intent.PutExtra("com.termux.RUN_COMMAND_PATH", "/data/data/com.termux/files/usr/bin/bash");
+    public void ExecuteTermuxCommand(string command)
+    {
+        var intent = new Intent("com.termux.RUN_COMMAND");
+        intent.SetClassName("com.termux", "com.termux.app.RunCommandService");
 
-    //    intent.PutExtra("com.termux.RUN_COMMAND_ARGUMENTS", ["-c", command]);
+        intent.PutExtra("com.termux.RUN_COMMAND_PATH", "/data/data/com.termux/files/usr/bin/bash");
 
-    //    intent.PutExtra("com.termux.RUN_COMMAND_WORKDIR", "/data/data/com.termux/files/home");
+        intent.PutExtra("com.termux.RUN_COMMAND_ARGUMENTS", ["-c", command]);
 
-    //    intent.PutExtra("com.termux.RUN_COMMAND_BACKGROUND", true);
-    //    intent.PutExtra("com.termux.RUN_COMMAND_SESSION_ACTION", "0");
+        intent.PutExtra("com.termux.RUN_COMMAND_WORKDIR", "/data/data/com.termux/files/home");
 
-    //    var pluginResultsServiceIntent = new Intent(_context, typeof(PluginResultsService));
-    //    var executionId = PluginResultsService.GetNextExecutionId();
-    //    PluginResultsService.TaskCompletionSource = new();
+        intent.PutExtra("com.termux.RUN_COMMAND_BACKGROUND", true);
+        intent.PutExtra("com.termux.RUN_COMMAND_SESSION_ACTION", "0");
 
-    //    pluginResultsServiceIntent.PutExtra(PluginResultsService.ExecutionId, executionId);
-
-    //    var pendingIntent = PendingIntent.GetService(_context,
-    //        executionId,
-    //        pluginResultsServiceIntent,
-    //        PendingIntentFlags.OneShot | (Build.VERSION.SdkInt >= BuildVersionCodes.S ? PendingIntentFlags.Mutable : 0));
-
-    //    intent.PutExtra("com.termux.RUN_COMMAND_PENDING_INTENT", pendingIntent);
-
-    //    _context.StartService(intent);
-
-    //    return PluginResultsService.TaskCompletionSource.Task;
-    //}
-
-    //public Task<string?> ExecuteUbuntuCommandAsync(string command)
-    //{
-    //    return ExecuteTermuxCommandAsync($"bash $PREFIX/bin/ubuntu_exec \"{command}\"");
-    //}
+        _context.StartService(intent);
+    }
 }
 
 #endif

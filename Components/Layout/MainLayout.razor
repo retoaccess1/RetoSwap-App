@@ -12,7 +12,7 @@
     {
         <ErrorHandler>
             <Header />
-            <main>
+            <main class="@(_keyboardIsOpen ? "minimized" : "")">
                 @Body
             </main>
             <NavMenu />
@@ -21,16 +21,24 @@
 </div>
 
 @code {
+    private bool _keyboardIsOpen;
     public bool IsIndex { get; set; } = true;
 
     protected override void OnInitialized()
     {
         NavigationManager.LocationChanged += HandleLocationChanged;
+        KeyboardService.KeyboardStateChanged += HandleKeyboardChanged;
     }
 
     private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)
     {
         IsIndex = string.IsNullOrEmpty(e.Location.Replace(NavigationManager.BaseUri, ""));
+        StateHasChanged();
+    }
+
+    private void HandleKeyboardChanged(bool isOpen)
+    {
+        _keyboardIsOpen = isOpen;
         StateHasChanged();
     }
 }

@@ -1,10 +1,12 @@
 ﻿using Blazored.LocalStorage;
+using HavenoSharp.Models;
 using Manta.Helpers;
 using Manta.Models;
 using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
 using MudBlazor;
+using Manta.Extensions;
 
 namespace Manta.Components.Pages;
 
@@ -182,7 +184,8 @@ public partial class Market : ComponentBase, IDisposable
         {
             Years = TradeStatistics
                 .OrderBy(x => x.Date)
-                .GroupBy(x => x.Date.Year)
+                // ToDateTime() temporary
+                .GroupBy(x => x.Date.ToDateTime().Year)
                 .Select(x => x.Key)
                 .ToList();
 
@@ -194,7 +197,7 @@ public partial class Market : ComponentBase, IDisposable
         for (int i = 0; i < volumePerMonth.Length; i++)
         {
             volumePerMonth[i] = (double)TradeStatistics
-                .Where(x => x.Date.Month == i + 1 && x.Date.Year == Year)
+                .Where(x => x.Date.ToDateTime().Month == i + 1 && x.Date.ToDateTime().Year == Year)
                 .Aggregate(0m, (x, y) => x + ((ulong)y.Amount).ToMonero());
         }
 

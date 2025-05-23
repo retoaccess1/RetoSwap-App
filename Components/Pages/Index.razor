@@ -20,17 +20,17 @@
     @switch (TermuxSetupState)
     {
         case TermuxSetupState.InstallingTermux:
-            <div class="installing">
+            <div class="loader-text-container">
                 <span class="loader"></span>
-                <p class="regular-p-grey">Downloading Termux...</p>
+                <p class="regular-p-grey">Downloading Termux</p>
             </div>
             @* <p>@($"Downloaded {ProgressPercentage:F2}%")</p> *@
             break;
         case TermuxSetupState.SettingUpTermux:
-            <p class="regular-p-grey">Setting up Haveno...</p>
+            <p class="regular-p-grey">Setting up Haveno</p>
             break;
         case TermuxSetupState.Finished:
-            <p class="regular-p-grey">Finished setting up Haveno. Daemon is starting...</p>
+            <p class="regular-p-grey">Finished setting up Haveno. Daemon is starting</p>
             break;
          default: break;
     }
@@ -38,4 +38,18 @@
 <Modal IsOpen="InstallationErrorMessage is not null" Title="Installation error" ModalButtonOptions="ModalButtonOptions.NONE" IsCloseable="false">
     <p>@InstallationErrorMessage</p>
     <p class="regular-p-grey">Try restarting the app</p>
+</Modal>
+<Modal IsOpen="TorStartInfo != string.Empty" Title="Starting TOR" ModalButtonOptions="ModalButtonOptions.NONE" IsCloseable="false">
+    <div class="loader-text-container">
+        <span class="loader"></span>
+        <p class="regular-p-grey init-text">@TorStartInfo</p>
+    </div>
+    <button class="button-submit" @onclick="@(() => NavigationManager.NavigateTo("/Market"))">Skip initialization</button>
+</Modal>
+<Modal IsOpen="IsDaemonIntitializingModalOpen" Title="Haveno initializing" ModalButtonOptions="ModalButtonOptions.NONE" IsCloseable="false">
+    <div class="loader-text-container">
+        <span class="loader"></span>
+        <p class="regular-p-grey init-text">The Haveno daemon is starting, please wait</p>
+    </div>
+    <button class="button-submit" @onclick="@(() => NavigationManager.NavigateTo("/Market"))">Skip initialization</button>
 </Modal>

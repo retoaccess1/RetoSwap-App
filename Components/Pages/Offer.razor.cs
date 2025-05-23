@@ -1,12 +1,10 @@
-﻿using Haveno.Proto.Grpc;
+﻿using HavenoSharp.Models;
+using HavenoSharp.Models.Requests;
+using HavenoSharp.Services;
 using Manta.Helpers;
-using Manta.Models;
 using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
-
-using static Haveno.Proto.Grpc.Offers;
-using static Haveno.Proto.Grpc.PaymentAccounts;
-using static Haveno.Proto.Grpc.Trades;
+using System.Linq;
 
 namespace Manta.Components.Pages;
 
@@ -21,6 +19,12 @@ public partial class Offer : ComponentBase, IDisposable
     public BalanceSingleton BalanceSingleton { get; set; } = default!;
     [Inject]
     public NotificationSingleton NotificationSingleton { get; set; } = default!;
+    [Inject]
+    public IHavenoOfferService OfferService { get; set; } = default!;
+    [Inject]
+    public IHavenoPaymentAccountService PaymentAccountService { get; set; } = default!;
+    [Inject]
+    public IHavenoTradeService TradeService { get; set; } = default!;
 
     public OfferInfo? OfferInfo { get; set; }
 
@@ -59,6 +63,7 @@ public partial class Offer : ComponentBase, IDisposable
     public bool IsTakingOffer { get; set; }
     public bool UserDoesNotHaveAccount { get; set; }
     public string? AccountToCreate { get; set; }
+    public string? AccountErrorMessage { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -74,27 +79,42 @@ public partial class Offer : ComponentBase, IDisposable
     {
         try
         {
-            using var grpcChannelHelper = new GrpcChannelHelper();
-            OffersClient offersClient = new(grpcChannelHelper.Channel);
-
-            var offerResponse = await offersClient.GetOfferAsync(new GetOfferRequest { Id = OfferId });
-            OfferInfo = offerResponse.Offer;
+            OfferInfo = await OfferService.GetOfferAsync(OfferId);
 
             FiatAmount = decimal.Parse(OfferInfo.Price) * Amount;
+            Amount = OfferInfo.Amount.ToMonero();
 
-            var paymentAccountsClient = new PaymentAccountsClient(grpcChannelHelper.Channel);
+            var paymentAccounts = await PaymentAccountService.GetPaymentAccountsAsync();
 
-            var paymentAccountResponse = await paymentAccountsClient.GetPaymentAccountsAsync(new GetPaymentAccountsRequest());
-            PaymentAccounts = paymentAccountResponse.PaymentAccounts.ToDictionary(x => x.Id, x => x.AccountName);
+            List<PaymentAccount> sameTypePaymentAccounts = [];
 
-            SelectedPaymentAccountId = PaymentAccounts.FirstOrDefault(x => x.Value == OfferInfo.PaymentMethodId).Key;
-            if (string.IsNullOrEmpty(SelectedPaymentAccountId))
+            sameTypePaymentAccounts = paymentAccounts.Where(x => x.PaymentMethod.Id == OfferInfo.PaymentMethodId).ToList();
+
+            if (sameTypePaymentAccounts.Count == 0)
             {
                 UserDoesNotHaveAccount = true;
                 AccountToCreate = OfferInfo.PaymentMethodId;
+                AccountErrorMessage = $"You do not have an account of this type ({OfferInfo.PaymentMethodShortName}).";
+                return;
             }
 
-            Amount = OfferInfo.Amount.ToMonero();
+            var currencyCode = OfferInfo.PaymentMethodId == "BLOCK_CHAINS" ? OfferInfo.BaseCurrencyCode : OfferInfo.CounterCurrencyCode;
+
+            sameTypePaymentAccounts = sameTypePaymentAccounts
+                .Where(x => x.TradeCurrencies.Select(x => x.Code).Contains(currencyCode)).ToList();
+
+            SelectedPaymentAccountId = sameTypePaymentAccounts
+                .FirstOrDefault(x => x.PaymentMethod.Id == OfferInfo.PaymentMethodId)?.Id ?? string.Empty;
+
+            if (string.IsNullOrEmpty(SelectedPaymentAccountId))
+            {
+                UserDoesNotHaveAccount = true;
+                AccountErrorMessage = $"You do not have a {OfferInfo.PaymentMethodShortName} account that supports this currency ({currencyCode}).";
+                AccountToCreate = OfferInfo.PaymentMethodId;
+                return;
+            }
+
+            PaymentAccounts = sameTypePaymentAccounts.ToDictionary(x => x.Id, x => x.AccountName);
         }
         catch
         {
@@ -110,9 +130,6 @@ public partial class Offer : ComponentBase, IDisposable
 
         try
         {
-            using var grpcChannelHelper = new GrpcChannelHelper(noTimeout: true);
-            var tradesClient = new TradesClient(grpcChannelHelper.Channel);
-
             var takeOfferRequest = new TakeOfferRequest
             {
                 OfferId = OfferInfo?.Id,
@@ -121,7 +138,7 @@ public partial class Offer : ComponentBase, IDisposable
                 Challenge = OfferInfo?.Challenge
             };
 
-            var response = await tradesClient.TakeOfferAsync(takeOfferRequest, cancellationToken: CancelOfferCts.Token);
+            var response = await TradeService.TakeOfferAsync(takeOfferRequest);
 
             NotificationSingleton.TradeInfos.TryAdd(response.Trade.TradeId, response.Trade);
 

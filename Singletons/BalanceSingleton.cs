@@ -1,14 +1,14 @@
-﻿using Haveno.Proto.Grpc;
+﻿using HavenoSharp.Models;
+using HavenoSharp.Services;
 using Manta.Helpers;
 using Manta.Models;
-
-using static Haveno.Proto.Grpc.Price;
-using static Haveno.Proto.Grpc.Wallets;
 
 namespace Manta.Singletons;
 
 public class BalanceSingleton
 {
+    private readonly IServiceProvider _serviceProvider;
+
     public WalletInfo? WalletInfo { get; private set; }
     public List<MarketPriceInfo> MarketPriceInfos { get; private set; } = [];
     public Dictionary<string, decimal> MarketPriceInfoDictionary { get; set; } = [];
@@ -16,8 +16,9 @@ public class BalanceSingleton
 
     public event Action<bool>? OnBalanceFetch;
 
-    public BalanceSingleton()
+    public BalanceSingleton(IServiceProvider serviceProvider)
     {
+        _serviceProvider = serviceProvider;
         Task.Run(PollBalance);
     }
 
@@ -56,28 +57,26 @@ public class BalanceSingleton
             {
                 OnBalanceFetch?.Invoke(true);
 
-                using var grpcChannelHelper = new GrpcChannelHelper();
+                using var scope = _serviceProvider.CreateScope();
+                var walletService = _serviceProvider.GetRequiredService<IHavenoWalletService>();
+                var priceService = _serviceProvider.GetRequiredService<IHavenoPriceService>();
 
-                var walletClient = new WalletsClient(grpcChannelHelper.Channel);
-                var balanceResponse = await walletClient.GetBalancesAsync(new GetBalancesRequest());
-                var primaryAddressResponse = await walletClient.GetXmrPrimaryAddressAsync(new GetXmrPrimaryAddressRequest());
+                var balances = await walletService.GetBalancesAsync();
+                var primaryAddress = await walletService.GetXmrPrimaryAddressAsync();
 
                 WalletInfo = new WalletInfo
                 {
-                    AvailableXMRBalance = balanceResponse.Balances.Xmr.AvailableBalance,
-                    XMRBalance = balanceResponse.Balances.Xmr.Balance,
-                    PrimaryAddress = primaryAddressResponse.PrimaryAddress,
-                    PendingXMRBalance = balanceResponse.Balances.Xmr.Balance - balanceResponse.Balances.Xmr.AvailableBalance,
-                    ReservedTradeBalance = balanceResponse.Balances.Xmr.ReservedTradeBalance,
-                    ReservedOfferBalance = balanceResponse.Balances.Xmr.ReservedOfferBalance
+                    AvailableXMRBalance = balances.AvailableXMRBalance,
+                    XMRBalance = balances.XMRBalance,
+                    PrimaryAddress = primaryAddress,
+                    PendingXMRBalance = balances.XMRBalance - balances.AvailableXMRBalance,
+                    ReservedTradeBalance = balances.ReservedTradeBalance,
+                    ReservedOfferBalance = balances.ReservedOfferBalance
                 };
 
                 Console.WriteLine("Finished fetching balance");
 
-                var priceClient = new PriceClient(grpcChannelHelper.Channel);
-                var getPricesResponse = await priceClient.GetMarketPricesAsync(new MarketPricesRequest());
-                
-                MarketPriceInfos = [.. getPricesResponse.MarketPrice];
+                MarketPriceInfos = await priceService.GetMarketPricesAsync();
                 MarketPriceInfoDictionary = MarketPriceInfos.ToDictionary(x => x.CurrencyCode, x => (decimal)x.Price);
 
                 Console.WriteLine("Finished fetching prices");

@@ -2,6 +2,8 @@
 
 public static class CountryCodeHelper
 {
+    public static List<string> StateRequiredCountries = [ "US", "CA", "AU", "MY", "MX", "CN" ];
+
     public static Dictionary<string, string> CountryCodeDictionary = new()
     {
         { "AD", "Andorra (AD)" },

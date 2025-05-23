@@ -1,13 +1,13 @@
-﻿using Haveno.Proto.Grpc;
-using Manta.Helpers;
+﻿using HavenoSharp.Models;
+using HavenoSharp.Services;
 using Microsoft.AspNetCore.Components;
-
-using static Haveno.Proto.Grpc.Offers;
 
 namespace Manta.Components.Pages;
 
 public partial class MyOffers : ComponentBase
 {
+    [Inject]
+    public IHavenoOfferService OfferService { get; set; } = default!;
     [Inject]
     public NavigationManager NavigationManager { get; set; } = default!;
     public List<OfferInfo> Offers { get; set; } = [];
@@ -18,15 +18,7 @@ public partial class MyOffers : ComponentBase
         {
             try
             {
-                var grpcChannelHelper = new GrpcChannelHelper();
-                var offersClient = new OffersClient(grpcChannelHelper.Channel);
-
-                var getMyOffersResponse = await offersClient.GetMyOffersAsync(new GetMyOffersRequest
-                {
-
-                });
-
-                Offers = [.. getMyOffersResponse.Offers];
+                Offers = await OfferService.GetMyOffersAsync("", "");
 
                 // Why does this not get set?
                 Offers.ForEach(x => x.IsMyOffer = true);
@@ -48,13 +40,7 @@ public partial class MyOffers : ComponentBase
     {
         try
         {
-            var grpcChannelHelper = new GrpcChannelHelper();
-            var offersClient = new OffersClient(grpcChannelHelper.Channel);
-
-            var cancelOfferResponse = await offersClient.CancelOfferAsync(new CancelOfferRequest
-            {
-                Id = id
-            });
+            await OfferService.CancelOfferAsync(id);
 
             var offer = Offers.FirstOrDefault(x => x.Id == id);
             if (offer is null)
