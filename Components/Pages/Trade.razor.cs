@@ -237,7 +237,6 @@ public partial class Trade : ComponentBase, IDisposable
     {
         await TradeService.CompleteTradeAsync(tradeId);
 
-
         var cloneTradeInfo = JsonSerializer.Deserialize<TradeInfo>(JsonSerializer.Serialize(TradeInfo))!;
         cloneTradeInfo.IsCompleted = true;
         NotificationSingleton.TradeInfos.TryUpdate(TradeId, cloneTradeInfo, TradeInfo);

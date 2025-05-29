@@ -34,8 +34,11 @@
     </div>
     @* <SearchableDropdown Items="" Text="Country" Placeholder="Choose country"></SearchableDropdown> *@
     <Toggle OnToggledChanged="HandleToggle" @bind-IsToggled="IsToggled" Text="Notifications" />
-    <Toggle Disabled="DaemonInstallOption == DaemonInstallOptions.RemoteNode" OnToggledChanged="HandleWakeLockToggle" @bind-IsToggled="IsWakeLockToggled" Text="Keep offers open in background" />
-    <p class="note">Note: This uses more battery</p>
+    @if (DaemonInstallOption == DaemonInstallOptions.TermuxAutomatic)
+    {
+        <Toggle OnToggledChanged="HandleWakeLockToggle" @bind-IsToggled="IsWakeLockToggled" Text="Keep offers open in background" />
+        <p class="note">Note: This uses more battery</p>        
+    }
 
     <p class="bold-p remote-node-txt">Remote node configuration</p>
     <div class="@(IsRemoteNodeToggled ? "remote-node-section" : "remote-node-section remote-node-disabled")">

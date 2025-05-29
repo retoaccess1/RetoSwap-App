@@ -1,11 +1,17 @@
 ﻿.wallet-main {
-  height: 100%;
   display: flex;
   flex-direction: column;
 }
+.wallet-main .top {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #000;
+}
 .wallet-main .top .monero-card {
   height: 186px;
-  max-width: 380px;
+  /*max-width: 380px;*/
+  width: 100%;
   background-image: url(../img/wallet-background.svg);
   background-size: cover;
   border-radius: 20px;
@@ -77,8 +83,9 @@
   margin-bottom: 10px;
 }
 .wallet-main ul {
-  margin-top: 10px;
+  /*margin-top: 10px;*/
   overflow-y: auto;
+  height: 100%;
 }
 .wallet-main ul li {
   margin-bottom: 10px;

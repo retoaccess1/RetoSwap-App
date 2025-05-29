@@ -1,5 +1,6 @@
 ﻿using HavenoSharp.Models;
 using HavenoSharp.Services;
+using Manta.Components.Reusable;
 using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
 
@@ -49,6 +50,8 @@ public partial class Trades : ComponentBase, IDisposable
 
     public List<Dispute> Disputes { get; set; } = [];
 
+    public TradeInfo? CompletedTradeInfo;
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -71,6 +74,12 @@ public partial class Trades : ComponentBase, IDisposable
         NotificationSingleton.OnTradeUpdate += HandleTradeUpdate;
 
         await base.OnInitializedAsync();
+    }
+
+    public void DisplayCompletedTradeModal(string tradeId)
+    {
+        CompletedTradeInfo = FilteredTradeInfos.FirstOrDefault(x => x.TradeId == tradeId);
+        StateHasChanged();
     }
 
     public async Task GetDisputesAsync()

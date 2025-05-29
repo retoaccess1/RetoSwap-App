@@ -81,9 +81,9 @@ public class PluginResultsService : IntentService
         }
     }
 
-    public static Task<string?> ExecuteUbuntuCommandAsync(string command)
+    public static Task<string?> ExecuteUbuntuCommandAsync(string command, CancellationToken cancellationToken = default)
     {
-        return ExecuteTermuxCommandAsync($"bash $PREFIX/bin/ubuntu_exec \"{command}\"");
+        return ExecuteTermuxCommandAsync($"bash $PREFIX/bin/ubuntu_exec \"{command}\"", cancellationToken);
     }
 
     protected override void OnHandleIntent(Intent? intent)

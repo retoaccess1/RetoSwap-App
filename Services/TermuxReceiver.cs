@@ -16,7 +16,8 @@ public class TermuxReceiver : BroadcastReceiver
 
     public override void OnReceive(Context? context, Intent? intent)
     {
-        TaskCompletionSource.SetResult();
+        if (!TaskCompletionSource.Task.IsCompleted)
+            TaskCompletionSource.SetResult();
     }
 }
 

@@ -6,6 +6,7 @@
 
     .text {
         /*font-weight: bold;*/
+        margin-bottom: 10px;
     }
 
     &::before {
@@ -21,7 +22,7 @@
         vertical-align: -0.125em;
         -webkit-font-smoothing: antialiased;
         position: absolute;
-        top: 34px;
+        top: 44px;
         right: 16px;
         color: #fff;
         transition: transform 0.2s;
@@ -30,7 +31,8 @@
     .list-wrapper {
         padding-right: 16px;
         background-color: #121212;
-        border-radius: 12px;
+        border-bottom-left-radius: 12px;
+        border-bottom-right-radius: 12px;
     }
 
     .list {
@@ -66,16 +68,14 @@
     display: flex !important;
 }
 
-.in-hidden {
+.input-hidden {
     border-radius: 100px;
 }
 
-.in-visible {
-    border-end-end-radius: 0;
-    border-bottom-left-radius: 0;
-    border-top-left-radius: 12px;
-    border-start-end-radius: 12px;
+.input-visible {
     border: none;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
 }
 
 .rotate {

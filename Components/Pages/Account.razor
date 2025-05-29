@@ -25,15 +25,13 @@
         }
     </div>
     <div class="payment-methods-container">
-        <div>
-            <SearchableDropdown 
+        <SearchableDropdown 
             Placeholder="Select payment method"
             @ref="PaymentMethodSearchableDropdown"
             Items="@TraditionalPaymentMethodStrings"
             Text="Create new account"
             InitialValue="@AccountToCreate"
             OnSubmit="@((val) => SelectedPaymentMethodId = val)" />
-        </div>
     </div>
 
     @if (SelectedPaymentAccount is not null)
