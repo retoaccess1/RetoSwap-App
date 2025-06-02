@@ -2,6 +2,7 @@
 using HavenoSharp.Services;
 using Manta.Helpers;
 using Manta.Models;
+using Manta.Services;
 
 namespace Manta.Singletons;
 
@@ -20,19 +21,41 @@ public class BalanceSingleton
     {
         _serviceProvider = serviceProvider;
         Task.Run(PollBalance);
+#if DEBUG
+        // Testing how long task stays alive
+        Task.Run(Poll);
+#endif
     }
 
-    public decimal GetPriceWithFallback(string currency)
+    private async Task Poll()
     {
-        // Check if initialized?
+        INotificationManagerService? notifService = null;
+        int delay = 10_000;
 
-        try
+        while (true)
         {
-            return MarketPriceInfoDictionary[currency];
-        }
-        catch (KeyNotFoundException)
-        {
-            return MarketPriceInfoDictionary[CurrencyCultureInfo.FallbackCurrency];
+            try
+            {
+                notifService = IPlatformApplication.Current?.Services.GetService<INotificationManagerService>();
+                if (notifService is null)
+                    throw new Exception("notifService is null");
+
+                var offerService = IPlatformApplication.Current?.Services.GetService<IHavenoOfferService>();
+                if (offerService is null)
+                    throw new Exception("offerService is null");
+
+                var offers = await offerService.GetOffersAsync("", "BUY");
+
+                notifService.SendNotification(DateTime.Now.ToString(), $"Offer count: {offers.Count}");
+
+                delay = 300_000;
+            }
+            catch (Exception e)
+            {
+                notifService?.SendNotification(DateTime.Now.ToString(), $"Exception: {e}");
+            }
+
+            await Task.Delay(delay);
         }
     }
 
@@ -84,7 +107,7 @@ public class BalanceSingleton
                 if (!InitializedTCS.Task.IsCompleted)
                     InitializedTCS.SetResult(true);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 //Console.WriteLine(e);
             }

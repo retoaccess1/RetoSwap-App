@@ -118,7 +118,7 @@ public partial class BuySell : ComponentBase, IDisposable
     public SearchableDropdown CurrencySearchableDropdown { get; set; } = default!;
     public SearchableDropdown PaymentMethodSearchableDropdown { get; set; } = default!;
 
-    public bool IsCollapsed { get; set; }
+    public bool IsCollapsed { get; set; } = true;
 
     public void CloseCreateOffer()
     {

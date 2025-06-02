@@ -7,7 +7,6 @@ using Manta.Services;
 using MudBlazor.Services;
 using ZXing.Net.Maui.Controls;
 using HavenoSharp.Extensions;
-using HavenoSharp.Singletons;
 
 namespace Manta;
 
@@ -45,7 +44,6 @@ public static class MauiProgram
 
 #if ANDROID
         builder.Services.AddTransient<INotificationManagerService, AndroidNotificationManagerService>();
-        builder.Services.AddSingleton<TermuxSetupSingleton>();
         builder.Services.AddScoped<IHavenoDaemonService, AndroidHavenoDaemonService>();
 #elif WINDOWS
         builder.Services.AddTransient<INotificationManagerService, WindowsNotificationManagerService>();

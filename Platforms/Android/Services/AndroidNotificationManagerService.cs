@@ -1,11 +1,12 @@
-﻿#if ANDROID
-using Android.App;
+﻿using Android.App;
 using Android.Content;
 using Android.Graphics;
 using Android.OS;
 using AndroidX.Core.App;
 
 namespace Manta.Services;
+
+#pragma warning disable CA1416
 
 public class AndroidNotificationManagerService : INotificationManagerService
 {
@@ -119,7 +120,7 @@ public class AndroidNotificationManagerService : INotificationManagerService
                 Description = _channelDescription
             };
 
-            var manager = (NotificationManager)Platform.AppContext.GetSystemService(Context.NotificationService);
+            var manager = (NotificationManager?)Platform.AppContext.GetSystemService(Context.NotificationService);
             if (manager is null)
                 return;
 
@@ -161,4 +162,4 @@ public class NotificationEventArgs : EventArgs
     public string Message { get; set; } = string.Empty;
 }
 
-#endif
+#pragma warning restore

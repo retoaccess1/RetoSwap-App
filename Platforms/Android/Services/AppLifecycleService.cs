@@ -27,6 +27,10 @@ public class AppLifecycleService : Java.Lang.Object, Android.App.Application.IAc
     {
         Console.WriteLine("App WENT TO SLEEP");
 
+        // This probably isnt as needed now that the daemon runs in the app
+        // But still might want to use this a battery optimization
+        // Can we even get trade/chat updates when app is in sleep?  
+        // TODO: Need to pause all polling singletons when app goes into bg
         if (SecureStorageHelper.Get<bool>("notifications-enabled"))
         {
             AlarmUtils.ScheduleExactAlarm(Android.App.Application.Context);

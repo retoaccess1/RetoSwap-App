@@ -119,7 +119,7 @@ public partial class Chat : ComponentBase, IDisposable
 
             Message = string.Empty;
         }
-        catch (Exception e)
+        catch (Exception)
         {
 
         }

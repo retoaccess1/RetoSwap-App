@@ -3,6 +3,6 @@
 public enum DaemonInstallOptions
 {
     None,
-    TermuxAutomatic,
+    Standalone,
     RemoteNode
 }

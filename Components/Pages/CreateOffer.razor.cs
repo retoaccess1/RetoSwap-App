@@ -15,7 +15,7 @@ public class AdjustedPrices
     public decimal FixedPrice;
 }
 
-public partial class CreateOffer : ComponentBase
+public partial class CreateOffer : ComponentBase, IDisposable
 {
     [Inject]
     public IHavenoPaymentAccountService PaymentAccountService { get; set; } = default!;
@@ -67,6 +67,7 @@ public partial class CreateOffer : ComponentBase
     public List<PaymentAccount> ProtoPaymentAccounts { get; set; } = [];
     public Dictionary<string, string> PaymentAccounts { get; set; } = [];
 
+    public ulong AvailableXMRBalance { get; set; }
     public bool NoMarketPrice { get; set; }
     public bool IsFiat { get; set; }
 
@@ -99,7 +100,52 @@ public partial class CreateOffer : ComponentBase
 
     // Currently does not respect trade limits, TODO
     public decimal MaxTradeLimit { get; set; }
-    public decimal MoneroAmount { get; set; }
+    public decimal MoneroAmount 
+    { 
+        get; 
+        set 
+        {
+            field = value;
+
+            var piconeroAmount = field.ToPiconero();
+
+            // TODO need to get actual percentages! really important!
+            var takerFeePct = 0.0075;
+            var makerFeePct = 0.0015;
+
+            if (Direction == "BUY")
+            {
+                TradeFee = (ulong)(piconeroAmount * makerFeePct);
+                ulong securityDepositAmount = (ulong)(piconeroAmount * (SecurityDepositPct / 100));
+
+                if (securityDepositAmount < 100_000_000_000)
+                {
+                    securityDepositAmount = 100_000_000_000;
+                }
+
+                RequiredFunds = piconeroAmount + securityDepositAmount + TradeFee;
+            }
+            else
+            {
+                var tradeFeePct = BuyerAsTakerWithoutDeposit ? (makerFeePct + takerFeePct) : makerFeePct;
+
+                TradeFee = (ulong)(piconeroAmount * tradeFeePct);
+                ulong depositAmount = (ulong)(piconeroAmount * (SecurityDepositPct / 100));
+
+                if (depositAmount < 100_000_000_000)
+                {
+                    depositAmount = 100_000_000_000;
+                }
+
+                RequiredFunds = depositAmount + TradeFee;
+            }
+
+            if (BalanceSingleton.MarketPriceInfoDictionary.TryGetValue(SelectedCurrencyCode, out var priceForOneXMR))
+            {
+                TradeFeeFiat = Math.Round(TradeFee.ToMonero() * priceForOneXMR, 2);
+            }
+        } 
+    }
     public decimal MinimumMoneroAmount { get; set; }
     public decimal MarketPriceMarginPct { get; set; }
     public decimal FiatPrice { get; set; }
@@ -120,6 +166,10 @@ public partial class CreateOffer : ComponentBase
     public bool IsFetching { get; set; }
     public bool IsConfirmModalOpen { get; set; }
 
+    public ulong RequiredFunds { get; set; }
+    public ulong TradeFee { get; set; }
+    public decimal TradeFeeFiat { get; set; }
+
     public void Clear()
     {
         MinimumMoneroAmount = 0m;
@@ -129,6 +179,7 @@ public partial class CreateOffer : ComponentBase
         TriggerAmount = 0;
         FixedPrice = 0;
         SecurityDepositPct = 15m;
+        TradeFee = 0;
     }
 
     // Gives the adjusted amounts so that the fiat value is a whole number
@@ -383,6 +434,19 @@ public partial class CreateOffer : ComponentBase
         }
     }
 
+    public async void HandleBalanceFetch(bool isFetching)
+    {
+        // Or invoke on UI thread?
+        await InvokeAsync(() =>
+        {
+            if (!isFetching)
+            {
+                AvailableXMRBalance = BalanceSingleton.WalletInfo!.AvailableXMRBalance;
+                StateHasChanged();
+            }
+        });
+    }
+
     protected override async Task OnInitializedAsync()
     {
         var paymentAccounts = await PaymentAccountService.GetPaymentAccountsAsync();
@@ -398,6 +462,13 @@ public partial class CreateOffer : ComponentBase
             var paymentMethod = paymentAccounts.First(x => x.Id == SelectedPaymentAccountId).PaymentMethod;
             MaxTradeLimit = ((ulong)paymentMethod.MaxTradeLimit).ToMonero();
         }
+
+        if (BalanceSingleton.WalletInfo is not null)
+        {
+            AvailableXMRBalance = BalanceSingleton.WalletInfo.AvailableXMRBalance;
+        }
+
+        BalanceSingleton.OnBalanceFetch += HandleBalanceFetch;
 
         await base.OnInitializedAsync();
     }
@@ -452,5 +523,10 @@ public partial class CreateOffer : ComponentBase
         {
             IsFetching = false;
         }
+    }
+
+    public void Dispose()
+    {
+        BalanceSingleton.OnBalanceFetch -= HandleBalanceFetch;
     }
 }

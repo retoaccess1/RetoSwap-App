@@ -195,24 +195,6 @@ public partial class Account : ComponentBase
         }
     }
 
-    // Does not work to validate crypto addresses. Only max/mins
-    public async Task ValidateField(FieldId fieldId, string value)
-    {
-        try
-        {
-            var response = await PaymentAccountService.ValidateFormFieldAsync(new ValidateFormFieldRequest
-            { 
-                FieldId = FieldId.ADDRESS,
-                Form = PaymentAccountForm,
-                Value = value
-            });
-        }
-        catch (Exception e)
-        {
-
-        }
-    }
-
     public void HandleAccountClick(PaymentAccount paymentAccount)
     {
         PaymentAccountForm = null;
@@ -227,7 +209,7 @@ public partial class Account : ComponentBase
 
         _messageStore.Clear();
 
-        if (e.FieldIdentifier.Model is not PaymentAccountFormField field)
+        if (e.FieldIdentifier.Model is not PaymentAccountFormField field || PaymentAccountForm is null)
             return;
 
         try
@@ -258,6 +240,9 @@ public partial class Account : ComponentBase
 
     public async Task CreateCryptoPaymentAccountAsync()
     {
+        if (CreateCryptoCurrencyPaymentAccountRequest is null)
+            return;
+
         var createdCryptoAccount = await PaymentAccountService.CreateCryptoCurrencyPaymentAccountAsync(CreateCryptoCurrencyPaymentAccountRequest);
         PaymentAccounts = [.. PaymentAccounts, createdCryptoAccount];
 
@@ -290,15 +275,6 @@ public partial class Account : ComponentBase
             if (acceptedCountriesField is not null)
             {
                 acceptedCountriesField.Value = string.Join(",", [..AcceptedEUSEPACountries.Where(x => x.IsSelected).Select(x => x.Code), ..AcceptedNonEUSEPACountries.Where(x => x.IsSelected).Select(x => x.Code)]);
-            }
-
-            if (SelectedPaymentMethodId == "F2F" || SelectedPaymentMethodId == "MONEY_GRAM") 
-            {
-                var countriesField = request.PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == FieldId.COUNTRY);
-                if (countriesField is not null)
-                {
-
-                }            
             }
 
             var createdPaymentAccount = await PaymentAccountService.CreatePaymentAccountAsync(request);

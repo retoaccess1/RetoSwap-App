@@ -18,3 +18,8 @@ button, .slider-container {
   color: #4c4c4c;
   font-weight: 500;
 }
+
+.funding-section {
+  margin-top: 30px;
+  margin-bottom: 20px;
+}

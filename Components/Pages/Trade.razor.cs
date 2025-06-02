@@ -98,7 +98,7 @@ public partial class Trade : ComponentBase, IDisposable
                 FetchTradeTask = FetchTradeAsync();
                 break;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
 
             }
@@ -194,7 +194,7 @@ public partial class Trade : ComponentBase, IDisposable
                 UpdateTradeState();
                 StateHasChanged();
             }
-            catch (Exception e)
+            catch (Exception)
             {
 
             }
@@ -207,12 +207,12 @@ public partial class Trade : ComponentBase, IDisposable
 
         await TradeService.ConfirmPaymentReceivedAsync(tradeId);
 
-        var trade = await TradeService.GetTradeAsync(tradeId);
+        //var trade = await TradeService.GetTradeAsync(tradeId);
 
-        NotificationSingleton.TradeInfos.AddOrUpdate(tradeId, trade, (key, old) => trade);
-        TradeInfo = trade;
+        //NotificationSingleton.TradeInfos.AddOrUpdate(tradeId, trade, (key, old) => trade);
+        //TradeInfo = trade;
 
-        UpdateTradeState();
+        //UpdateTradeState();
 
         IsFetching = false;
     }
@@ -223,12 +223,12 @@ public partial class Trade : ComponentBase, IDisposable
 
         await TradeService.ConfirmPaymentSentAsync(tradeId);
 
-        var trade = await TradeService.GetTradeAsync(tradeId);
+        //var trade = await TradeService.GetTradeAsync(tradeId);
 
-        NotificationSingleton.TradeInfos.AddOrUpdate(tradeId, trade, (key, old) => trade);
-        TradeInfo = trade;
+        //NotificationSingleton.TradeInfos.AddOrUpdate(tradeId, trade, (key, old) => trade);
+        //TradeInfo = trade;
 
-        UpdateTradeState();
+        //UpdateTradeState();
 
         IsFetching = false;
     }
@@ -269,7 +269,7 @@ public partial class Trade : ComponentBase, IDisposable
                 Console.WriteLine(e);
             }
 
-            await Task.Delay(5_000, CancellationTokenSource.Token);
+            await Task.Delay(1_500, CancellationTokenSource.Token);
         }
     }
 

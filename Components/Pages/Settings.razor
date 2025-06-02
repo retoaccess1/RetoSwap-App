@@ -17,7 +17,6 @@
     <div class="info-container">
         <p class="bold-p">Build information</p>
         <p>Version: @Version</p>
-        <p>Build: @Build</p>
         <p>Haveno version: @HavenoVersion</p>
         <p>Daemon status: @(IsConnected ? "Connected" : "Disconnected") </p>
         <p>Monero node: @(XMRNodeIsRunning ? "Running" : "Stopped")</p>
@@ -33,8 +32,8 @@
         @* <button class="backup-btn" @onclick="() => ShowRestoreModal = true">Restore account</button> *@
     </div>
     @* <SearchableDropdown Items="" Text="Country" Placeholder="Choose country"></SearchableDropdown> *@
-    <Toggle OnToggledChanged="HandleToggle" @bind-IsToggled="IsToggled" Text="Notifications" />
-    @if (DaemonInstallOption == DaemonInstallOptions.TermuxAutomatic)
+    <Toggle OnToggledChanged="HandleToggle" @bind-IsToggled="IsNotificationsToggled" Text="Notifications" />
+    @if (DaemonInstallOption == DaemonInstallOptions.Standalone)
     {
         <Toggle OnToggledChanged="HandleWakeLockToggle" @bind-IsToggled="IsWakeLockToggled" Text="Keep offers open in background" />
         <p class="note">Note: This uses more battery</p>        

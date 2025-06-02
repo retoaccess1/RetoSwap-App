@@ -1,6 +1,6 @@
-﻿using HavenoSharp.Singletons;
+﻿using HavenoSharp.Services;
+using HavenoSharp.Singletons;
 using Manta.Helpers;
-using Microsoft.AspNetCore.Components;
 using System.Diagnostics;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
@@ -15,7 +15,7 @@ public enum HavenoInstallationStatus
     InstalledOutOfDate
 }
 
-public class WindowsHavenoDaemonService : IHavenoDaemonService
+public class WindowsHavenoDaemonService : HavenoDaemonServiceBase
 {
     private string[] _havenoRepos = ["atsamd21/haveno", "haveno-dex/haveno"];
     private string? _currentHavenoVersion;
@@ -24,7 +24,12 @@ public class WindowsHavenoDaemonService : IHavenoDaemonService
 
     private readonly GrpcChannelSingleton _grpcChannelSingleton;
 
-    public WindowsHavenoDaemonService(GrpcChannelSingleton grpcChannelSingleton)
+    public WindowsHavenoDaemonService(GrpcChannelSingleton grpcChannelSingleton,
+        IServiceProvider serviceProvider,
+        IHavenoWalletService walletService,
+        IHavenoVersionService versionService,
+        IHavenoAccountService accountService
+        ) : base(serviceProvider, walletService, versionService, accountService)
     {
         _grpcChannelSingleton = grpcChannelSingleton;
         _os = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "windows" : "linux-x86_64";
@@ -46,7 +51,7 @@ public class WindowsHavenoDaemonService : IHavenoDaemonService
         writer.Close();
     }
 
-    public async Task InstallHavenoDaemon()
+    public override async Task InstallHavenoDaemonAsync()
     {
         Console.WriteLine("Initializing...");
 
@@ -125,7 +130,7 @@ public class WindowsHavenoDaemonService : IHavenoDaemonService
         }
     }
 
-    public async Task<bool> GetIsDaemonInstalledAsync()
+    public override async Task<bool> GetIsDaemonInstalledAsync()
     {
         var daemonPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Daemon");
 
@@ -148,7 +153,7 @@ public class WindowsHavenoDaemonService : IHavenoDaemonService
         }
     }
 
-    public async Task<bool> TryStartLocalHavenoDaemonAsync(string password, string host)
+    public override async Task<bool> TryStartLocalHavenoDaemonAsync(string password, string host, Action<string>? progressCb = default)
     {
         var currentDirectory = AppDomain.CurrentDomain.BaseDirectory;
         if (string.IsNullOrEmpty(currentDirectory))
@@ -216,5 +221,15 @@ public class WindowsHavenoDaemonService : IHavenoDaemonService
         //await process.WaitForExitAsync();
 
         return true;
+    }
+
+    public override Task<bool> TryStartTorAsync()
+    {
+        throw new NotImplementedException();
+    }
+
+    public override Task StopHavenoDaemonAsync()
+    {
+        throw new NotImplementedException();
     }
 }

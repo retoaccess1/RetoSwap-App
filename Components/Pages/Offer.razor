@@ -4,8 +4,8 @@
     <div class="dropdown">
         <SearchableDropdown Disabled="@(PaymentAccounts.Count < 2)" InitialValue="@SelectedPaymentAccountId" Text="Trading account" Placeholder="Trading account" Items="@PaymentAccounts" OnSubmit="(val) => SelectedPaymentAccountId = val"></SearchableDropdown>
     </div>
-    <label>Amount</label>
-    <input disabled="@(UserDoesNotHaveAccount || OfferInfo?.MinAmount == OfferInfo?.Amount)" step="0.01" min="@OfferInfo?.MinAmount.ToMonero()" max="@OfferInfo?.Amount.ToMonero()" @bind="@Amount" type="number" />
+    <label>Amount to @(OfferInfo?.Direction == "BUY" ? "sell" : "buy")</label>
+    <input disabled="@(UserDoesNotHaveAccount || OfferInfo?.MinAmount == OfferInfo?.Amount)" step="0.01" min="@OfferInfo?.MinAmount.ToMonero()" max="@OfferInfo?.Amount.ToMonero()" @bind="@MoneroAmount" type="number" />
     @if (OfferInfo?.MinAmount == OfferInfo?.Amount)
     {
         <p class="range">Min/Max: @OfferInfo?.MinAmount.ToMonero() XMR</p>
@@ -16,16 +16,34 @@
     }
     <label>Total in @OfferInfo?.CounterCurrencyCode</label>
     <input readonly @bind="@FiatAmount" type="number" step="0.01" />
+
+    <div class="funding-section">
+        <InfoRow Label="Available funds" Value="@(AvailableBalance.ToMonero() + " XMR")"></InfoRow>
+        <InfoRow Label="Required funds" Value="@(RequiredFunds.ToMonero() + " XMR")"></InfoRow>
+    </div>
+
     <div class="slider-container">
-        <Slider OnReachedEnd="TakeOfferAsync" Disabled="@UserDoesNotHaveAccount" Text="Take offer"></Slider>
+        <Slider OnReachedEnd="TakeOfferAsync" Disabled="UserDoesNotHaveAccount || (RequiredFunds > AvailableBalance)" Text="Take offer"></Slider>
     </div>
     <button class="button-cancel" @onclick="Cancel">Cancel</button>
 </div>
 
 <Modal IsOpen="IsTakingOffer" Title="Taking offer" ModalButtonOptions="ModalButtonOptions.NONE" OnCancelPressed="() => CancelOfferCts.Cancel()">
     <p class="regular-p-grey">Please wait</p>
-    @* <Spinner IsVisible="true"></Spinner> *@
 </Modal>
 <Modal Title="No payment account" IsOpen="UserDoesNotHaveAccount" ModalButtonOptions="ModalButtonOptions.OK" OkButtonText="Create account" OnOkPressed="@NavigateToAccount">
     <p class="regular-p-grey">@AccountErrorMessage</p>
+</Modal>
+<Modal 
+    Title="Trade info" 
+    IsOpen="ShowExtraInfoModal"
+    ModalButtonOptions="ModalButtonOptions.OK_CANCEL" 
+    CancelButtonText="Close" 
+    OkButtonText="Confirm" 
+    OnOkPressed="() => ShowExtraInfoModal = false" 
+    OnCancelPressed="@(() => NavigationManager.NavigateTo("BuySell"))">
+    <p class="regular-p-grey">Please review the maker's terms and conditions.</p>
+    <p class="regular-p-grey">If you do not meet the requirements do not take this trade</p>
+    <br />
+    <p class="regular-p-grey">@OfferInfo?.ExtraInfo</p>
 </Modal>

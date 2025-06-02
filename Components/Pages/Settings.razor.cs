@@ -7,6 +7,7 @@ using Manta.Models;
 using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
 using Grpc.Net.Client.Web;
+using Manta.Services;
 
 #if ANDROID
 using Manta.Platforms.Android.Services;
@@ -33,10 +34,6 @@ public partial class Settings : ComponentBase, IDisposable
     public ILocalStorageService LocalStorage { get; set; } = default!;
     [Inject]
     public DaemonConnectionSingleton DaemonConnectionSingleton { get; set; } = default!;
-#if ANDROID
-    [Inject]
-    public TermuxSetupSingleton TermuxSetupSingleton { get; set; } = default!;
-#endif
     [Inject]
     public NotificationSingleton NotificationSingleton { get; set; } = default!;
     [Inject]
@@ -45,17 +42,18 @@ public partial class Settings : ComponentBase, IDisposable
     public IHavenoAccountService AccountService { get; set; } = default!;
     [Inject]
     public GrpcChannelSingleton GrpcChannelSingleton { get; set; } = default!;
+    [Inject]
+    public IHavenoDaemonService HavenoDaemonService { get; set; } = default!;
 
     public bool IsFetching { get; set; }
     public bool IsBackingUp { get; set; }
     public bool IsConnecting { get; set; }
 
-    public bool IsToggled { get; set; }
+    public bool IsNotificationsToggled { get; set; }
     public bool IsWakeLockToggled { get; set; }
+    public bool IsRemoteNodeToggled { get; set; }
 
     public bool IsConnected { get; set; }
-
-    public bool IsRemoteNodeToggled { get; set; }
     public DaemonInstallOptions DaemonInstallOption { get; set; }
 
     public string? Password { get; set; }
@@ -108,7 +106,10 @@ public partial class Settings : ComponentBase, IDisposable
             BackupCts = new();
             using var backupStream = await AccountService.BackupAccountAsync(BackupCts.Token);
 
+#pragma warning disable CA1416
             var fileSaverResult = await FileSaver.Default.SaveAsync(result.Folder.Path, $"haveno_backup_{DateTime.Now.ToString()}-{Guid.NewGuid()}.zip", backupStream);
+#pragma warning restore CA1416
+
             if (fileSaverResult.IsSuccessful)
             {
 
@@ -181,7 +182,7 @@ public partial class Settings : ComponentBase, IDisposable
 
         IsConnecting = true;
 
-        await SecureStorageHelper.SetAsync("daemonInstallOption", DaemonInstallOptions.RemoteNode);
+        await SecureStorageHelper.SetAsync("daemon-installation-type", DaemonInstallOptions.RemoteNode);
 
         var host = "http://" + Host + ":2134";
 
@@ -190,9 +191,9 @@ public partial class Settings : ComponentBase, IDisposable
 
 #if ANDROID
         GrpcChannelSingleton.CreateChannel(host, Password, new HttpClient(new GrpcWebHandler(GrpcWebMode.GrpcWeb, new AndroidSocks5Handler())));
+#endif
 
-        await TermuxSetupSingleton.StopLocalHavenoDaemonAsync();
-        await TermuxSetupSingleton.CloseTermux();
+        await HavenoDaemonService.StopHavenoDaemonAsync();
 
         RemoteNodeConnectCts = new();
 
@@ -201,7 +202,7 @@ public partial class Settings : ComponentBase, IDisposable
             // Try for 2 minutes
             for (int i = 0; i < 120; i++)
             {
-                if (await TermuxSetupSingleton.IsHavenoDaemonRunningAsync(RemoteNodeConnectCts.Token))
+                if (await HavenoDaemonService.IsHavenoDaemonRunningAsync(RemoteNodeConnectCts.Token))
                 {
                     IsConnecting = false;
                     return;
@@ -217,27 +218,24 @@ public partial class Settings : ComponentBase, IDisposable
 
         IsConnecting = false;
         ConnectionError = "Could not connect to remote node. Make sure Orbot is installed and configured.";
-#endif
     }
 
     public async Task HandleRemoteNodeToggle(bool isToggled)
     {
         // Prompt that account won't be synced and that if running, local daemon, termux etc needs to be stopped
-        if (!isToggled)
+        if (!isToggled) 
         {
-#if ANDROID
             // Theres a small issue if orbot is running at the same time as it listens to the same ports that the Termux tor instance listens on, however users should not be regularly switching hosting modes
-            await SecureStorageHelper.SetAsync("daemonInstallOption", DaemonInstallOptions.TermuxAutomatic);
+            await SecureStorageHelper.SetAsync("daemon-installation-type", DaemonInstallOptions.Standalone);
 
-            if (await TermuxSetupSingleton.GetIsTermuxAndDaemonInstalledAsync())
+            if (await HavenoDaemonService.GetIsDaemonInstalledAsync())
             {
-                await TermuxSetupSingleton.TryStartLocalHavenoDaemonAsync(Guid.NewGuid().ToString(), "http://127.0.0.1:3201");
+                await HavenoDaemonService.TryStartLocalHavenoDaemonAsync(Guid.NewGuid().ToString(), "http://127.0.0.1:3201");
             }
             else
             {
                 NavigationManager.NavigateTo("/");
             }
-#endif
 
             Password = null;
             Host = null;
@@ -253,7 +251,7 @@ public partial class Settings : ComponentBase, IDisposable
             if (status)
                 await SecureStorageHelper.SetAsync("notifications-enabled", true);
             else 
-                IsToggled = false;
+                IsNotificationsToggled = false;
         }
         else
         {
@@ -264,15 +262,11 @@ public partial class Settings : ComponentBase, IDisposable
 
     public async Task HandleWakeLockToggle(bool isToggled)
     {
-#if ANDROID
         if (!isToggled)
             return;
-
-        if (await TermuxSetupSingleton.RequestEnableWakeLockAsync())
-        {
-            await SecureStorageHelper.SetAsync("wakelock-enabled", true);
-        }
-        else
+        
+#if ANDROID
+        if (!await AndroidPermissionService.RequestIgnoreBatteryOptimizationsAsync())
         {
             IsWakeLockToggled = false;
         }
@@ -293,8 +287,6 @@ public partial class Settings : ComponentBase, IDisposable
     {
         await InvokeAsync(() => {
             XMRNodeIsRunning = DaemonInfoSingleton.XMRNodeIsRunning;
-            //UrlConnections = DaemonInfoSingleton.UrlConnections;
-
             StateHasChanged();
         });
     }
@@ -310,7 +302,7 @@ public partial class Settings : ComponentBase, IDisposable
     protected override async Task OnInitializedAsync()
     {
 #if ANDROID
-        IsToggled = (await Permissions.CheckStatusAsync<NotificationPermission>() == PermissionStatus.Granted) && (await SecureStorageHelper.GetAsync<bool>("notifications-enabled"));
+        IsNotificationsToggled = (await Permissions.CheckStatusAsync<NotificationPermission>() == PermissionStatus.Granted) && (await SecureStorageHelper.GetAsync<bool>("notifications-enabled"));
 #endif
         var preferredCurrency = await LocalStorage.GetItemAsStringAsync("preferredCurrency");
         if (preferredCurrency is not null)
@@ -325,10 +317,12 @@ public partial class Settings : ComponentBase, IDisposable
             Password = await SecureStorageHelper.GetAsync<string>("password");
         }
 
-        DaemonInstallOption = await SecureStorageHelper.GetAsync<DaemonInstallOptions>("daemonInstallOption");
+        DaemonInstallOption = await SecureStorageHelper.GetAsync<DaemonInstallOptions>("daemon-installation-type");
         IsRemoteNodeToggled = DaemonInstallOption == DaemonInstallOptions.RemoteNode;
 
-        IsWakeLockToggled = (await SecureStorageHelper.GetAsync<bool>("wakelock-enabled")) || DaemonInstallOption == DaemonInstallOptions.RemoteNode;
+#if ANDROID
+        IsWakeLockToggled = AndroidPermissionService.GetIgnoreBatteryOptimizationsEnabled() || DaemonInstallOption == DaemonInstallOptions.RemoteNode;
+#endif
 
         HavenoVersion = DaemonConnectionSingleton.Version;
         IsConnected = DaemonConnectionSingleton.IsConnected;

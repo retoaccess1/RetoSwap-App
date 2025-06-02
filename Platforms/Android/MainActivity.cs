@@ -3,7 +3,6 @@ using Android.Content;
 using Android.Content.PM;
 using Android.OS;
 using AndroidX.Core.View;
-using Manta.Platforms.Android.Services;
 using Manta.Services;
 
 namespace Manta;
@@ -17,22 +16,21 @@ public class MainActivity : MauiAppCompatActivity
 {
     public MainActivity()
     {
-        _ = typeof(Manta.Services.TermuxReceiver);
+
     }
 
     protected override void OnActivityResult(int requestCode, Result resultCode, Intent? data)
     {
+        if (Enum.IsDefined(typeof(PermissionCodes), requestCode))
+        {
+            AndroidPermissionService.SetPermissionResult((PermissionCodes)requestCode, resultCode);
+        }
+
         base.OnActivityResult(requestCode, resultCode, data);
     }
 
     private void HandleIntent(Intent intent)
     {
-        if (intent?.Data?.Host == "termux_callback")
-        {
-            Console.WriteLine("Returned from Termux!");
-            var output = intent.Data.GetQueryParameter("result");
-        }
-
         // TODO Handle notification. if message, navigate to chat, if trade navigate to trade
     }
 
@@ -57,9 +55,11 @@ public class MainActivity : MauiAppCompatActivity
 
         CreateNotificationFromIntent(Intent);
 
+#pragma warning disable
 #if ANDROID29_0_OR_GREATER
         RegisterActivityLifecycleCallbacks(new AppLifecycleService());
 #endif
+#pragma warning restore
     }
 
     protected override void OnNewIntent(Intent? intent)
@@ -92,13 +92,11 @@ public class MainActivity : MauiAppCompatActivity
 
     public override void OnRequestPermissionsResult(int requestCode, string[] permissions, Permission[] grantResults)
     {
-        TermuxPermissionHelper.HandlePermissionResult(requestCode, permissions, grantResults);
         base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
     }
 
     protected override void OnResume()
     {
         base.OnResume();
-        TermuxInstallService.Resumed();
     }
 }

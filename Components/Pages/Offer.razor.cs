@@ -4,7 +4,6 @@ using HavenoSharp.Services;
 using Manta.Helpers;
 using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
-using System.Linq;
 
 namespace Manta.Components.Pages;
 
@@ -26,10 +25,11 @@ public partial class Offer : ComponentBase, IDisposable
     [Inject]
     public IHavenoTradeService TradeService { get; set; } = default!;
 
+    public bool ShowExtraInfoModal { get; set; }
     public OfferInfo? OfferInfo { get; set; }
 
     private ulong _piconeroAmount;
-    public decimal Amount 
+    public decimal MoneroAmount 
     {
         get; 
         set 
@@ -49,8 +49,33 @@ public partial class Offer : ComponentBase, IDisposable
 
             _piconeroAmount = field.ToPiconero();
 
+            if (OfferInfo.Direction == "BUY")
+            {
+                ulong transactionFee = 0;
+                ulong takerFee = (ulong)(OfferInfo.Amount * OfferInfo.TakerFeePct);
+                ulong depositAmount = (ulong)(OfferInfo.Amount * OfferInfo.SellerSecurityDepositPct);
+                if (depositAmount < 100_000_000_000)
+                {
+                    depositAmount = 100_000_000_000;
+                }
+
+                RequiredFunds = _piconeroAmount + transactionFee + depositAmount + takerFee;
+            }
+            else
+            {
+                ulong transactionFee = 0;
+                ulong takerFee = (ulong)(OfferInfo.Amount * OfferInfo.TakerFeePct);
+                ulong depositAmount = (ulong)(OfferInfo.Amount * OfferInfo.BuyerSecurityDepositPct);
+                if (depositAmount < 100_000_000_000)
+                {
+                    depositAmount = 100_000_000_000;
+                }
+
+                RequiredFunds = transactionFee + depositAmount + takerFee;
+            }
+
             if (OfferInfo is not null)  // Price changes...
-                FiatAmount = decimal.Parse(OfferInfo.Price) * Amount;
+                FiatAmount = decimal.Parse(OfferInfo.Price) * MoneroAmount;
         } 
     }
 
@@ -62,8 +87,10 @@ public partial class Offer : ComponentBase, IDisposable
 
     public bool IsTakingOffer { get; set; }
     public bool UserDoesNotHaveAccount { get; set; }
+    public ulong RequiredFunds { get; set; }
     public string? AccountToCreate { get; set; }
     public string? AccountErrorMessage { get; set; }
+    public ulong AvailableBalance { get; set; }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -81,8 +108,7 @@ public partial class Offer : ComponentBase, IDisposable
         {
             OfferInfo = await OfferService.GetOfferAsync(OfferId);
 
-            FiatAmount = decimal.Parse(OfferInfo.Price) * Amount;
-            Amount = OfferInfo.Amount.ToMonero();
+            ShowExtraInfoModal = !string.IsNullOrEmpty(OfferInfo.ExtraInfo);
 
             var paymentAccounts = await PaymentAccountService.GetPaymentAccountsAsync();
 
@@ -115,6 +141,12 @@ public partial class Offer : ComponentBase, IDisposable
             }
 
             PaymentAccounts = sameTypePaymentAccounts.ToDictionary(x => x.Id, x => x.AccountName);
+
+            AvailableBalance = BalanceSingleton.WalletInfo?.AvailableXMRBalance ?? 0;
+            FiatAmount = decimal.Parse(OfferInfo.Price) * MoneroAmount;
+            MoneroAmount = OfferInfo.Amount.ToMonero();
+
+            BalanceSingleton.OnBalanceFetch += HandleBalanceFetch;
         }
         catch
         {
@@ -124,18 +156,35 @@ public partial class Offer : ComponentBase, IDisposable
         await base.OnInitializedAsync();
     }
 
+    public async void HandleBalanceFetch(bool isFetching)
+    {
+        if (!isFetching)
+        {
+            await InvokeAsync(() => {
+                if (OfferInfo is null)
+                    return;
+
+                AvailableBalance = BalanceSingleton.WalletInfo?.AvailableXMRBalance ?? 0;
+                StateHasChanged();
+            });
+        }
+    }
+
     public async Task TakeOfferAsync()
     {
+        if (OfferInfo is null)
+            return;
+
         IsTakingOffer = true;
 
         try
         {
             var takeOfferRequest = new TakeOfferRequest
             {
-                OfferId = OfferInfo?.Id,
+                OfferId = OfferInfo.Id,
                 Amount = _piconeroAmount,
                 PaymentAccountId = SelectedPaymentAccountId,
-                Challenge = OfferInfo?.Challenge
+                Challenge = OfferInfo.Challenge
             };
 
             var response = await TradeService.TakeOfferAsync(takeOfferRequest);
@@ -144,11 +193,11 @@ public partial class Offer : ComponentBase, IDisposable
 
             NavigationManager.NavigateTo("Trades");
         }
-        catch (OperationCanceledException e)
+        catch (OperationCanceledException)
         {
             // Show user it was canceled
         }
-        catch (Exception e)
+        catch (Exception)
         {
             throw;
         }
@@ -170,6 +219,6 @@ public partial class Offer : ComponentBase, IDisposable
 
     public void Dispose()
     {
-
+        BalanceSingleton.OnBalanceFetch -= HandleBalanceFetch;
     }
 }

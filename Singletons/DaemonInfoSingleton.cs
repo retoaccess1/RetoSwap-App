@@ -35,7 +35,7 @@ public class DaemonInfoSingleton
 
                 XMRNodeIsRunning = await xmrNodeService.IsXmrNodeOnlineAsync();
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 //Console.WriteLine(e);
             }

@@ -73,12 +73,25 @@
         <label>Set both traders' security deposit (%)</label>
         <input readonly="@BuyerAsTakerWithoutDeposit" type="number" @bind="SecurityDepositPct" />
 
-        <div class="deposit-toggle">
-            <Toggle Text="No deposit required from buyer" @bind-IsToggled="BuyerAsTakerWithoutDeposit"></Toggle>
-        </div>
+@*         @if (TradeFee < 100_000_000_000)
+        {
+
+        }
+        else
+        {
+            
+        } *@
+        <InfoRow Label="Trade fee" Value="@($"{TradeFee.ToMonero()} XMR (~{TradeFeeFiat} {SelectedCurrencyCode})")"></InfoRow>
+
+        @if (Direction == "SELL")
+        {
+            <div class="deposit-toggle">
+                <Toggle Text="No deposit required from buyer" @bind-IsToggled="BuyerAsTakerWithoutDeposit"></Toggle>
+            </div>
+        }
 
         <div class="buttons">
-            <button class="button-green" disabled="@(MoneroAmount < 0.15m || MinimumMoneroAmount < 0.15m)" @onclick="() => IsConfirmModalOpen = true">Review offer</button>
+            <button class="button-green" disabled="@(MoneroAmount < 0.15m || MinimumMoneroAmount < 0.15m || RequiredFunds > AvailableXMRBalance)" @onclick="() => IsConfirmModalOpen = true">Review offer</button>
             <button class="button-grey" @onclick="OnCloseCreateOffer">Cancel</button>
         </div>
     }

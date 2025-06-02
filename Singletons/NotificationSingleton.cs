@@ -93,7 +93,7 @@ public class NotificationSingleton
 
                 break;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 if (i == 1)
                 {
@@ -122,9 +122,9 @@ public class NotificationSingleton
 
                 break;
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                Console.WriteLine(e);
+                //Console.WriteLine(e);
             }
 
             await Task.Delay(2_000);

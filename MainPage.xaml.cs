@@ -10,10 +10,11 @@ public partial class MainPage : ContentPage
     protected override void OnHandlerChanged()
     {
         base.OnHandlerChanged();
+
 #if ANDROID
-		var blazorView = this.blazorWebView;
-		var platformView = (Android.Webkit.WebView)blazorView.Handler.PlatformView;
-		platformView.OverScrollMode = Android.Views.OverScrollMode.Never;
+		var platformView = (Android.Webkit.WebView?)blazorWebView.Handler?.PlatformView;
+        if (platformView is not null)
+		    platformView.OverScrollMode = Android.Views.OverScrollMode.Never;
 #endif
     }
 }

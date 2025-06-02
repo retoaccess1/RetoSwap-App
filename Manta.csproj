@@ -38,19 +38,24 @@
     <TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
     <LangVersion>preview</LangVersion>
-    <PublishAot>False</PublishAot>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net8.0-android|AnyCPU'">
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <DebugType>None</DebugType>
     <DebugSymbols>false</DebugSymbols>
+    <RunAOTCompilation>False</RunAOTCompilation>
+    <PublishTrimmed>False</PublishTrimmed>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-android|AnyCPU'">
+    <PublishTrimmed>False</PublishTrimmed>
   </PropertyGroup>
 
   <!--<PropertyGroup>
     <UseNativeHttpHandler>false</UseNativeHttpHandler>
   </PropertyGroup>-->
-
+  
   <ItemGroup>
     <!-- App Icon -->
     <MauiIcon Include="Resources\AppIcon\havenologo.png" ForegroundFile="Resources\AppIcon\havenologo.png" Color="#000000" />
@@ -71,11 +76,17 @@
 
   <ItemGroup>
     <AndroidResource Remove="Enums\**" />
+    <AndroidResource Remove="Platforms\Android\JniLibs\arm64\**" />
     <Compile Remove="Enums\**" />
+    <Compile Remove="Platforms\Android\JniLibs\arm64\**" />
     <Content Remove="Enums\**" />
+    <Content Remove="Platforms\Android\JniLibs\arm64\**" />
     <EmbeddedResource Remove="Enums\**" />
+    <EmbeddedResource Remove="Platforms\Android\JniLibs\arm64\**" />
     <MauiXaml Remove="Enums\**" />
+    <MauiXaml Remove="Platforms\Android\JniLibs\arm64\**" />
     <None Remove="Enums\**" />
+    <None Remove="Platforms\Android\JniLibs\arm64\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -86,6 +97,35 @@
     <None Remove="install_haveno.sh" />
     <None Remove="Platforms\Android\Resources\xml\net_sec_conf.xml" />
     <None Remove="Resources\AppIcon\appiconfg.svg" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AndroidNativeLibrary Include="Platforms\Android\JniLibs\arm64-v8a\libprootwrapper.so">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="Platforms\Android\JniLibs\arm64-v8a\libproot.so">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="Platforms\Android\JniLibs\arm64-v8a\libloader.so">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="Platforms\Android\JniLibs\arm64-v8a\libloader32.so">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
+
+
+    <AndroidNativeLibrary Include="Platforms\Android\JniLibs\x86_64\libprootwrapper.so">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="Platforms\Android\JniLibs\x86_64\libloader.so">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="Platforms\Android\JniLibs\x86_64\libloader32.so">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
+    <AndroidNativeLibrary Include="Platforms\Android\JniLibs\x86_64\libproot.so">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </AndroidNativeLibrary>
   </ItemGroup>
 
   <ItemGroup>
@@ -109,17 +149,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Platforms\Android\Assets\" />
     <Folder Include="wwwroot\fonts\" />
   </ItemGroup>
 
   <ItemGroup>
     <None Include="compilerconfig.json" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <MauiAsset Update="Resources\Raw\install_haveno.sh">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </MauiAsset>
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-android'">

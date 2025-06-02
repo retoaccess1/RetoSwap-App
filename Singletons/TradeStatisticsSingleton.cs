@@ -38,7 +38,7 @@ public class TradeStatisticsSingleton
                 if (!InitializedTCS.Task.IsCompleted)
                 {
                     InitializedTCS.SetResult(true);
-#if !DEBUG
+#if RELEASE
                     _delay = 60_000;
 #endif
                 }
@@ -47,7 +47,7 @@ public class TradeStatisticsSingleton
             {
                 return;
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 //Console.WriteLine(e);
             }
