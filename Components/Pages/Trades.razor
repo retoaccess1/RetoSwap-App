@@ -95,7 +95,7 @@
         {
             <p>@CompletedTradeInfo?.Offer.BaseCurrencyCode amount to receive: @CompletedTradeInfo?.TradeVolume @CompletedTradeInfo?.Offer.BaseCurrencyCode</p>
         }
-        <p>Trade price: @Math.Round(decimal.Parse(CompletedTradeInfo?.Price ?? "0"), 4)</p>
+        <p>Trade price: @Math.Round(decimal.Parse(CompletedTradeInfo?.Price ?? "0", CultureInfo.InvariantCulture), 4)</p>
         <p>Payment method: @CompletedTradeInfo?.Offer.PaymentMethodShortName</p>
     </div>
 </Modal>

@@ -24,8 +24,8 @@
                                         @offer.CounterCurrencyCode
                                         @(" ")
                                         @{
-                                            var minVolume = double.Parse(offer.MinVolume);
-                                            var volume = double.Parse(offer.Volume);
+                                            var minVolume = double.Parse(offer.MinVolume, CultureInfo.InvariantCulture);
+                                            var volume = double.Parse(offer.Volume, CultureInfo.InvariantCulture);
 
                                             if (minVolume == volume)
                                             {
@@ -50,8 +50,8 @@
                                     <p>@offer.BaseCurrencyCode
                                     @(" ")
                                     @{
-                                        var minVolume = double.Parse(offer.MinVolume);
-                                        var volume = double.Parse(offer.Volume);
+                                        var minVolume = double.Parse(offer.MinVolume, CultureInfo.InvariantCulture);
+                                        var volume = double.Parse(offer.Volume, CultureInfo.InvariantCulture);
 
                                         if (minVolume == volume)
                                         {
@@ -74,7 +74,7 @@
                         <div class="offer-top-right">
                             <p>@offer.PaymentMethodShortName</p>
                             <div class="amounts">
-                                @(Math.Round(double.Parse(offer.Price), 2))
+                                @(Math.Round(double.Parse(offer.Price, CultureInfo.InvariantCulture), 2))
                                 @offer.CounterCurrencyCode
                                 (@Math.Round(offer.MarketPriceMarginPct, 2).ToString("0.00")%)
                             </div>

@@ -4,7 +4,7 @@
     <div class="modal-content regular-p-grey">
         <p>Sending @Amount XMR</p>
         <p class="withdrawal-address">To address: @WithdrawalAddress</p>
-        <p>Fee: @(ulong.Parse(Transaction?.Fee ?? "0").ToMonero()) XMR</p>
+        <p>Fee: @(ulong.Parse(Transaction?.Fee ?? "0", CultureInfo.InvariantCulture).ToMonero()) XMR</p>
     </div>
 </Modal>
 <Modal @bind-IsOpen="@CreatingTxModalIsOpen" Title="Creating transaction" OnOkPressed="WithdrawAsync">
@@ -102,14 +102,14 @@
                             {
                                 <img src="icons/arrow-right.svg" class="in" />
                                 <p class="transaction-amount">
-                                    XMR @transaction.IncomingTransfers.Aggregate(ulong.MinValue, (x, y) => x + ulong.Parse(y.Amount)).ToMonero().ToString("0.000")
+                                    XMR @transaction.IncomingTransfers.Aggregate(ulong.MinValue, (x, y) => x + ulong.Parse(y.Amount, CultureInfo.InvariantCulture)).ToMonero().ToString("0.000")
                                 </p>
                             }
                             else
                             {
                                 <img src="icons/arrow-right.svg" class="out" />
                                 <p class="transaction-amount">
-                                    XMR @ulong.Parse(transaction.OutgoingTransfer.Amount).ToMonero().ToString("0.000")
+                                    XMR @ulong.Parse(transaction.OutgoingTransfer.Amount, CultureInfo.InvariantCulture).ToMonero().ToString("0.000")
                                 </p>
                             }
                             <p>

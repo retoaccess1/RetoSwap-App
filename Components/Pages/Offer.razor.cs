@@ -4,6 +4,7 @@ using HavenoSharp.Services;
 using Manta.Helpers;
 using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
+using System.Globalization;
 
 namespace Manta.Components.Pages;
 
@@ -75,7 +76,7 @@ public partial class Offer : ComponentBase, IDisposable
             }
 
             if (OfferInfo is not null)  // Price changes...
-                FiatAmount = decimal.Parse(OfferInfo.Price) * MoneroAmount;
+                FiatAmount = decimal.Parse(OfferInfo.Price, CultureInfo.InvariantCulture) * MoneroAmount;
         } 
     }
 
@@ -143,7 +144,7 @@ public partial class Offer : ComponentBase, IDisposable
             PaymentAccounts = sameTypePaymentAccounts.ToDictionary(x => x.Id, x => x.AccountName);
 
             AvailableBalance = BalanceSingleton.WalletInfo?.AvailableXMRBalance ?? 0;
-            FiatAmount = decimal.Parse(OfferInfo.Price) * MoneroAmount;
+            FiatAmount = decimal.Parse(OfferInfo.Price, CultureInfo.InvariantCulture) * MoneroAmount;
             MoneroAmount = OfferInfo.Amount.ToMonero();
 
             BalanceSingleton.OnBalanceFetch += HandleBalanceFetch;
