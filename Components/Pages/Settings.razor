@@ -29,9 +29,9 @@
     </div>
     <div class="backup-buttons">
         <button class="backup-btn button-green" @onclick="BackupAsync">Backup account</button>
-        @* <button class="backup-btn" @onclick="() => ShowRestoreModal = true">Restore account</button> *@
+        <button disabled class="backup-btn" @onclick="() => ShowRestoreModal = true">Restore account</button>
     </div>
-    @* <SearchableDropdown Items="" Text="Country" Placeholder="Choose country"></SearchableDropdown> *@
+
     <Toggle OnToggledChanged="HandleToggle" @bind-IsToggled="IsNotificationsToggled" Text="Notifications" />
     @if (DaemonInstallOption == DaemonInstallOptions.Standalone)
     {

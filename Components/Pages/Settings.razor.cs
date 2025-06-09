@@ -9,10 +9,6 @@ using Microsoft.AspNetCore.Components;
 using Grpc.Net.Client.Web;
 using Manta.Services;
 
-#if ANDROID
-using Manta.Platforms.Android.Services;
-#endif
-
 namespace Manta.Components.Pages;
 
 public partial class Settings : ComponentBase, IDisposable
@@ -56,8 +52,8 @@ public partial class Settings : ComponentBase, IDisposable
     public bool IsConnected { get; set; }
     public DaemonInstallOptions DaemonInstallOption { get; set; }
 
-    public string? Password { get; set; }
-    public string? Host { get; set; }
+    public string? Password { get; set { field = value?.Trim(); } }
+    public string? Host { get; set { field = value?.Trim(); } }
 
     public CancellationTokenSource? RemoteNodeConnectCts { get; set; }
     public CancellationTokenSource? BackupCts { get; set; }
@@ -67,23 +63,19 @@ public partial class Settings : ComponentBase, IDisposable
 
     public async Task RestoreFromBackupAsync()
     {
-        //var backupZip = await FilePicker.PickAsync();
-        //if (backupZip is null)
-        //    return;
+        var backupZip = await FilePicker.PickAsync();
+        if (backupZip is null)
+            return;
 
-        //using var fileStream = File.Open(backupZip.FullPath, FileMode.Open);
+        using var fileStream = File.Open(backupZip.FullPath, FileMode.Open);
 
-        //using MemoryStream memoryStream = new();
-        //fileStream.CopyTo(memoryStream);
+        using MemoryStream memoryStream = new();
+        fileStream.CopyTo(memoryStream);
 
-        //var zipBytes = await Google.Protobuf.ByteString.FromStreamAsync(memoryStream);
+        // Bugged, for some reason daemon restarts after account deleted and creates a new account
+        await AccountService.DeleteAccountAsync();
 
-        //await DeleteAccountAsync();
-
-        //using var grpcChannelHelper = new GrpcChannelHelper(disableMessageSizeLimit: true);
-        //var accountClient = new AccountClient(grpcChannelHelper.Channel);
-
-        //var response = await accountClient.RestoreAccountAsync(new RestoreAccountRequest { ZipBytes = zipBytes, TotalLength = (ulong)zipBytes.Length, HasMore = false, Offset = 0 });
+        await AccountService.RestoreAccountAsync(memoryStream);
     }
 
     public async Task BackupAsync()
@@ -93,11 +85,7 @@ public partial class Settings : ComponentBase, IDisposable
         try
         {
             var result = await FolderPicker.Default.PickAsync();
-            if (result.IsSuccessful)
-            {
-
-            }
-            else
+            if (!result.IsSuccessful)
             {
                 IsBackingUp = false;
                 return;
@@ -107,14 +95,10 @@ public partial class Settings : ComponentBase, IDisposable
             using var backupStream = await AccountService.BackupAccountAsync(BackupCts.Token);
 
 #pragma warning disable CA1416
-            var fileSaverResult = await FileSaver.Default.SaveAsync(result.Folder.Path, $"haveno_backup_{DateTime.Now.ToString()}-{Guid.NewGuid()}.zip", backupStream);
+            var fileSaverResult = await FileSaver.Default.SaveAsync(result.Folder.Path, $"haveno_backup_{DateTime.Now}-{Guid.NewGuid()}.zip", backupStream);
 #pragma warning restore CA1416
 
-            if (fileSaverResult.IsSuccessful)
-            {
-
-            }
-            else
+            if (!fileSaverResult.IsSuccessful)
             {
                 IsBackingUp = false;
                 return;
@@ -176,7 +160,6 @@ public partial class Settings : ComponentBase, IDisposable
 
     public async Task ConnectToRemoteNode()
     {
-        // Todo validation
         if (string.IsNullOrEmpty(Password) || string.IsNullOrEmpty(Host))
             return;
 

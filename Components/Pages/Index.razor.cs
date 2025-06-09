@@ -1,10 +1,10 @@
 ﻿using Blazored.LocalStorage;
+using HavenoSharp.Singletons;
+using Manta.Helpers;
 using Manta.Models;
 using Manta.Services;
-using Microsoft.AspNetCore.Components;
 using Manta.Singletons;
-using Manta.Helpers;
-using HavenoSharp.Singletons;
+using Microsoft.AspNetCore.Components;
 using Grpc.Net.Client.Web;
 
 namespace Manta.Components.Pages;
@@ -15,6 +15,7 @@ public partial class Index : ComponentBase
     public DaemonSetupState DaemonSetupState { get; set; }
     public bool IsInstallTypeModalOpen { get; set; }
     public string DaemonStartInfo { get; set; } = string.Empty;
+    public double InstallProgress { get; set; }
     public bool IsDaemonStartInfoModalOpen { get; set; }
     public string? InstallationErrorMessage { get; set; }
 
@@ -91,12 +92,19 @@ public partial class Index : ComponentBase
 
         try
         {
-            await HavenoDaemonService.InstallHavenoDaemonAsync();
+            var progressCb = new Progress<double>(progress =>
+            {
+                InstallProgress = progress;
+                StateHasChanged();
+            });
+
+            await HavenoDaemonService.InstallHavenoDaemonAsync(progressCb);
         }
         catch (Exception e)
         {
-            await SecureStorageHelper.SetAsync("daemonInstallOption", DaemonInstallOptions.None);
-            IsInstallTypeModalOpen = true;
+            // Todo don't need to use SecureStorage for everything
+            await SecureStorageHelper.SetAsync("daemon-installation-type", DaemonInstallOptions.None);
+            DaemonSetupState = DaemonSetupState.Initial;
             InstallationErrorMessage = e.ToString();
             StateHasChanged();
             return;

@@ -95,13 +95,13 @@ public class AlarmReceiver : BroadcastReceiver
 
         var serviceProvider = IPlatformApplication.Current?.Services;
         if (serviceProvider is null)
-            throw new Exception("serviceProvider was null");
+            return;
 
         using var scope = serviceProvider.CreateScope();
 
         var notificationSingleton = scope.ServiceProvider.GetRequiredService<NotificationSingleton>();
 
-        Task.Run(notificationSingleton.BackgroundSync);
+        //Task.Run(notificationSingleton.BackgroundSync);
 
         // Chaining alarms basically
         AlarmUtils.ScheduleExactAlarm(context);

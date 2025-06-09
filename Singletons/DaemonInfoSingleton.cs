@@ -1,13 +1,11 @@
 ﻿using HavenoSharp.Services;
-using Manta.Helpers;
 
 namespace Manta.Singletons;
 
-public class DaemonInfoSingleton
+public class DaemonInfoSingleton : SingletonBase
 {
     private readonly IServiceProvider _serviceProvider;
 
-    //public List<UrlConnection> UrlConnections { get; private set; } = [];
     public bool XMRNodeIsRunning { get; private set; }
 
     public event Action<bool>? OnDaemonInfoFetch;
@@ -24,11 +22,9 @@ public class DaemonInfoSingleton
         {
             try
             {
+                await _pauseSource.Token.WaitIfPausedAsync();
+
                 OnDaemonInfoFetch?.Invoke(true);
-
-                //var connectionsResponse = await xmrConnectionsClient.GetConnectionsAsync(new GetConnectionsRequest());
-
-                //UrlConnections = [.. connectionsResponse.Connections];
 
                 using var scope = _serviceProvider.CreateScope();
                 var xmrNodeService = _serviceProvider.GetRequiredService<IHavenoXmrNodeService>();
@@ -37,7 +33,7 @@ public class DaemonInfoSingleton
             }
             catch (Exception)
             {
-                //Console.WriteLine(e);
+
             }
             finally
             {

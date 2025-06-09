@@ -1,6 +1,6 @@
 ﻿using Android;
 
-namespace Manta.Platforms.Android.Services;
+namespace Manta.Services;
 
 public class NotificationPermission : Permissions.BasePlatformPermission
 {

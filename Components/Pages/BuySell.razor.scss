@@ -44,8 +44,16 @@
     .toggle-container {
         display: flex;
 
+        p {
+            color: #737373;
+        }
+
         .buy-txt {
             margin-right: 6px;
+        }
+
+        .txt-active {
+            color: #fff;
         }
 
         .sell-txt {

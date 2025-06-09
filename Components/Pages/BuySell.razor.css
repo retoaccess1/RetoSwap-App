@@ -40,8 +40,14 @@
 .account-type .toggle-container {
   display: flex;
 }
+.account-type .toggle-container p {
+  color: #737373;
+}
 .account-type .toggle-container .buy-txt {
   margin-right: 6px;
+}
+.account-type .toggle-container .txt-active {
+  color: #fff;
 }
 .account-type .toggle-container .sell-txt {
   margin-left: 6px;

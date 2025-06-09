@@ -19,9 +19,9 @@
     <div class="account-type">
         <Tabs @bind-SelectedTabIndex="OfferPaymentType" TabNames="@(["Fiat", "Crypto", "Other"])"></Tabs>
         <div class="toggle-container">
-            <p class="buy-txt">Buy</p>
+            <p class=@(Direction == "BUY" ? "buy-txt txt-active" : "buy-txt")>Buy</p>
             <Toggle @bind-IsToggled="IsToggled"/>
-            <p class="sell-txt">Sell</p>
+            <p class=@(Direction == "SELL" ? "sell-txt txt-active" : "sell-txt")>Sell</p>
         </div>
         <div class="collapse">
             <ion-icon @onclick="() => IsCollapsed = !IsCollapsed" name=@(IsCollapsed ? "chevron-down-outline" : "chevron-up-outline")></ion-icon>

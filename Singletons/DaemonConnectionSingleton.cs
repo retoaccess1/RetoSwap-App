@@ -4,7 +4,7 @@ using HavenoSharp.Services;
 
 namespace Manta.Singletons;
 
-public class DaemonConnectionSingleton
+public class DaemonConnectionSingleton : SingletonBase
 {
     private readonly IHavenoVersionService _versionService;
     private readonly IHavenoWalletService _walletService;
@@ -16,7 +16,6 @@ public class DaemonConnectionSingleton
 
     public bool IsWalletAvailable { get; private set; }
     public Action<bool>? OnWalletAvailabilityChanged;
-
 
     public DaemonConnectionSingleton(IHavenoVersionService versionService, IHavenoWalletService walletService)
     {
@@ -33,6 +32,9 @@ public class DaemonConnectionSingleton
         {
             try
             {
+                // This will work but since this singleton has two tasks they will block eachother
+                await _pauseSource.Token.WaitIfPausedAsync();
+
                 await _walletService.GetXmrPrimaryAddressAsync();
 
                 if (!IsWalletAvailable)
@@ -85,6 +87,8 @@ public class DaemonConnectionSingleton
         {
             try
             {
+                await _pauseSource.Token.WaitIfPausedAsync();
+
                 // Checks if the daemon is running, it could still be that its not fully initialized so things like wallet won't work.
                 Version = await _versionService.GetVersionAsync();
 

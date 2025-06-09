@@ -47,3 +47,8 @@
 button {
   margin-top: 10px;
 }
+
+::deep .installation-error-text {
+  white-space: normal;
+  line-break: normal;
+}

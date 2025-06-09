@@ -55,15 +55,7 @@ public partial class Wallet : ComponentBase, IDisposable
     public NumberFormatInfo PreferredCurrencyFormat { get; set; } = default!;
     public bool IsFetching { get; set; }
 
-    protected override Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-
-        }
-
-        return base.OnAfterRenderAsync(firstRender);
-    }
+    public CancellationTokenSource CancellationTokenSource { get; set; } = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -84,8 +76,7 @@ public partial class Wallet : ComponentBase, IDisposable
 
                 BalanceSingleton.OnBalanceFetch += HandleBalanceFetch;
 
-                // Move to long running task
-                await GetTransactionsAsync();
+                _ = Task.Run(GetTransactionsAsync);
 
                 break;
             }
@@ -102,7 +93,30 @@ public partial class Wallet : ComponentBase, IDisposable
 
     private async Task GetTransactionsAsync()
     {
-        Transactions = await WalletService.GetXmrTxsAsync();
+        while (true)
+        {
+            try
+            {
+                Transactions = await WalletService.GetXmrTxsAsync();
+
+                await Task.Delay(5_000, CancellationTokenSource.Token);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            catch (Exception)
+            {
+                try
+                {
+                    await Task.Delay(5_000, CancellationTokenSource.Token);
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+            }
+        }
     }
 
     private async void HandleBalanceFetch(bool isFetching)
@@ -176,5 +190,7 @@ public partial class Wallet : ComponentBase, IDisposable
     public void Dispose()
     {
         BalanceSingleton.OnBalanceFetch -= HandleBalanceFetch;
+        CancellationTokenSource.Cancel();
+        CancellationTokenSource.Dispose();
     }
 }

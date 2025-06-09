@@ -3,9 +3,9 @@
 <Spinner IsFullscreen="true" IsVisible="IsInitializing"/>
 
 <Modal IsOpen="IsInstallTypeModalOpen"
-Title="Initial setup"
-ModalButtonOptions="ModalButtonOptions.NONE"
-IsCloseable="false">
+    Title="Initial setup"
+    ModalButtonOptions="ModalButtonOptions.NONE"
+    IsCloseable="false">
     <div class="install-modal">
         <p class="regular-p-grey">In order to use the app in standalone mode the Haveno daemon needs to be installed ~400mb download</p>
         <p>Please choose an installation type</p>
@@ -22,18 +22,19 @@ IsCloseable="false">
         case DaemonSetupState.InstallingDependencies:
             <div class="loader-text-container">
                 <span class="loader"></span>
-                <p class="regular-p-grey">Downloading dependencies</p>
+                <p class="regular-p-grey">Downloading dependencies @($"{InstallProgress:F0}%")</p>
             </div>
-            break;
-        case DaemonSetupState.InstallingHavenoDaemon:
-            <p class="regular-p-grey">Setting up Haveno</p>
             break;
         default: break;
     }
 </Modal>
-<Modal IsOpen="InstallationErrorMessage is not null" Title="Installation error" ModalButtonOptions="ModalButtonOptions.NONE" IsCloseable="false">
-    <p>@InstallationErrorMessage</p>
-    <p class="regular-p-grey">Try restarting the app</p>
+<Modal 
+    IsOpen="InstallationErrorMessage is not null" 
+    Title="Installation error"
+    ModalButtonOptions="ModalButtonOptions.CANCEL"
+    OnCancelPressed="@(() => { IsInstallTypeModalOpen = true; InstallationErrorMessage = null; })"
+    CancelButtonText="Close">
+    <p class="installation-error-text">@InstallationErrorMessage</p>
 </Modal>
 <Modal IsOpen="IsDaemonStartInfoModalOpen || DaemonStartInfo != string.Empty" Title="Initializing" ModalButtonOptions="ModalButtonOptions.NONE" IsCloseable="false">
     <p class="regular-p-grey init-text-top">Haveno is starting, please wait</p>

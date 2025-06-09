@@ -10,8 +10,8 @@ using System.Text;
 
 namespace Manta.Services;
 
-[Service(Name = "com.companyname.manta.BackendService", Enabled = true, Exported = true, Permission = "android.permission.BIND_JOB_SERVICE", ForegroundServiceType = Android.Content.PM.ForegroundService.TypeSystemExempted)]
-[IntentFilter(["com.companyname.manta.ACTION_START_BACKEND"])]
+[Service(Name = "com.companyname.manta.BackendService", Enabled = true, Exported = false, Permission = "android.permission.BIND_VPN_SERVICE", ForegroundServiceType = Android.Content.PM.ForegroundService.TypeDataSync)]
+[IntentFilter(["com.companyname.manta.ACTION_START_BACKEND", "com.companyname.manta.ACTION_STOP_BACKEND"])]
 public class BackendService : Service
 {
     private string _notificationChannelId = "BackendServiceChannel";
@@ -21,7 +21,6 @@ public class BackendService : Service
     private CancellationTokenSource? _torCts;
     private CancellationTokenSource? _daemonCts;
     private TaskCompletionSource? _torReadyTCS;
-    private PowerManager.WakeLock? _wakeLock;
 
     public BackendService()
     {
@@ -61,16 +60,17 @@ public class BackendService : Service
         {
             _notificationManager = (NotificationManager?)GetSystemService(Context.NotificationService);
             _notificationBuilder = new NotificationCompat.Builder(this, _notificationChannelId)
-                .SetSmallIcon(Resource.Drawable.haveno)
+                .SetSmallIcon(Resource.Drawable.small_icon)
                 .SetContentIntent(pendingIntent)
-                .SetCategory(Notification.CategoryService);
+                .SetPriority(NotificationCompat.PriorityMin)
+                .SetVisibility(NotificationCompat.VisibilitySecret)
+                .SetCategory(Notification.CategoryService)
+                .SetShowWhen(false)
+                .SetSilent(true)
+                .SetOngoing(true);
         }
 
-        _notificationBuilder.SetOngoing(true);
-        _notificationBuilder.SetContentTitle("test");
         _notificationBuilder.MActions?.Clear();
-
-        _notificationBuilder.SetContentText("test");
 
         StartForeground(1, _notificationBuilder.Build());
     }
@@ -84,8 +84,7 @@ public class BackendService : Service
             _notificationManager = (NotificationManager?)GetSystemService(Context.NotificationService);
         }
 
-        if (AndroidPermissionService.GetIgnoreBatteryOptimizationsEnabled())
-            CreateNotificationChannel();
+        CreateNotificationChannel();
     }
 
     [return: GeneratedEnum]
@@ -94,80 +93,43 @@ public class BackendService : Service
         if (intent is null)
             return StartCommandResult.RedeliverIntent;
 
-        var serviceProvider = IPlatformApplication.Current?.Services;
-        var grpcChannelSingleton = serviceProvider?.GetService<GrpcChannelSingleton>();
-        if (grpcChannelSingleton is null)
-            throw new Exception("GrpcChannelSingleton was null in StartBackendServices");
+        ShowNotification();
 
-        var host = intent.GetStringExtra("host");
-        var password = intent.GetStringExtra("password");
-
-        if (password is null || host == null)
-            return StartCommandResult.RedeliverIntent;
-
-        SecureStorageHelper.Set("password", password);
-        SecureStorageHelper.Set("host", host);
-        grpcChannelSingleton.CreateChannel(host, password);
-
-        var torThread = new Thread(() =>
+        switch (intent.Action) 
         {
-            Proot.RunProotUbuntuCommand("tor");
-        });
-        torThread.Start();
+            case "ACTION_STOP_BACKEND":
+                Task.Run(StopHavenoDaemonAsync);
+                break;
+            case "ACTION_START_BACKEND":
+                {
+                    // TODO If running cancel
+                    var password = intent.GetStringExtra("password");
 
-        var daemonThread = new Thread(() =>
-        {
-            Proot.RunProotUbuntuCommand("bash", "-c", $"/usr/share/haveno/haveno-daemon --baseCurrencyNetwork=XMR_STAGENET --useLocalhostForP2P=false --useDevPrivilegeKeys=false --nodePort=9999 --appName=haveno-XMR_STAGENET_user1 --apiPassword={password} --apiPort=3201 --passwordRequired=false --useNativeXmrWallet=false --torControlHost=127.0.0.1 --torControlPort=9051");
-        });
-        daemonThread.Start();
+                    if (password is null)
+                        return StartCommandResult.RedeliverIntent;
+
+                    Task.Run(() => StartBackend(password));
+                }
+                break;
+            default: break;
+        }
 
         return StartCommandResult.RedeliverIntent;
     }
 
-    public override IBinder? OnBind(Intent? intent)
+    void UpdateProgress(string progress, bool isDone = false)
     {
-        return null;
+        var intent = new Intent("com.companyname.manta.BACKEND_PROGRESS");
+        intent.PutExtra("progress", progress);
+        if (isDone)
+            intent.PutExtra("isDone", isDone);
+
+        intent.SetPackage(Android.App.Application.Context.PackageName);
+        SendBroadcast(intent);
     }
 
-    //private async Task StartBackendServices(string password, string host)
-    //{
-    //    //var serviceProvider = MauiApplication.Current.Services;
-    //    //var grpcChannelSingleton = serviceProvider.GetService<GrpcChannelSingleton>();
-    //    //if (grpcChannelSingleton is null)
-    //    //    throw new Exception("GrpcChannelSingleton was null in StartBackendServices");
-
-    //    //SecureStorageHelper.Set("password", password);
-    //    //SecureStorageHelper.Set("host", host);
-    //    //grpcChannelSingleton.CreateChannel(host, password);
-
-    //    //var torThread = new Thread(() =>
-    //    //{
-    //    //    Proot.RunProotUbuntuCommand("tor");
-    //    //});
-    //    //torThread.Start();
-
-    //    //var daemonThread = new Thread(() =>
-    //    //{
-    //    //    Proot.RunProotUbuntuCommand("bash", "-c", $"/usr/share/haveno/haveno-daemon --baseCurrencyNetwork=XMR_STAGENET --useLocalhostForP2P=false --useDevPrivilegeKeys=false --nodePort=9999 --appName=haveno-XMR_STAGENET_user1 --apiPassword={password} --apiPort=3201 --passwordRequired=false --useNativeXmrWallet=false --torControlHost=127.0.0.1 --torControlPort=9051");
-    //    //});
-    //    //daemonThread.Start();
-    //}
-
-    private async void A(string password, string host, Action<string>? progressCb = default)
+    private void StartBackend(string password)
     {
-        var serviceProvider = IPlatformApplication.Current?.Services;
-        var grpcChannelSingleton = serviceProvider?.GetService<GrpcChannelSingleton>();
-        if (grpcChannelSingleton is null)
-            throw new Exception("GrpcChannelSingleton was null in StartBackendServices");
-
-        await SecureStorageHelper.SetAsync("password", password);
-        await SecureStorageHelper.SetAsync("host", host);
-        grpcChannelSingleton.CreateChannel(host, password);
-
-        // TODO
-        // When app uses optimized battery settings, these threads get killed.
-        // I want these to just sleep when optimized so they resume when the app resumes
-
         _torReadyTCS = new();
 
         _ = Task.Run(() =>
@@ -197,7 +159,7 @@ public class BackendService : Service
                         {
                             var percentage = new string(stringBuilder.ToString().Reverse().ToArray());
 
-                            progressCb?.Invoke($"Tor bootstrapping: {percentage}%");
+                            UpdateProgress($"Tor bootstrapping: {percentage}%");
 
                             if (percentage == "100")
                             {
@@ -213,9 +175,10 @@ public class BackendService : Service
         {
             await _torReadyTCS.Task;
 
-            progressCb?.Invoke("Starting daemon");
+            UpdateProgress("Starting daemon");
 
             _daemonCts = new();
+            // Don't need to set a new password whenever starting daemon
             using var streamReader = Proot.RunProotUbuntuCommand("bash", _daemonCts.Token, "-c", $"/usr/share/haveno/haveno-daemon --baseCurrencyNetwork=XMR_STAGENET --useLocalhostForP2P=false --useDevPrivilegeKeys=false --nodePort=9999 --appName=haveno-XMR_STAGENET_user1 --apiPassword={password} --apiPort=3201 --passwordRequired=false --useNativeXmrWallet=false --torControlHost=127.0.0.1 --torControlPort=9051");
 
             string? line;
@@ -223,14 +186,30 @@ public class BackendService : Service
             {
                 Console.WriteLine(line);
 
-                switch (line)
+                if (line.Contains("Init wallet"))
                 {
-                    case "Init wallet":
-                        progressCb?.Invoke("Initializing wallet");
-                        break;
-                    default: break;
+                    UpdateProgress("Initializing wallet", true);
+
                 }
+                //else if (line.Contains("walletInitialized=true"))
+                //{
+
+                //}
             }
         });
+    }
+
+    public async Task StopHavenoDaemonAsync()
+    {
+        if (_daemonCts is not null)
+            await _daemonCts.CancelAsync();
+
+        if (_torCts is not null)
+            await _torCts.CancelAsync();
+    }
+
+    public override IBinder? OnBind(Intent? intent)
+    {
+        return null;
     }
 }

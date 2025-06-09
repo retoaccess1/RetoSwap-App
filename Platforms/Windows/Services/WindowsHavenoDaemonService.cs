@@ -51,7 +51,7 @@ public class WindowsHavenoDaemonService : HavenoDaemonServiceBase
         writer.Close();
     }
 
-    public override async Task InstallHavenoDaemonAsync()
+    public override async Task InstallHavenoDaemonAsync(IProgress<double> progressCb)
     {
         Console.WriteLine("Initializing...");
 

@@ -3,7 +3,7 @@ using HavenoSharp.Models;
 
 namespace Manta.Singletons;
 
-public class TradeStatisticsSingleton
+public class TradeStatisticsSingleton : SingletonBase
 {
     private int _delay = 5_000;
     private CancellationTokenSource _cancellationTokenSource = new();
@@ -27,6 +27,8 @@ public class TradeStatisticsSingleton
         {
             try
             {
+                await _pauseSource.Token.WaitIfPausedAsync();
+
                 OnTradeStatisticsFetch?.Invoke(true);
 
                 using var scope = _serviceProvider.CreateScope();

@@ -1,5 +1,6 @@
 ﻿using System.Formats.Tar;
 using System.IO.Compression;
+using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -55,16 +56,52 @@ public static class Proot
         SetFullPermissions(path);
     }
 
-    public static async Task<Stream> DownloadUbuntu()
+    private static async Task<Stream> DownloadWithProgressAsync(string url, IProgress<double> progressCb, HttpClient httpClient)
+    {
+        using var response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
+        response.EnsureSuccessStatusCode();
+
+        var contentLength = response.Content.Headers.ContentLength ?? -1L;
+        long totalRead = 0;
+        var buffer = new byte[8192];
+
+        using var stream = await response.Content.ReadAsStreamAsync();
+
+        var ms = new MemoryStream();
+
+        double lastPercent = 0;
+        int read;
+        while ((read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length))) > 0)
+        {
+            await ms.WriteAsync(buffer.AsMemory(0, read));
+            totalRead += read;
+
+            var currentPercent = (double)totalRead / contentLength * 100;
+            if (currentPercent - lastPercent > 1f || currentPercent >= 100f)
+            {
+                lastPercent = currentPercent;
+                progressCb?.Report(currentPercent);
+            }
+        }
+
+        ms.Position = 0;
+
+        return ms;
+    }
+
+    public static async Task<Stream> DownloadUbuntu(IProgress<double> progressCb)
     {
         using var client = new HttpClient();
+        client.Timeout = Timeout.InfiniteTimeSpan;
+
         var response = await client.GetAsync($"https://github.com/atsamd21/ubuntu-rootfs/releases/latest");
 
         var latestVersion = response.RequestMessage?.RequestUri?.ToString().Split("tag/v").ElementAt(1);
         if (latestVersion is null)
             latestVersion = "0.0.1";
 
-        return await client.GetStreamAsync($"https://github.com/atsamd21/ubuntu-rootfs/releases/download/v{latestVersion}/{_ubuntuTarName}.tar.gz");
+        //return await client.GetStreamAsync($"https://github.com/atsamd21/ubuntu-rootfs/releases/download/v{latestVersion}/{_ubuntuTarName}.tar.gz");
+        return await DownloadWithProgressAsync($"https://github.com/atsamd21/ubuntu-rootfs/releases/download/v{latestVersion}/{_ubuntuTarName}.tar.gz", progressCb, client);
     }
 
     public static async Task ExtractUbuntu(Stream ubuntuDownloadStream)
@@ -105,7 +142,9 @@ public static class Proot
                 var target = entry.LinkName;
                 var command = $"ln -s \"{target}\" \"{destPath}\"";
 
-                await Java.Lang.Runtime.GetRuntime().Exec(["sh", "-c", command])?.WaitForAsync();
+                var task = Java.Lang.Runtime.GetRuntime()?.Exec(["sh", "-c", command])?.WaitForAsync();
+                if (task is not null)
+                    await task;
             }
             else
             {

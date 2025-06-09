@@ -1,20 +1,34 @@
-﻿using Android.OS;
+﻿using Android.Content;
+using AndroidX.Core.Content;
 using HavenoSharp.Services;
 using HavenoSharp.Singletons;
 using Manta.Helpers;
 using System.Runtime.InteropServices;
-using System.Text;
 
 namespace Manta.Services;
+
+public class ProgressReceiver : BroadcastReceiver
+{
+    public event Action<string>? OnProgressChanged;
+    public TaskCompletionSource CompletedTCS { get; } = new();
+
+    public override void OnReceive(Context? context, Intent? intent)
+    {
+        var progress = intent?.GetStringExtra("progress");
+        if (progress is null)
+            return;
+
+        OnProgressChanged?.Invoke(progress);
+
+        var isDone = intent?.GetBooleanExtra("isDone", false);
+        if (isDone is not null and true)
+            CompletedTCS.SetResult();
+    }
+}
 
 public class AndroidHavenoDaemonService : HavenoDaemonServiceBase
 {
     private readonly GrpcChannelSingleton _grpcChannelSingleton;
-
-    private static CancellationTokenSource? _torCts;
-    private static CancellationTokenSource? _daemonCts;
-    private static TaskCompletionSource? _torReadyTCS;
-    private static PowerManager.WakeLock? _wakeLock;
 
     public AndroidHavenoDaemonService(
         GrpcChannelSingleton grpcChannelSingleton, 
@@ -27,9 +41,9 @@ public class AndroidHavenoDaemonService : HavenoDaemonServiceBase
         _grpcChannelSingleton = grpcChannelSingleton;
     }
 
-    public override async Task InstallHavenoDaemonAsync()
+    public override async Task InstallHavenoDaemonAsync(IProgress<double> progressCb)
     {
-        var ubuntuDownloadStream = await Proot.DownloadUbuntu();
+        var ubuntuDownloadStream = await Proot.DownloadUbuntu(progressCb);
         await Proot.ExtractUbuntu(ubuntuDownloadStream);
 
         var arch = RuntimeInformation.OSArchitecture.ToString() == "X64" ? "amd64" : "arm64";
@@ -42,24 +56,23 @@ public class AndroidHavenoDaemonService : HavenoDaemonServiceBase
         Proot.RunProotUbuntuCommand("chmod", "+x", "/usr/share/haveno/haveno-daemon");
     }
 
-    public override async Task<bool> GetIsDaemonInstalledAsync()
+    public override Task<bool> GetIsDaemonInstalledAsync()
     {
         try
         {
             var result = Proot.RunProotUbuntuCommand("echo", "check");
             if (!result.Contains("check"))
-                return false;
+                return Task.FromResult(false);
 
-            // TODO should check for actual version
             result = Proot.RunProotUbuntuCommand("java", "--version");
             if (!result.Contains("21"))
-                return false;
+                return Task.FromResult(false);
 
-            return true;
+            return Task.FromResult(true);
         }
         catch (Exception)
         {
-            return false;
+            return Task.FromResult(false);
         }
     }
 
@@ -70,6 +83,11 @@ public class AndroidHavenoDaemonService : HavenoDaemonServiceBase
         {
             return true;
         }
+
+        await SecureStorageHelper.SetAsync("password", password);
+        await SecureStorageHelper.SetAsync("host", host);
+
+        _grpcChannelSingleton.CreateChannel(host, password);
 
         //if (AndroidPermissionService.GetIgnoreBatteryOptimizationsEnabled())
         //{
@@ -82,86 +100,31 @@ public class AndroidHavenoDaemonService : HavenoDaemonServiceBase
         //    _wakeLock?.Acquire();
         //}
 
-        //var startBackendIntent = new Intent(Platform.AppContext, typeof(BackendService))
-        //                .SetAction("ACTION_START_BACKEND")
-        //                .PutExtra("password", password)
-        //                .PutExtra("host", host);
+        var receiver = new ProgressReceiver();
+        receiver.OnProgressChanged += progressCb;
 
-        //ContextCompat.StartForegroundService(Platform.AppContext, startBackendIntent);
+        var filter = new IntentFilter("com.companyname.manta.BACKEND_PROGRESS");
 
-        await SecureStorageHelper.SetAsync("password", password);
-        await SecureStorageHelper.SetAsync("host", host);
-        _grpcChannelSingleton.CreateChannel(host, password);
-
-        // TODO
-        // When app uses optimized battery settings, these threads get killed.
-        // I want these to just sleep when optimized so they resume when the app resumes
-
-        _torReadyTCS = new();
-
-        _ = Task.Run(() =>
+        if (OperatingSystem.IsAndroidVersionAtLeast(33))
         {
-            _torCts = new();
-            using var streamReader = Proot.RunProotUbuntuCommand("tor", _torCts.Token);
-
-            string? line;
-            while ((line = streamReader.ReadLine()) != null)
-            {
-                Console.WriteLine(line);
-
-                for (int i = 0; i < line.Length; i++)
-                {
-                    if (line[i] == '%')
-                    {
-                        StringBuilder stringBuilder = new();
-                        for (int j = i - 1; j > 0; j--)
-                        {
-                            if (line[j] > '9' || line[j] < '0')
-                                break;
-
-                            stringBuilder.Append(line[j]);
-                        }
-
-                        if (stringBuilder.Length > 0)
-                        {
-                            var percentage = new string(stringBuilder.ToString().Reverse().ToArray());
-
-                            progressCb?.Invoke($"Tor bootstrapping: {percentage}%");
-
-                            if (percentage == "100")
-                            {
-                                _torReadyTCS.SetResult();
-                            }
-                        }
-                    }
-                }
-            }
-        });
-
-        _ = Task.Run(async () =>
+            Platform.AppContext.RegisterReceiver(receiver, filter, ReceiverFlags.NotExported);
+        }
+        else
         {
-            await _torReadyTCS.Task;
+            Platform.AppContext.RegisterReceiver(receiver, filter);
 
-            progressCb?.Invoke("Starting daemon");
+        }
 
-            _daemonCts = new();
-            using var streamReader = Proot.RunProotUbuntuCommand("bash", _daemonCts.Token, "-c", $"/usr/share/haveno/haveno-daemon --baseCurrencyNetwork=XMR_STAGENET --useLocalhostForP2P=false --useDevPrivilegeKeys=false --nodePort=9999 --appName=haveno-XMR_STAGENET_user1 --apiPassword={password} --apiPort=3201 --passwordRequired=false --useNativeXmrWallet=false --torControlHost=127.0.0.1 --torControlPort=9051");
+        var startBackendIntent = new Intent(Platform.AppContext, typeof(BackendService))
+                        .SetAction("ACTION_START_BACKEND")
+                        .PutExtra("password", password);
 
-            string? line;
-            while ((line = streamReader.ReadLine()) != null)
-            {
-                Console.WriteLine(line);
+        ContextCompat.StartForegroundService(Platform.AppContext, startBackendIntent);
 
-                if (line.Contains("Init wallet"))
-                {
-                    progressCb?.Invoke("Initializing wallet");
-                }
-                else if (line.Contains("walletInitialized=true"))
-                {
+        await receiver.CompletedTCS.Task;
 
-                }
-            }
-        });
+        receiver.OnProgressChanged -= progressCb;
+        Platform.AppContext.UnregisterReceiver(receiver);
 
         return true;
     }
@@ -171,12 +134,13 @@ public class AndroidHavenoDaemonService : HavenoDaemonServiceBase
         throw new NotImplementedException();
     }
 
-    public override async Task StopHavenoDaemonAsync()
+    public override Task StopHavenoDaemonAsync()
     {
-        if (_daemonCts is not null)
-            await _daemonCts.CancelAsync();
+        var startBackendIntent = new Intent(Platform.AppContext, typeof(BackendService))
+                        .SetAction("ACTION_STOP_BACKEND");
 
-        if (_torCts is not null)
-            await _torCts.CancelAsync();
+        ContextCompat.StartForegroundService(Platform.AppContext, startBackendIntent);
+
+        return Task.CompletedTask;
     }
 }

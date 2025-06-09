@@ -6,7 +6,7 @@ namespace Manta.Services;
 public interface IHavenoDaemonService
 {
     Task<bool> GetIsDaemonInstalledAsync();
-    Task InstallHavenoDaemonAsync();
+    Task InstallHavenoDaemonAsync(IProgress<double> progressCb);
     Task<bool> TryStartLocalHavenoDaemonAsync(string password, string host, Action<string>? progressCb = default);
     Task<bool> TryStartTorAsync();
     Task<bool> WaitHavenoDaemonInitializedAsync(CancellationToken cancellationToken = default);
@@ -31,48 +31,31 @@ public abstract class HavenoDaemonServiceBase : IHavenoDaemonService
     }
 
     public abstract Task<bool> GetIsDaemonInstalledAsync();
-    public abstract Task InstallHavenoDaemonAsync();
+    public abstract Task InstallHavenoDaemonAsync(IProgress<double> progressCb);
     public abstract Task<bool> TryStartLocalHavenoDaemonAsync(string password, string host, Action<string>? progressCb = default);
     public abstract Task<bool> TryStartTorAsync();
     public abstract Task StopHavenoDaemonAsync();
 
     public async Task<bool> IsHavenoDaemonRunningAsync(CancellationToken cancellationToken = default)
     {
-        for (int i = 0; i < 2; i++)
+        try
         {
-            try
-            {
-                // Will tell us its running but not if its initialized
-                await _versionService.GetVersionAsync(cancellationToken: cancellationToken);
+            // Will tell us its running but not if its initialized
+            await _versionService.GetVersionAsync(cancellationToken: cancellationToken);
 
-                return true;
-            }
-            catch (TaskCanceledException)
-            {
-                throw;
-            }
-            catch (RpcException)
-            {
+            return true;
+        }
+        catch (TaskCanceledException)
+        {
+            throw;
+        }
+        catch (RpcException)
+        {
+            // Might be running but wrong password?
+        }
+        catch (Exception)
+        {
 
-            }
-            catch (Exception)
-            {
-
-            }
-
-            try
-            {
-                if (i == 1)
-                {
-                    break;
-                }
-
-                await Task.Delay(2_000, cancellationToken: cancellationToken);
-            }
-            catch (TaskCanceledException)
-            {
-                throw;
-            }
         }
 
         return false;
@@ -103,7 +86,7 @@ public abstract class HavenoDaemonServiceBase : IHavenoDaemonService
 
             try
             {
-                await Task.Delay(2_000, cancellationToken: cancellationToken);
+                await Task.Delay(1_100, cancellationToken: cancellationToken);
             }
             catch (TaskCanceledException)
             {
@@ -137,7 +120,7 @@ public abstract class HavenoDaemonServiceBase : IHavenoDaemonService
 
             try
             {
-                await Task.Delay(2_000, cancellationToken);
+                await Task.Delay(1_100, cancellationToken);
             }
             catch (TaskCanceledException)
             {
