@@ -1,4 +1,5 @@
 ﻿using System.Formats.Tar;
+using System.Globalization;
 using System.IO.Compression;
 using System.Net.Http;
 using System.Runtime.InteropServices;
@@ -104,8 +105,11 @@ public static class Proot
         return await DownloadWithProgressAsync($"https://github.com/atsamd21/ubuntu-rootfs/releases/download/v{latestVersion}/{_ubuntuTarName}.tar.gz", progressCb, client);
     }
 
-    public static async Task ExtractUbuntu(Stream ubuntuDownloadStream)
+    public static async Task ExtractUbuntu(Stream ubuntuDownloadStream, IProgress<double> progressCb)
     {
+        // Testing!
+        progressCb.Report(101f);
+
         File.SetUnixFileMode(
             _tmpDir,
             UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |

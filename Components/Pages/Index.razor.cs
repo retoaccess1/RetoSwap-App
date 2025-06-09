@@ -94,11 +94,23 @@ public partial class Index : ComponentBase
         {
             var progressCb = new Progress<double>(progress =>
             {
-                InstallProgress = progress;
+                if (progress == 101f)
+                {
+                    DaemonSetupState = DaemonSetupState.ExtractingRootfs;
+                }
+                else
+                {
+                    InstallProgress = progress;
+                }
+
                 StateHasChanged();
             });
 
             await HavenoDaemonService.InstallHavenoDaemonAsync(progressCb);
+
+            isDaemonInstalled = await HavenoDaemonService.GetIsDaemonInstalledAsync();
+            if (!isDaemonInstalled)
+                throw new Exception("There was an error during the installation process");
         }
         catch (Exception e)
         {

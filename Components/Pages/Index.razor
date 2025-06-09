@@ -25,6 +25,12 @@
                 <p class="regular-p-grey">Downloading dependencies @($"{InstallProgress:F0}%")</p>
             </div>
             break;
+         case DaemonSetupState.ExtractingRootfs:
+            <div class="loader-text-container">
+                <span class="loader"></span>
+                <p class="regular-p-grey">Extracting</p>
+            </div>
+            break;
         default: break;
     }
 </Modal>

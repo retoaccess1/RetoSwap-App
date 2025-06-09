@@ -4,6 +4,6 @@ public enum DaemonSetupState
 {
     Initial,
     InstallingDependencies,
-    InstallingHavenoDaemon,
+    ExtractingRootfs,
     Finished
 }
