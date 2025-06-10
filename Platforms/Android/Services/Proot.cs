@@ -143,12 +143,11 @@ public static class Proot
                     SetFullPermissions(parentDir);
                 }
 
+
                 var target = entry.LinkName;
                 var command = $"ln -s \"{target}\" \"{destPath}\"";
 
-                var task = Java.Lang.Runtime.GetRuntime()?.Exec(["sh", "-c", command])?.WaitForAsync();
-                if (task is not null)
-                    await task;
+                File.CreateSymbolicLink(destPath, target);
             }
             else
             {
