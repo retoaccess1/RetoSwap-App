@@ -23,7 +23,7 @@
     </div>
 
     <div class="slider-container">
-        <Slider OnReachedEnd="TakeOfferAsync" Disabled="UserDoesNotHaveAccount || (RequiredFunds > AvailableBalance)" Text="Take offer"></Slider>
+        <Slider OnReachedEnd="OpenNextTakeOfferStep" Disabled="UserDoesNotHaveAccount || (RequiredFunds > AvailableBalance)" Text="Take offer"></Slider>
     </div>
     <button class="button-cancel" @onclick="Cancel">Cancel</button>
 </div>
@@ -46,4 +46,7 @@
     <p class="regular-p-grey">If you do not meet the requirements do not take this trade</p>
     <br />
     <p class="regular-p-grey">@OfferInfo?.ExtraInfo</p>
+</Modal>
+<Modal Title="Enter offer passphrase" IsOpen="ShowPassphraseModal" ModalButtonOptions="ModalButtonOptions.OK_CANCEL" OkButtonText="Confirm" OnOkPressed="@TakeOfferAsync">
+    <input class="passphrase-input" type="text" @bind="Passphrase" placeholder="" />
 </Modal>

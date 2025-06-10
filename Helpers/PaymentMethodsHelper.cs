@@ -2,6 +2,14 @@
 
 public static class PaymentMethodsHelper
 {
+    public static Dictionary<string, string> BlockChainsPaymentMethodsDictionary = new()
+    {
+        { "BLOCK_CHAINS", "Cryptocurrencies" },
+        { "BLOCK_CHAINS_INSTANT", "Cryptocurrencies Instant" },
+        { "BLOCK_CHAINS_SHORT", "Cryptocurrencies" },
+        { "BLOCK_CHAINS_INSTANT_SHORT", "Cryptocurrencies Instant" },
+    };
+
     public static Dictionary<string, string> PaymentMethodsDictionary = new()
     {
         { "NATIONAL_BANK", "National bank transfer" },

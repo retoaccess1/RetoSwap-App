@@ -42,7 +42,14 @@
                 </div>
                 <div class="dropdown">
                     <SearchableDropdown @ref="PaymentMethodSearchableDropdown" Placeholder="Show all" Items="@VisiblePaymentMethods" Text="Payment method" OnSubmit="@((val) => SelectedPaymentMethod = val)" />
-                </div>                
+                </div>
+                @if (Direction == "BUY")
+                {
+                    <div class="no-deposit">
+                        <InputCheckbox type="checkbox" id="no-deposit" @bind-Value="ShowNoDepositOffers" />
+                        <label for="no-deposit">No deposit</label>
+                    </div>                    
+                }
             }
             <div class="offers-list-text-container">
                 <p class="offers-list-text">@(Direction == "BUY" ? "Buy XMR from" : "Sell XMR to")</p>

@@ -27,6 +27,11 @@ public partial class Offer : ComponentBase, IDisposable
     public IHavenoTradeService TradeService { get; set; } = default!;
 
     public bool ShowExtraInfoModal { get; set; }
+    public bool ShowPassphraseModal { get; set; }
+
+    public string Passphrase { get; set; } = string.Empty;
+
+
     public OfferInfo? OfferInfo { get; set; }
 
     private ulong _piconeroAmount;
@@ -50,29 +55,32 @@ public partial class Offer : ComponentBase, IDisposable
 
             _piconeroAmount = field.ToPiconero();
 
-            if (OfferInfo.Direction == "BUY")
+            if (OfferInfo.BuyerSecurityDepositPct > 0)
             {
-                ulong transactionFee = 0;
-                ulong takerFee = (ulong)(OfferInfo.Amount * OfferInfo.TakerFeePct);
-                ulong depositAmount = (ulong)(OfferInfo.Amount * OfferInfo.SellerSecurityDepositPct);
-                if (depositAmount < 100_000_000_000)
+                if (OfferInfo.Direction == "BUY")
                 {
-                    depositAmount = 100_000_000_000;
-                }
+                    ulong transactionFee = 0;
+                    ulong takerFee = (ulong)(OfferInfo.Amount * OfferInfo.TakerFeePct);
+                    ulong depositAmount = (ulong)(OfferInfo.Amount * OfferInfo.SellerSecurityDepositPct);
+                    if (depositAmount < 100_000_000_000)
+                    {
+                        depositAmount = 100_000_000_000;
+                    }
 
-                RequiredFunds = _piconeroAmount + transactionFee + depositAmount + takerFee;
-            }
-            else
-            {
-                ulong transactionFee = 0;
-                ulong takerFee = (ulong)(OfferInfo.Amount * OfferInfo.TakerFeePct);
-                ulong depositAmount = (ulong)(OfferInfo.Amount * OfferInfo.BuyerSecurityDepositPct);
-                if (depositAmount < 100_000_000_000)
+                    RequiredFunds = _piconeroAmount + transactionFee + depositAmount + takerFee;
+                }
+                else
                 {
-                    depositAmount = 100_000_000_000;
-                }
+                    ulong transactionFee = 0;
+                    ulong takerFee = (ulong)(OfferInfo.Amount * OfferInfo.TakerFeePct);
+                    ulong depositAmount = (ulong)(OfferInfo.Amount * OfferInfo.BuyerSecurityDepositPct);
+                    if (depositAmount < 100_000_000_000)
+                    {
+                        depositAmount = 100_000_000_000;
+                    }
 
-                RequiredFunds = transactionFee + depositAmount + takerFee;
+                    RequiredFunds = transactionFee + depositAmount + takerFee;
+                }
             }
 
             if (OfferInfo is not null)  // Price changes...
@@ -171,11 +179,27 @@ public partial class Offer : ComponentBase, IDisposable
         }
     }
 
+    public async Task OpenNextTakeOfferStep()
+    {
+        if (OfferInfo is null)
+            return;
+
+        if (OfferInfo.BuyerSecurityDepositPct == 0)
+        {
+            ShowPassphraseModal = true;
+        }
+        else
+        {
+            await TakeOfferAsync();
+        }
+    }
+
     public async Task TakeOfferAsync()
     {
         if (OfferInfo is null)
             return;
 
+        ShowPassphraseModal = false;
         IsTakingOffer = true;
 
         try
@@ -185,7 +209,7 @@ public partial class Offer : ComponentBase, IDisposable
                 OfferId = OfferInfo.Id,
                 Amount = _piconeroAmount,
                 PaymentAccountId = SelectedPaymentAccountId,
-                Challenge = OfferInfo.Challenge
+                Challenge = Passphrase
             };
 
             var response = await TradeService.TakeOfferAsync(takeOfferRequest);

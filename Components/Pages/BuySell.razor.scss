@@ -148,7 +148,7 @@
                 width: fit-content;
                 padding: 2px 4px 2px;
                 border-radius: 4px;
-                margin-bottom: 4px;
+                /*margin-bottom: 4px;*/
                 background-color: #343434;
             }
         }
@@ -172,3 +172,12 @@
     padding: 10px 0 10px;
 }
 
+.no-deposit {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px;
+
+    label {
+        margin-left: 10px;
+    }
+}

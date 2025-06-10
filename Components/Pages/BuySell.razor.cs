@@ -96,7 +96,21 @@ public partial class BuySell : ComponentBase, IDisposable
             SelectedPaymentMethod = string.Empty;
         } 
     }
-    public string Direction { get; set; } = "BUY";
+
+    public bool ShowNoDepositOffers { get; set; }
+    public string Direction 
+    { 
+        get; 
+        set 
+        {
+            field = value;
+
+            if (value == "SELL" && ShowNoDepositOffers)
+            {
+                ShowNoDepositOffers = false;
+            }
+        } 
+    } = "BUY";
 
     public Task? OfferFetchTask;
 
@@ -211,24 +225,41 @@ public partial class BuySell : ComponentBase, IDisposable
 
     private List<OfferInfo> FilterOffers(List<OfferInfo> offers)
     {
+        IEnumerable<OfferInfo> filteredOffers;
+
         if (!string.IsNullOrEmpty(SelectedPaymentMethod))
         {
-            return [.. offers.Where(x => x.PaymentMethodId == SelectedPaymentMethod)];
+            filteredOffers = offers.Where(x => x.PaymentMethodId == SelectedPaymentMethod);
         }
         else
         {
             switch (OfferPaymentType)
             {
                 case 0:
-                    return [.. offers.Where(x => TraditionalPaymentMethods.ContainsKey(x.PaymentMethodId)).Where(x => x.PaymentMethodId != "BLOCK_CHAINS")];
+                    filteredOffers = offers.Where(x => TraditionalPaymentMethods.ContainsKey(x.PaymentMethodId)).Where(x => x.PaymentMethodId != "BLOCK_CHAINS");
+                    break;
                 case 1:
-                    return [.. offers.Where(x => CryptoPaymentMethods.ContainsKey(x.PaymentMethodId))];
+                    filteredOffers = offers.Where(x => CryptoPaymentMethods.ContainsKey(x.PaymentMethodId));
+                    break;
                 case 2:
-                    return [.. offers.Where(x => !TraditionalPaymentMethods.ContainsKey(x.PaymentMethodId)).Where(x => x.PaymentMethodId != "BLOCK_CHAINS")];
+                    filteredOffers = offers.Where(x => !TraditionalPaymentMethods.ContainsKey(x.PaymentMethodId)).Where(x => x.PaymentMethodId != "BLOCK_CHAINS");
+                    break;
                 default:
-                    return [.. offers];
+                    filteredOffers = offers;
+                    break;
             }
         }
+
+        if (ShowNoDepositOffers)
+        {
+            filteredOffers = filteredOffers.Where(x => x.BuyerSecurityDepositPct == 0);
+        }
+        else
+        {
+            filteredOffers = filteredOffers.Where(x => x.BuyerSecurityDepositPct > 0);
+        }
+
+        return [.. filteredOffers];
     }
 
     private async Task FetchOffersAsync()
