@@ -1,7 +1,7 @@
 ﻿@* give this a background that covers screen like modal so user can click out of the input more easily *@
 @* show all default option*@
 
-<div class=@($"searchable-dropdown-main {(_isActive ? "rotate" : "")} {Class}")>
+<div class=@($"searchable-dropdown-main {(_isActive ? "rotate" : "")} {(Disabled ? "disabled" : "")} {Class}")>
     <p class="text">@Text</p>
     <input type="text"
     readonly="@Disabled"

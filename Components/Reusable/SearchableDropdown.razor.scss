@@ -103,3 +103,9 @@
 ::-webkit-scrollbar-thumb:hover {
     background: #555;
 }
+
+.disabled {
+    &::before {
+        color: #222222;
+    }
+}
