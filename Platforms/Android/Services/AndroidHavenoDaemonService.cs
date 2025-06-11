@@ -43,7 +43,7 @@ public class AndroidHavenoDaemonService : HavenoDaemonServiceBase
 
     public override async Task InstallHavenoDaemonAsync(IProgress<double> progressCb)
     {
-        var ubuntuDownloadStream = await Proot.DownloadUbuntu(progressCb);
+        using var ubuntuDownloadStream = await Proot.DownloadUbuntu(progressCb);
         await Proot.ExtractUbuntu(ubuntuDownloadStream, progressCb);
 
         var arch = RuntimeInformation.OSArchitecture.ToString() == "X64" ? "amd64" : "arm64";

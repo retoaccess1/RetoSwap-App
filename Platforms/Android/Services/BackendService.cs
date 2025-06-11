@@ -1,11 +1,8 @@
 ﻿using Android.App;
 using Android.Content;
-using Android.Net;
 using Android.OS;
 using Android.Runtime;
 using AndroidX.Core.App;
-using HavenoSharp.Singletons;
-using Manta.Helpers;
 using System.Text;
 
 namespace Manta.Services;
@@ -191,10 +188,6 @@ public class BackendService : Service
                     UpdateProgress("Initializing wallet", true);
 
                 }
-                //else if (line.Contains("walletInitialized=true"))
-                //{
-
-                //}
             }
         });
     }

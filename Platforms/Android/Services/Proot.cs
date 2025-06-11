@@ -1,7 +1,5 @@
 ﻿using System.Formats.Tar;
-using System.Globalization;
 using System.IO.Compression;
-using System.Net.Http;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -49,10 +47,9 @@ public static class Proot
 
     private static async Task CreateFileWithPermissions(string path, Stream data)
     {
-        using (var fs = new FileStream(path, FileMode.Create, FileAccess.Write))
-        {
-            await data.CopyToAsync(fs);
-        }
+        using var fs = new FileStream(path, FileMode.Create, FileAccess.Write);
+
+        await data.CopyToAsync(fs);
 
         SetFullPermissions(path);
     }
@@ -101,7 +98,6 @@ public static class Proot
         if (latestVersion is null)
             latestVersion = "0.0.1";
 
-        //return await client.GetStreamAsync($"https://github.com/atsamd21/ubuntu-rootfs/releases/download/v{latestVersion}/{_ubuntuTarName}.tar.gz");
         return await DownloadWithProgressAsync($"https://github.com/atsamd21/ubuntu-rootfs/releases/download/v{latestVersion}/{_ubuntuTarName}.tar.gz", progressCb, client);
     }
 
@@ -117,6 +113,16 @@ public static class Proot
             UnixFileMode.OtherRead | UnixFileMode.OtherExecute
         );
 
+        if (File.GetUnixFileMode(_tmpDir) != (UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute |
+            UnixFileMode.GroupRead | UnixFileMode.GroupExecute |
+            UnixFileMode.OtherRead | UnixFileMode.OtherExecute))
+        {
+            throw new Exception("Could not set file permissions");
+        }
+
+        if (Directory.Exists(_rootfsDir))
+            Directory.Delete(_rootfsDir, true);
+
         Directory.CreateDirectory(_rootfsDir);
         SetFullPermissions(_rootfsDir);
 
@@ -124,7 +130,7 @@ public static class Proot
         using var tarReader = new TarReader(gzipStream);
 
         TarEntry? entry;
-        while ((entry = await tarReader.GetNextEntryAsync()) != null)
+        while ((entry = await tarReader.GetNextEntryAsync()) is not null)
         {
             string destPath = Path.Combine(_rootfsDir, entry.Name);
             string? parentDir = Path.GetDirectoryName(destPath);
@@ -143,11 +149,7 @@ public static class Proot
                     SetFullPermissions(parentDir);
                 }
 
-
-                var target = entry.LinkName;
-                var command = $"ln -s \"{target}\" \"{destPath}\"";
-
-                File.CreateSymbolicLink(destPath, target);
+                File.CreateSymbolicLink(destPath, entry.LinkName);
             }
             else
             {
@@ -158,11 +160,11 @@ public static class Proot
                 }
 
                 if (entry.DataStream is not null)
+                {
                     await CreateFileWithPermissions(destPath, entry.DataStream);
+                }
             }
         }
-
-        await ubuntuDownloadStream.DisposeAsync();
     }
 
     public static string RunProotUbuntuCommand(string command, params string[] arguments)
