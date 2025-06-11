@@ -71,6 +71,11 @@
   font-size: 12px;
   display: inline-block;
 }
+.wallet-main .top .monero-card .monero-card-bottom .monero-card-bottom-pending .wallet-reserved-balance-crypto {
+  opacity: 0.8;
+  line-height: 14px;
+  font-size: 12px;
+}
 .wallet-main .addresses-text {
   margin-top: 10px;
   font-weight: bold;
