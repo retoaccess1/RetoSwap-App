@@ -39,13 +39,17 @@
     IsOpen="ShowExtraInfoModal"
     ModalButtonOptions="ModalButtonOptions.OK_CANCEL" 
     CancelButtonText="Close" 
-    OkButtonText="Confirm" 
+    OkButtonText="Confirm"
+    IsCloseable="false"
     OnOkPressed="() => ShowExtraInfoModal = false" 
     OnCancelPressed="@(() => NavigationManager.NavigateTo("BuySell"))">
     <p class="regular-p-grey">Please review the maker's terms and conditions.</p>
     <p class="regular-p-grey">If you do not meet the requirements do not take this trade</p>
     <br />
-    <p class="regular-p-grey">@OfferInfo?.ExtraInfo</p>
+    <div class="extra-info">
+        <p class="regular-p-grey">@OfferInfo?.ExtraInfo</p>
+        <img class="copy-icon" @onclick="@(async () => await Clipboard.Default.SetTextAsync(OfferInfo?.ExtraInfo))" src="icons/copy.svg" />
+    </div>
 </Modal>
 <Modal Title="Enter offer passphrase" IsOpen="ShowPassphraseModal" ModalButtonOptions="ModalButtonOptions.OK_CANCEL" OkButtonText="Confirm" OnOkPressed="@TakeOfferAsync">
     <input class="passphrase-input" type="text" @bind="Passphrase" placeholder="" />

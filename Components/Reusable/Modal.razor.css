@@ -1,5 +1,5 @@
 ﻿.closeable {
-  background-color: rgba(0, 0, 0, 0.4);
+  /*background-color: rgba(0, 0, 0, 0.4);*/
 }
 
 .generic-modal {
@@ -13,6 +13,7 @@
   align-items: center;
   z-index: 800;
   color: #000;
+  background-color: rgba(0, 0, 0, 0.4);
 }
 .generic-modal .verify-modal {
   background-color: white;

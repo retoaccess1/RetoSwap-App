@@ -31,7 +31,6 @@ public partial class Offer : ComponentBase, IDisposable
 
     public string Passphrase { get; set; } = string.Empty;
 
-
     public OfferInfo? OfferInfo { get; set; }
 
     private ulong _piconeroAmount;

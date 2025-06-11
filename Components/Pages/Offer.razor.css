@@ -29,3 +29,22 @@ button, .slider-container {
   color: #000;
   font-weight: 400;
 }
+
+.extra-info {
+  position: relative;
+}
+.extra-info p {
+  border: 1px solid #666666;
+  border-radius: 10px;
+  padding: 10px;
+}
+.extra-info .copy-icon {
+  height: 16px;
+  min-height: 16px;
+  width: 16px;
+  min-width: 16px;
+  filter: invert(1);
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+}
