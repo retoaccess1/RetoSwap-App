@@ -70,7 +70,7 @@ public partial class Chat : ComponentBase, IDisposable
             {
                 var dispute = await DisputeService.GetDisputeAsync(DisputeTradeId);
 
-                Messages = [.. dispute.ChatMessages.OrderBy(x => x.Date)];
+                Messages = [.. dispute.ChatMessage.OrderBy(x => x.Date)];
                 DisputeId = dispute.Id;
             }
 
