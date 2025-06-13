@@ -253,10 +253,7 @@ public static class Proot
         if (process is null || process.InputStream is null)
             throw new Exception("process is null or process.InputStream is null");
 
-        cancellationToken.Register(() =>
-        {
-            process.Dispose();
-        });
+        cancellationToken.Register(process.Dispose);
 
         return new StreamReader(process.InputStream);
     }

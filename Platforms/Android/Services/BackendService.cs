@@ -95,7 +95,7 @@ public class BackendService : Service
         switch (intent.Action) 
         {
             case "ACTION_STOP_BACKEND":
-                Task.Run(StopHavenoDaemonAsync);
+                StopHavenoDaemon();
                 break;
             case "ACTION_START_BACKEND":
                 {
@@ -192,13 +192,10 @@ public class BackendService : Service
         });
     }
 
-    public async Task StopHavenoDaemonAsync()
+    public void StopHavenoDaemon()
     {
-        if (_daemonCts is not null)
-            await _daemonCts.CancelAsync();
-
-        if (_torCts is not null)
-            await _torCts.CancelAsync();
+        _daemonCts?.Cancel();
+        _torCts?.Cancel();
     }
 
     public override IBinder? OnBind(Intent? intent)

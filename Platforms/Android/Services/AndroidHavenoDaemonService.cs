@@ -76,7 +76,6 @@ public class AndroidHavenoDaemonService : HavenoDaemonServiceBase
         }
     }
 
-    // TODO Add progress callback
     public override async Task<bool> TryStartLocalHavenoDaemonAsync(string password, string host, Action<string>? progressCb = default)
     {
         if (await IsHavenoDaemonRunningAsync())
@@ -88,17 +87,6 @@ public class AndroidHavenoDaemonService : HavenoDaemonServiceBase
         await SecureStorageHelper.SetAsync("host", host);
 
         _grpcChannelSingleton.CreateChannel(host, password);
-
-        //if (AndroidPermissionService.GetIgnoreBatteryOptimizationsEnabled())
-        //{
-        //    var activity = Platform.CurrentActivity;
-        //    if (activity is null)
-        //        return false;
-
-        //    var powerManager = (PowerManager?)activity.ApplicationContext?.GetSystemService(Context.PowerService);
-        //    _wakeLock = powerManager?.NewWakeLock(WakeLockFlags.Partial, "HavenoDaemon:WakeLock");
-        //    _wakeLock?.Acquire();
-        //}
 
         var receiver = new ProgressReceiver();
         receiver.OnProgressChanged += progressCb;
@@ -112,7 +100,6 @@ public class AndroidHavenoDaemonService : HavenoDaemonServiceBase
         else
         {
             Platform.AppContext.RegisterReceiver(receiver, filter);
-
         }
 
         var startBackendIntent = new Intent(Platform.AppContext, typeof(BackendService))
