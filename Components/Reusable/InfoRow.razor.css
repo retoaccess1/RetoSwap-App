@@ -34,14 +34,8 @@
   line-height: 14px;
   font-weight: 500;
 }
-.info-row .inner-container ion-icon {
-  height: 16px;
-  min-height: 16px;
-  width: 16px;
-  min-width: 16px;
-}
 .info-row .inner-container .eye {
-  margin-right: 6px;
+  margin-right: 4px;
 }
 .info-row .inner-container .expanded {
   overflow: initial;
@@ -49,7 +43,10 @@
 }
 .info-row .inner-expanded {
   height: fit-content;
-  padding: 16px;
+  padding: 13px;
+  padding-left: 17px;
+  padding-right: 17px;
   border: none;
   border-radius: 12px;
+  align-items: flex-start;
 }

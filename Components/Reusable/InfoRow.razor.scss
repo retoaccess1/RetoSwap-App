@@ -38,15 +38,8 @@
             font-weight: 500;
         }
 
-        ion-icon {
-            height: 16px;
-            min-height: 16px;
-            width: 16px;
-            min-width: 16px;
-        }
-
         .eye {
-            margin-right: 6px;
+            margin-right: 4px;
         }
 
         .expanded {
@@ -57,8 +50,11 @@
 
     .inner-expanded {
         height: fit-content;
-        padding: 16px;
-        border: none;
+        padding: 13px;
+        padding-left: 17px;
+        padding-right: 17px;
+        border:  none;
         border-radius: 12px;
+        align-items: flex-start;
     }
 }
