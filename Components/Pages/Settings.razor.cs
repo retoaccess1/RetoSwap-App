@@ -43,7 +43,7 @@ public partial class Settings : ComponentBase, IDisposable
 
     public bool IsFetching { get; set; }
     public bool IsBackingUp { get; set; }
-    public bool IsConnecting { get; set; }
+    public bool ShowConnectToRemoteNodeModal { get; set; }
 
     public bool IsNotificationsToggled { get; set; }
     public bool IsWakeLockToggled { get; set; }
@@ -114,7 +114,9 @@ public partial class Settings : ComponentBase, IDisposable
 
     public async Task ScanQRCodeAsync()
     {
-        await Permissions.RequestAsync<Permissions.Camera>();
+        var permissionStatus = await Permissions.RequestAsync<Permissions.Camera>();
+        if (permissionStatus == PermissionStatus.Denied || permissionStatus == PermissionStatus.Unknown || permissionStatus == PermissionStatus.Disabled)
+            return;
 
         var cameraPage = new CameraPage();
 
@@ -150,20 +152,22 @@ public partial class Settings : ComponentBase, IDisposable
         await current.MainPage.Navigation.PopModalAsync();
     }
 
-    public async Task CancelConnectToRemoteNode()
+    public async Task CancelConnectToRemoteNodeAsync()
     {
         if (RemoteNodeConnectCts is null)
             return;
 
         await RemoteNodeConnectCts.CancelAsync();
+
+        ShowConnectToRemoteNodeModal = false;
     }
 
-    public async Task ConnectToRemoteNode()
+    public async Task ConnectToRemoteNodeAsync()
     {
         if (string.IsNullOrEmpty(Password) || string.IsNullOrEmpty(Host))
             return;
 
-        IsConnecting = true;
+        ShowConnectToRemoteNodeModal = true;
 
         await SecureStorageHelper.SetAsync("daemon-installation-type", DaemonInstallOptions.RemoteNode);
 
@@ -187,7 +191,7 @@ public partial class Settings : ComponentBase, IDisposable
             {
                 if (await HavenoDaemonService.IsHavenoDaemonRunningAsync(RemoteNodeConnectCts.Token))
                 {
-                    IsConnecting = false;
+                    IsConnected = true;
                     return;
                 }
             }
@@ -199,11 +203,11 @@ public partial class Settings : ComponentBase, IDisposable
             return;
         }
 
-        IsConnecting = false;
+        ShowConnectToRemoteNodeModal = false;
         ConnectionError = "Could not connect to remote node. Make sure Orbot is installed and configured.";
     }
 
-    public async Task HandleRemoteNodeToggle(bool isToggled)
+    public async Task HandleRemoteNodeToggleAsync(bool isToggled)
     {
         // Prompt that account won't be synced and that if running, local daemon, termux etc needs to be stopped
         if (!isToggled) 
@@ -225,7 +229,7 @@ public partial class Settings : ComponentBase, IDisposable
         }
     }
 
-    public async Task HandleToggle(bool isToggled)
+    public async Task HandleToggleAsync(bool isToggled)
     {
 #if ANDROID
         if (isToggled)
@@ -277,6 +281,9 @@ public partial class Settings : ComponentBase, IDisposable
     private async void HandleDaemonConnectionChanged(bool isConnected)
     {
         await InvokeAsync(() => {
+            if (IsConnected == isConnected)
+                return;
+
             IsConnected = isConnected;
             StateHasChanged();
         });
@@ -318,7 +325,7 @@ public partial class Settings : ComponentBase, IDisposable
         await base.OnInitializedAsync();
     }
 
-    public async Task HandlePreferredCurrencySubmit(string currencyCode)
+    public async Task HandlePreferredCurrencySubmitAsync(string currencyCode)
     {
         if (string.IsNullOrEmpty(currencyCode))
             return;

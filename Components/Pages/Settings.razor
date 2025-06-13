@@ -4,11 +4,22 @@
     <p class="regular-p-grey">Please wait</p>
     <p class="regular-p-grey">Note: This can take a long time when using a remote node</p>
 </Modal>
-<Modal Title="Restore account" ModalButtonOptions="ModalButtonOptions.OK_CANCEL" @bind-IsOpen="ShowRestoreModal" OnOkPressed="RestoreFromBackupAsync" OkButtonText="Restore">
+<Modal Title="Restore account" ModalButtonOptions="ModalButtonOptions.NONE" @bind-IsOpen="ShowRestoreModal" OnOkPressed="RestoreFromBackupAsync" OkButtonText="Restore">
     <p class="regular-p-grey">Warning! This will delete your current account. Make sure you have made a backup</p>
 </Modal>
-<Modal Title="Connecting to remote node" ModalButtonOptions="ModalButtonOptions.CANCEL" @bind-IsOpen="IsConnecting" OnCancelPressed="CancelConnectToRemoteNode">
-    <p class="regular-p-grey">Make sure you have Orbot installed and "power user mode" enabled in settings to enable the proxy</p>
+<Modal Title="Connecting to remote node" @bind-IsOpen="ShowConnectToRemoteNodeModal" ModalButtonOptions="ModalButtonOptions.NONE">
+    @if (IsConnected)
+    {
+        <p class="regular-p-grey">Connected successfully</p>
+        <br />
+        <button class="button-submit" @onclick="() => ShowConnectToRemoteNodeModal = false">Continue</button>
+    }
+    else
+    {
+        <p class="regular-p-grey">Make sure you have Orbot installed and "power user mode" enabled in settings to enable the proxy</p>
+        <br />
+        <button class="button-cancel" @onclick="CancelConnectToRemoteNodeAsync">Cancel</button>
+    }
 </Modal>
 <Modal Title="Error" ModalButtonOptions="ModalButtonOptions.OK" IsOpen="@(!string.IsNullOrEmpty(ConnectionError))" IsOpenChanged="(e) => { if (!e) { ConnectionError = null; } }">
     <p class="regular-p-grey">@ConnectionError</p>
@@ -25,14 +36,14 @@
         <SearchableDropdown InitialValue="@Countries.First().Key" Items="Countries" Disabled="true" Text="Language" Placeholder="Choose language"></SearchableDropdown>
     </div>
     <div class="dropdown">
-        <SearchableDropdown InitialValue="@PreferredCurrency" Items="Currencies" Text="Preferred currency" Placeholder="Choose currency" OnSubmit="HandlePreferredCurrencySubmit"></SearchableDropdown>
+        <SearchableDropdown InitialValue="@PreferredCurrency" Items="Currencies" Text="Preferred currency" Placeholder="Choose currency" OnSubmit="HandlePreferredCurrencySubmitAsync"></SearchableDropdown>
     </div>
     <div class="backup-buttons">
         <button class="backup-btn button-green" @onclick="BackupAsync">Backup account</button>
         <button disabled class="backup-btn" @onclick="() => ShowRestoreModal = true">Restore account</button>
     </div>
 
-    <Toggle OnToggledChanged="HandleToggle" @bind-IsToggled="IsNotificationsToggled" Text="Notifications" />
+    <Toggle OnToggledChanged="HandleToggleAsync" @bind-IsToggled="IsNotificationsToggled" Text="Notifications" />
     @if (DaemonInstallOption == DaemonInstallOptions.Standalone)
     {
         <Toggle OnToggledChanged="HandleWakeLockToggle" @bind-IsToggled="IsWakeLockToggled" Text="Keep offers open in background" />
@@ -48,7 +59,7 @@
         <label class="bold-p">Password</label>
         <input @bind="Password" type="password" />
         <p class="note">Note: you need to have Orbot installed</p>
-        <button @onclick="ConnectToRemoteNode">Connect to remote node</button>
+        <button @onclick="ConnectToRemoteNodeAsync">Connect to remote node</button>
     </div>
-    <Toggle OnToggledChanged="HandleRemoteNodeToggle" @bind-IsToggled="IsRemoteNodeToggled" Text="Use remote node" />
+    <Toggle OnToggledChanged="HandleRemoteNodeToggleAsync" @bind-IsToggled="IsRemoteNodeToggled" Text="Use remote node" />
 </div>
