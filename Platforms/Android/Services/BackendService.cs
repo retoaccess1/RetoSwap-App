@@ -3,6 +3,7 @@ using Android.Content;
 using Android.OS;
 using Android.Runtime;
 using AndroidX.Core.App;
+using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Manta.Services;
@@ -18,6 +19,8 @@ public class BackendService : Service
     private CancellationTokenSource? _torCts;
     private CancellationTokenSource? _daemonCts;
     private TaskCompletionSource? _torReadyTCS;
+
+    private PowerManager.WakeLock? _wakeLock; 
 
     public BackendService()
     {
@@ -129,16 +132,35 @@ public class BackendService : Service
     {
         _torReadyTCS = new();
 
-        _ = Task.Run(() =>
+        var serviceProvider = IPlatformApplication.Current?.Services;
+        if (serviceProvider is null)
+            throw new Exception("serviceProvider was null in StartBackend()");
+
+        var havenoDaemonService = serviceProvider.GetRequiredService<IHavenoDaemonService>();
+        var daemonPath = havenoDaemonService.GetDaemonPath();
+
+        //var activity = Platform.CurrentActivity;
+        //if (activity is not null)
+        //{
+        //    var powerManager = (PowerManager?)activity.ApplicationContext?.GetSystemService(PowerService);
+
+        //    _wakeLock = powerManager?.NewWakeLock(WakeLockFlags.Partial, "HavenoDaemon:WakeLock");
+
+        //    _wakeLock?.Acquire();
+        //}
+
+        // Tor does not always connect successfully, need to timeout and give the user the option to restart
+        _ = Task.Factory.StartNew(() =>
         {
             _torCts = new();
             using var streamReader = Proot.RunProotUbuntuCommand("tor", _torCts.Token);
 
             string? line;
-            while ((line = streamReader.ReadLine()) != null)
+            while ((line = streamReader.ReadLine()) is not null)
             {
+#if DEBUG
                 Console.WriteLine(line);
-
+#endif
                 for (int i = 0; i < line.Length; i++)
                 {
                     if (line[i] == '%')
@@ -166,36 +188,44 @@ public class BackendService : Service
                     }
                 }
             }
-        });
+        }, TaskCreationOptions.LongRunning);
 
-        _ = Task.Run(async () =>
+        _ = Task.Factory.StartNew(async () =>
         {
             await _torReadyTCS.Task;
 
             UpdateProgress("Starting daemon");
 
             _daemonCts = new();
+
+            Proot.AppHome = daemonPath;
+
             // Don't need to set a new password whenever starting daemon
-            using var streamReader = Proot.RunProotUbuntuCommand("bash", _daemonCts.Token, "-c", $"/usr/share/haveno/haveno-daemon --baseCurrencyNetwork=XMR_STAGENET --useLocalhostForP2P=false --useDevPrivilegeKeys=false --nodePort=9999 --appName=haveno-XMR_STAGENET_user1 --apiPassword={password} --apiPort=3201 --passwordRequired=false --useNativeXmrWallet=false --torControlHost=127.0.0.1 --torControlPort=9051");
+            using var streamReader = Proot.RunProotUbuntuCommand("bash", _daemonCts.Token, "-c", $"{Path.Combine(daemonPath, "haveno-daemon-mobile")} --disableRateLimits=true --baseCurrencyNetwork=XMR_STAGENET --useLocalhostForP2P=false --useDevPrivilegeKeys=false --nodePort=9999 --appName=haveno-XMR_STAGENET_user1 --apiPassword={password} --apiPort=3201 --passwordRequired=false --useNativeXmrWallet=false --torControlHost=127.0.0.1 --torControlPort=9051");
 
             string? line;
-            while ((line = streamReader.ReadLine()) != null)
+            while ((line = streamReader.ReadLine()) is not null)
             {
+#if DEBUG
                 Console.WriteLine(line);
-
+#endif
                 if (line.Contains("Init wallet"))
                 {
                     UpdateProgress("Initializing wallet", true);
 
                 }
             }
-        });
+        }, TaskCreationOptions.LongRunning);
     }
 
     public void StopHavenoDaemon()
     {
         _daemonCts?.Cancel();
         _torCts?.Cancel();
+
+        //_wakeLock?.Release();
+        //_wakeLock?.Dispose();
+        //_wakeLock = null;
     }
 
     public override IBinder? OnBind(Intent? intent)

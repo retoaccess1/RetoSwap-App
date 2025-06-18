@@ -31,6 +31,19 @@
                 <p class="regular-p-grey">Extracting</p>
             </div>
             break;
+        // TODO Just change text instead
+        case DaemonSetupState.InstallingDaemon:
+            <div class="loader-text-container">
+                <span class="loader"></span>
+                <p class="regular-p-grey">Downloading Haveno @($"{InstallProgress:F0}%")</p>
+            </div>
+            break;
+        case DaemonSetupState.UpdatingDaemon:
+            <div class="loader-text-container">
+                <span class="loader"></span>
+                <p class="regular-p-grey">Updating Haveno @($"{InstallProgress:F0}%")</p>
+            </div>
+            break;
         default: break;
     }
 </Modal>

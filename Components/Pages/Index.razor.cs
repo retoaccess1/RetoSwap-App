@@ -97,6 +97,12 @@ public partial class Index : ComponentBase
                 if (progress == 101f)
                 {
                     DaemonSetupState = DaemonSetupState.ExtractingRootfs;
+                    InstallProgress = 0f;
+                }
+                else if (progress == 102f)
+                {
+                    DaemonSetupState = DaemonSetupState.InstallingDaemon;
+                    InstallProgress = 0f;
                 }
                 else
                 {
@@ -152,6 +158,20 @@ public partial class Index : ComponentBase
                     }
                     else
                     {
+                        var progressCb = new Progress<double>(progress =>
+                        {
+                            if (DaemonSetupState != DaemonSetupState.UpdatingDaemon)
+                            {
+                                InstallProgress = 0;
+                                DaemonSetupState = DaemonSetupState.UpdatingDaemon;
+                            }
+
+                            InstallProgress = progress;
+                            StateHasChanged();
+                        });
+
+                        await HavenoDaemonService.TryUpdateHavenoAsync(progressCb);
+
                         var host = await SecureStorageHelper.GetAsync<string>("host");
                         var password = await SecureStorageHelper.GetAsync<string>("password");
 

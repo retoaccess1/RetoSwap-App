@@ -32,11 +32,10 @@ public class AndroidHavenoDaemonService : HavenoDaemonServiceBase
 
     public AndroidHavenoDaemonService(
         GrpcChannelSingleton grpcChannelSingleton, 
-        IServiceProvider serviceProvider, 
         IHavenoWalletService walletService, 
         IHavenoVersionService versionService, 
         IHavenoAccountService accountService
-        ) : base(serviceProvider, walletService, versionService, accountService)
+        ) : base( walletService, versionService, accountService, Path.Combine(Proot.HomeDir, "daemon"))
     {
         _grpcChannelSingleton = grpcChannelSingleton;
     }
@@ -46,6 +45,8 @@ public class AndroidHavenoDaemonService : HavenoDaemonServiceBase
         using var ubuntuDownloadStream = await Proot.DownloadUbuntu(progressCb);
         await Proot.ExtractUbuntu(ubuntuDownloadStream, progressCb);
 
+        await DownloadHavenoDaemonAsync(progressCb);
+
         var arch = RuntimeInformation.OSArchitecture.ToString() == "X64" ? "amd64" : "arm64";
 
         Proot.RunProotUbuntuCommand("rm", "/bin/java");
@@ -53,26 +54,36 @@ public class AndroidHavenoDaemonService : HavenoDaemonServiceBase
         Proot.RunProotUbuntuCommand("ln", "-s", "/etc/java-21-openjdk/security/java.security", $"/usr/lib/jvm/java-21-openjdk-{arch}/conf/security/java.security");
         Proot.RunProotUbuntuCommand("ln", "-s", "/etc/java-21-openjdk/security/java.policy", $"/usr/lib/jvm/java-21-openjdk-{arch}/conf/security/java.policy");
         Proot.RunProotUbuntuCommand("ln", "-s", "/etc/java-21-openjdk/security/default.policy", $"/usr/lib/jvm/java-21-openjdk-{arch}/lib/security/default.policy");
-        Proot.RunProotUbuntuCommand("chmod", "+x", "/usr/share/haveno/haveno-daemon");
+        Proot.RunProotUbuntuCommand("chmod", "+x", Path.Combine(_daemonPath, "haveno-daemon-mobile"));
     }
 
-    public override Task<bool> GetIsDaemonInstalledAsync()
+    public override async Task TryUpdateHavenoAsync(IProgress<double> progressCb)
+    {
+        await base.TryUpdateHavenoAsync(progressCb);
+        Proot.RunProotUbuntuCommand("chmod", "+x", Path.Combine(_daemonPath, "haveno-daemon-mobile"));
+    }
+
+    public override async Task<bool> GetIsDaemonInstalledAsync()
     {
         try
         {
             var result = Proot.RunProotUbuntuCommand("echo", "check");
             if (!result.Contains("check"))
-                return Task.FromResult(false);
+                return false;
 
             result = Proot.RunProotUbuntuCommand("java", "--version");
             if (!result.Contains("21"))
-                return Task.FromResult(false);
+                return false;
 
-            return Task.FromResult(true);
+            var localVersion = await GetHavenoLocalVersionAsync();
+            if (string.IsNullOrEmpty(localVersion))
+                return false;
+
+            return true;
         }
         catch (Exception)
         {
-            return Task.FromResult(false);
+            return false;
         }
     }
 

@@ -1,4 +1,5 @@
-﻿using System.Formats.Tar;
+﻿using Manta.Helpers;
+using System.Formats.Tar;
 using System.IO.Compression;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -11,8 +12,10 @@ public static class Proot
     private static string _rootfsDir;
     private static string _filesDir;
     private static string _tmpDir;
-    private static string _homeDir;
     private static string _ubuntuTarName;
+
+    public static string HomeDir;
+    public static string AppHome = string.Empty;
 
     static Proot()
     {
@@ -22,12 +25,12 @@ public static class Proot
         _filesDir = Android.App.Application.Context.FilesDir!.AbsolutePath;
         _rootfsDir = Path.Combine(_filesDir, _ubuntuTarName);
         _tmpDir = Path.Combine(Android.App.Application.Context.FilesDir!.AbsolutePath, "tmp");
-        _homeDir = Path.Combine(Android.App.Application.Context.FilesDir!.AbsolutePath, "home");
+        HomeDir = Path.Combine(Android.App.Application.Context.FilesDir!.AbsolutePath, "home");
 
         Directory.CreateDirectory(_tmpDir);
         SetFullPermissions(_tmpDir);
-        Directory.CreateDirectory(_homeDir);
-        SetFullPermissions(_homeDir);
+        Directory.CreateDirectory(HomeDir);
+        SetFullPermissions(HomeDir);
     }
 
     private static void SetFullPermissions(string path)
@@ -54,56 +57,16 @@ public static class Proot
         SetFullPermissions(path);
     }
 
-    private static async Task<Stream> DownloadWithProgressAsync(string url, IProgress<double> progressCb, HttpClient httpClient)
-    {
-        using var response = await httpClient.GetAsync(url, HttpCompletionOption.ResponseHeadersRead);
-        response.EnsureSuccessStatusCode();
-
-        var contentLength = response.Content.Headers.ContentLength ?? -1L;
-        long totalRead = 0;
-        var buffer = new byte[8192];
-
-        using var stream = await response.Content.ReadAsStreamAsync();
-
-        var ms = new MemoryStream();
-
-        double lastPercent = 0;
-        int read;
-        while ((read = await stream.ReadAsync(buffer.AsMemory(0, buffer.Length))) > 0)
-        {
-            await ms.WriteAsync(buffer.AsMemory(0, read));
-            totalRead += read;
-
-            var currentPercent = (double)totalRead / contentLength * 100;
-            if (currentPercent - lastPercent > 1f || currentPercent >= 100f)
-            {
-                lastPercent = currentPercent;
-                progressCb?.Report(currentPercent);
-            }
-        }
-
-        ms.Position = 0;
-
-        return ms;
-    }
-
     public static async Task<Stream> DownloadUbuntu(IProgress<double> progressCb)
     {
         using var client = new HttpClient();
         client.Timeout = Timeout.InfiniteTimeSpan;
 
-        var response = await client.GetAsync($"https://github.com/atsamd21/ubuntu-rootfs/releases/latest");
-
-        var latestVersion = response.RequestMessage?.RequestUri?.ToString().Split("tag/v").ElementAt(1);
-        if (latestVersion is null)
-            latestVersion = "0.0.1";
-
-        return await DownloadWithProgressAsync($"https://github.com/atsamd21/ubuntu-rootfs/releases/download/v{latestVersion}/{_ubuntuTarName}.tar.gz", progressCb, client);
+        return await HttpClientHelper.DownloadWithProgressAsync($"https://github.com/atsamd21/ubuntu-rootfs/releases/download/v0.0.2/{_ubuntuTarName}.tar.gz", progressCb, client);
     }
 
     public static async Task ExtractUbuntu(Stream ubuntuDownloadStream, IProgress<double> progressCb)
     {
-        // Testing!
         progressCb.Report(101f);
 
         File.SetUnixFileMode(
@@ -176,7 +139,7 @@ public static class Proot
             "--link2symlink",
             "-0",
             "-b", $"{_tmpDir}:/tmp",
-            "-b", $"{_homeDir}:/home",
+            "-b", $"{HomeDir}:/home",
             "-w", "/",
             "-b", "/dev",
             "-b", "/proc",
@@ -227,7 +190,7 @@ public static class Proot
             "--link2symlink",
             "-0",
             "-b", $"{_tmpDir}:/tmp",
-            "-b", $"{_homeDir}:/home",
+            "-b", $"{HomeDir}:/home",
             "-w", "/",
             "-b", "/dev",
             "-b", "/proc",
@@ -248,6 +211,7 @@ public static class Proot
 
         env?.Add("TMPDIR", _tmpDir);
         env?.Add("PROOT_TMP_DIR", _tmpDir);
+        env?.Add("APP_HOME", AppHome);
 
         var process = processBuilder?.Start();
         if (process is null || process.InputStream is null)
