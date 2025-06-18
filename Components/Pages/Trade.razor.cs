@@ -1,6 +1,7 @@
 ﻿using HavenoSharp.Models;
 using HavenoSharp.Services;
 using Manta.Extensions;
+using Manta.Models;
 using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
 using System.Text.Json;
@@ -251,6 +252,8 @@ public partial class Trade : ComponentBase, IDisposable
         {
             try
             {
+                await PauseTokenSource.WaitWhilePausedAsync();
+
                 var trade = await TradeService.GetTradeAsync(TradeId, cancellationToken: CancellationTokenSource.Token);
 
                 if (NotificationSingleton.TradeInfos.TryUpdate(TradeId, trade, TradeInfo))

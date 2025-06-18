@@ -4,7 +4,7 @@ using Manta.Models;
 
 namespace Manta.Singletons;
 
-public class BalanceSingleton : SingletonBase
+public class BalanceSingleton
 {
     private readonly IServiceProvider _serviceProvider;
 
@@ -40,7 +40,7 @@ public class BalanceSingleton : SingletonBase
         {
             try
             {
-                await _pauseSource.Token.WaitIfPausedAsync();
+                await PauseTokenSource.WaitWhilePausedAsync();
 
                 OnBalanceFetch?.Invoke(true);
 

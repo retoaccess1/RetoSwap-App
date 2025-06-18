@@ -1,10 +1,11 @@
 ﻿using HavenoSharp.Models;
 using HavenoSharp.Models.Requests;
 using HavenoSharp.Services;
+using Manta.Models;
 
 namespace Manta.Singletons;
 
-public class DaemonConnectionSingleton : SingletonBase
+public class DaemonConnectionSingleton
 {
     private readonly IHavenoVersionService _versionService;
     private readonly IHavenoWalletService _walletService;
@@ -32,8 +33,7 @@ public class DaemonConnectionSingleton : SingletonBase
         {
             try
             {
-                // This will work but since this singleton has two tasks they will block eachother
-                await _pauseSource.Token.WaitIfPausedAsync();
+                await PauseTokenSource.WaitWhilePausedAsync();
 
                 await _walletService.GetXmrPrimaryAddressAsync();
 
@@ -87,7 +87,7 @@ public class DaemonConnectionSingleton : SingletonBase
         {
             try
             {
-                await _pauseSource.Token.WaitIfPausedAsync();
+                await PauseTokenSource.WaitWhilePausedAsync();
 
                 // Checks if the daemon is running, it could still be that its not fully initialized so things like wallet won't work.
                 Version = await _versionService.GetVersionAsync();

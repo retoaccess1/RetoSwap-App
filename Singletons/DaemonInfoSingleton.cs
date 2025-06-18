@@ -1,8 +1,9 @@
 ﻿using HavenoSharp.Services;
+using Manta.Models;
 
 namespace Manta.Singletons;
 
-public class DaemonInfoSingleton : SingletonBase
+public class DaemonInfoSingleton 
 {
     private readonly IServiceProvider _serviceProvider;
 
@@ -22,7 +23,7 @@ public class DaemonInfoSingleton : SingletonBase
         {
             try
             {
-                await _pauseSource.Token.WaitIfPausedAsync();
+                await PauseTokenSource.WaitWhilePausedAsync();
 
                 OnDaemonInfoFetch?.Invoke(true);
 

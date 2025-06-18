@@ -97,6 +97,8 @@ public partial class Wallet : ComponentBase, IDisposable
         {
             try
             {
+                await PauseTokenSource.WaitWhilePausedAsync();
+
                 Transactions = await WalletService.GetXmrTxsAsync();
 
                 await Task.Delay(5_000, CancellationTokenSource.Token);

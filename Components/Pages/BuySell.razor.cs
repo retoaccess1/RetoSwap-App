@@ -3,6 +3,7 @@ using HavenoSharp.Models;
 using HavenoSharp.Services;
 using Manta.Components.Reusable;
 using Manta.Helpers;
+using Manta.Models;
 using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
@@ -268,6 +269,8 @@ public partial class BuySell : ComponentBase, IDisposable
         {
             try
             {
+                await PauseTokenSource.WaitWhilePausedAsync();
+
                 IsFetching = true;
 
                 Offers = await OfferService.GetOffersAsync(SelectedCurrencyCode, Direction == "BUY" ? "SELL" : "BUY");

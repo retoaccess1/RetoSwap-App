@@ -1,9 +1,7 @@
 ﻿using Android.App;
 using Android.OS;
-using HavenoSharp.Singletons;
 using Manta.Helpers;
 using Manta.Models;
-using Manta.Singletons;
 
 namespace Manta.Services;
 
@@ -40,7 +38,7 @@ public class AppLifecycleService : Java.Lang.Object, Android.App.Application.IAc
 
         AlarmUtils.CancelAlarm(Android.App.Application.Context);
 
-        var serviceProvider = IPlatformApplication.Current?.Services;
+        //var serviceProvider = IPlatformApplication.Current?.Services;
         //var grpcChannelSingleton = serviceProvider?.GetService<GrpcChannelSingleton>();
 
         //if (grpcChannelSingleton is not null)
@@ -54,40 +52,20 @@ public class AppLifecycleService : Java.Lang.Object, Android.App.Application.IAc
         //    }
         //}
 
-        var daemonConnectionSingleton = serviceProvider?.GetService<DaemonConnectionSingleton>();
-        var tradeStatisticsSingleton = serviceProvider?.GetService<TradeStatisticsSingleton>();
-        var daemonInfoSingleton = serviceProvider?.GetService<DaemonInfoSingleton>();
-        var balanceSingleton = serviceProvider?.GetService<BalanceSingleton>();
-
-        daemonConnectionSingleton?.Resume();
-        tradeStatisticsSingleton?.Resume();
-        daemonInfoSingleton?.Resume();
-        balanceSingleton?.Resume();
+        PauseTokenSource.Resume();
     }
 
     public void OnActivityStopped(Activity activity)
     {
         Console.WriteLine("App WENT TO SLEEP");
 
-        var serviceProvider = IPlatformApplication.Current?.Services;
+        PauseTokenSource.Pause();
 
-        var daemonConnectionSingleton = serviceProvider?.GetService<DaemonConnectionSingleton>();
-        var tradeStatisticsSingleton = serviceProvider?.GetService<TradeStatisticsSingleton>();
-        var daemonInfoSingleton = serviceProvider?.GetService<DaemonInfoSingleton>();
-        var balanceSingleton = serviceProvider?.GetService<BalanceSingleton>();
+        AlarmUtils.ScheduleExactAlarm(Android.App.Application.Context);
 
-        daemonConnectionSingleton?.Pause();
-        tradeStatisticsSingleton?.Pause();
-        daemonInfoSingleton?.Pause();
-        balanceSingleton?.Pause();
-
-        // This probably isnt as needed now that the daemon runs in the app
-        // But still might want to use this a battery optimization
-        // Can we even get trade/chat updates when app is in sleep?  
-        // TODO: Need to pause all polling singletons when app goes into bg
-        if (SecureStorageHelper.Get<bool>("notifications-enabled"))
-        {
-            AlarmUtils.ScheduleExactAlarm(Android.App.Application.Context);
-        }
+        //if (SecureStorageHelper.Get<bool>("notifications-enabled"))
+        //{
+        //    AlarmUtils.ScheduleExactAlarm(Android.App.Application.Context);
+        //}
     }
 }
