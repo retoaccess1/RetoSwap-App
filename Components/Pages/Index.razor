@@ -22,20 +22,20 @@
         case DaemonSetupState.InstallingDependencies:
             <div class="loader-text-container">
                 <span class="loader"></span>
-                <p class="regular-p-grey">Downloading dependencies @($"{InstallProgress:F0}%")</p>
+                <p class="regular-p-grey">(1 / 3) Downloading dependencies @($"{InstallProgress:F0}%")</p>
             </div>
             break;
          case DaemonSetupState.ExtractingRootfs:
             <div class="loader-text-container">
                 <span class="loader"></span>
-                <p class="regular-p-grey">Extracting</p>
+                <p class="regular-p-grey">(2 / 3) Extracting</p>
             </div>
             break;
         // TODO Just change text instead
         case DaemonSetupState.InstallingDaemon:
             <div class="loader-text-container">
                 <span class="loader"></span>
-                <p class="regular-p-grey">Downloading Haveno @($"{InstallProgress:F0}%")</p>
+                <p class="regular-p-grey">(3 / 3) Downloading Haveno @($"{InstallProgress:F0}%")</p>
             </div>
             break;
         case DaemonSetupState.UpdatingDaemon:
