@@ -40,6 +40,8 @@ public partial class Settings : ComponentBase, IDisposable
     public GrpcChannelSingleton GrpcChannelSingleton { get; set; } = default!;
     [Inject]
     public IHavenoDaemonService HavenoDaemonService { get; set; } = default!;
+    [Inject]
+    public IHavenoXmrNodeService HavenoXmrNodeService { get; set; } = default!;
 
     public bool IsFetching { get; set; }
     public bool IsBackingUp { get; set; }
@@ -60,6 +62,13 @@ public partial class Settings : ComponentBase, IDisposable
     public string? ConnectionError { get; set; }
 
     public bool ShowRestoreModal { get; set; }
+
+    public bool ShowConnectToMoneroNodeModal { get; set; }
+    public string? MoneroNodePassword { get; set { field = value?.Trim(); } }
+    public string? MoneroNodeUrl { get; set { field = value?.Trim(); } }
+    public string? MoneroNodeUsername { get; set { field = value?.Trim(); } }
+
+    public string ConnectedMoneroNodeUrl { get; set; } = string.Empty;
 
     public async Task RestoreFromBackupAsync()
     {
@@ -150,6 +159,31 @@ public partial class Settings : ComponentBase, IDisposable
         }
 
         await current.MainPage.Navigation.PopModalAsync();
+    }
+
+    public async Task ConnectToMoneroNodeAsync()
+    {
+        // Should show error etc
+        if (MoneroNodeUrl is null)
+            return;
+
+        MoneroNodeUsername ??= string.Empty;
+        MoneroNodePassword ??= string.Empty;
+
+        // Does not throw an exception if fails?
+        // Also does not persist after restart
+        await HavenoXmrNodeService.SetMoneroNodeAsync(MoneroNodeUrl, MoneroNodeUsername, MoneroNodePassword);
+
+        var response = await HavenoXmrNodeService.GetMoneroNodeAsync();
+        ConnectedMoneroNodeUrl = response.Url;
+
+        // Since it does not seem to save
+        await SecureStorageHelper.SetAsync("monero-node-url", MoneroNodeUrl);
+
+        ShowConnectToMoneroNodeModal = false;
+        MoneroNodeUrl = string.Empty;
+        MoneroNodeUsername = string.Empty;
+        MoneroNodePassword = string.Empty;
     }
 
     public async Task CancelConnectToRemoteNodeAsync()
@@ -274,6 +308,7 @@ public partial class Settings : ComponentBase, IDisposable
     {
         await InvokeAsync(() => {
             XMRNodeIsRunning = DaemonInfoSingleton.XMRNodeIsRunning;
+            ConnectedMoneroNodeUrl = DaemonInfoSingleton.ConnectedMoneroNodeUrl;
             StateHasChanged();
         });
     }
@@ -316,6 +351,8 @@ public partial class Settings : ComponentBase, IDisposable
 
         HavenoVersion = DaemonConnectionSingleton.Version;
         IsConnected = DaemonConnectionSingleton.IsConnected;
+        XMRNodeIsRunning = DaemonInfoSingleton.XMRNodeIsRunning;
+        ConnectedMoneroNodeUrl = DaemonInfoSingleton.ConnectedMoneroNodeUrl;
 
         DaemonInfoSingleton.OnDaemonInfoFetch += HandleDaemonInfoFetch;
         DaemonConnectionSingleton.OnConnectionChanged += HandleDaemonConnectionChanged;

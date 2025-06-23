@@ -43,3 +43,13 @@
 .settings-main .backup-buttons button:first-child {
   margin-right: 10px;
 }
+
+.configure input {
+  background-color: #fff;
+  color: #000;
+  font-weight: 400;
+}
+
+.url {
+  white-space: nowrap;
+}

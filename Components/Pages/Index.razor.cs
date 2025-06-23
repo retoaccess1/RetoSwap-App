@@ -6,6 +6,7 @@ using Manta.Services;
 using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
 using Grpc.Net.Client.Web;
+using HavenoSharp.Services;
 
 namespace Manta.Components.Pages;
 
@@ -27,6 +28,8 @@ public partial class Index : ComponentBase
     public NavigationManager NavigationManager { get; set; } = default!;
     [Inject]
     public IHavenoDaemonService HavenoDaemonService { get; set; } = default!;
+    [Inject]
+    public IHavenoXmrNodeService HavenoXmrNodeService { get; set; } = default!;
 
     [Inject]
     public NotificationSingleton NotificationSingleton { get; set; } = default!;
@@ -73,6 +76,15 @@ public partial class Index : ComponentBase
             // Tell user
         }
 
+        var moneroNodeUrl = await SecureStorageHelper.GetAsync<string>("monero-node-url");
+        if (!string.IsNullOrEmpty(moneroNodeUrl))
+        {
+            var moneroNodeUsername = await SecureStorageHelper.GetAsync<string>("monero-node-username") ?? string.Empty;
+            var moneroNodePassword = await SecureStorageHelper.GetAsync<string>("monero-node-password") ?? string.Empty;
+
+            await HavenoXmrNodeService.SetMoneroNodeAsync(moneroNodeUrl, moneroNodeUsername, moneroNodePassword);
+        }
+
         HandleDaemonStartInfoChange("Initializing wallet");
         await HavenoDaemonService.WaitWalletInitializedAsync(initializingTokenSource.Token);
 
@@ -85,7 +97,10 @@ public partial class Index : ComponentBase
 
         var isDaemonInstalled = await HavenoDaemonService.GetIsDaemonInstalledAsync();
         if (isDaemonInstalled)
+        {
+            await StartHaveno();
             return;
+        }
 
         DaemonSetupState = DaemonSetupState.InstallingDependencies;
         StateHasChanged();

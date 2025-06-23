@@ -24,14 +24,32 @@
 <Modal Title="Error" ModalButtonOptions="ModalButtonOptions.OK" IsOpen="@(!string.IsNullOrEmpty(ConnectionError))" IsOpenChanged="(e) => { if (!e) { ConnectionError = null; } }">
     <p class="regular-p-grey">@ConnectionError</p>
 </Modal>
+<Modal Title="Configure Monero node" ModalButtonOptions="ModalButtonOptions.OK_CANCEL" @bind-IsOpen="ShowConnectToMoneroNodeModal" OnOkPressed="ConnectToMoneroNodeAsync" OkButtonText="Connect">
+    <div class="configure">
+        <label>Url</label>
+        <input @bind="MoneroNodeUrl" />
+        <label>Username</label>
+        <input @bind="MoneroNodeUsername" />
+        <label>Password</label>
+        <input @bind="MoneroNodePassword" />
+    </div>
+</Modal>
 <div class="settings-main">
     <div class="info-container">
         <p class="bold-p">Build information</p>
-        <p>Version: @Version</p>
+        <p>App version: @Version</p>
         <p>Haveno version: @HavenoVersion</p>
-        <p>Daemon status: @(IsConnected ? "Connected" : "Disconnected") </p>
-        <p>Monero node: @(XMRNodeIsRunning ? "Running" : "Stopped")</p>
+        <p>Daemon status: @(IsConnected ? "Connected" : "Disconnected")</p>
+        <br />
+        <p class="bold-p">Monero node</p>
+        @if (DaemonInstallOption == DaemonInstallOptions.RemoteNode)
+        {
+            <p>Status: @(XMRNodeIsRunning ? "Running" : "Stopped")</p>
+        }
+        <p class="url">Url: @ConnectedMoneroNodeUrl</p>
     </div>
+    <button @onclick="() => ShowConnectToMoneroNodeModal = true">Configure Monero node</button>
+    <br/>
     <div class="dropdown">
         <SearchableDropdown InitialValue="@Countries.First().Key" Items="Countries" Disabled="true" Text="Language" Placeholder="Choose language"></SearchableDropdown>
     </div>
