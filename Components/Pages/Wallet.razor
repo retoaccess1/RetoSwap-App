@@ -27,8 +27,8 @@
                     <p class="wallet-pending-balance-fiat">@(PendingFiat.ToString("C", PreferredCurrencyFormat)) pending</p>
                 </div>
                 <div class="monero-card-bottom-pending">
-                    <p class="wallet-balance-crypto">XMR @(Balance?.AvailableXMRBalance.ToMonero().ToString("0.0000")) </p>
-                    <p class="wallet-pending-balance-crypto">XMR @(Balance?.PendingXMRBalance.ToMonero().ToString("0.0000")) pending</p>
+                    <p class="wallet-balance-crypto">XMR @((Balance?.AvailableXMRBalance ?? 0).ToMonero().ToString("0.0000")) </p>
+                    <p class="wallet-pending-balance-crypto">XMR @((Balance?.PendingXMRBalance ?? 0).ToMonero().ToString("0.0000")) pending</p>
                     <p class="wallet-reserved-balance-crypto">XMR @(((Balance?.ReservedTradeBalance ?? 0) + (Balance?.ReservedOfferBalance ?? 0)).ToMonero().ToString("0.0000")) reserved</p>
                 </div>
             </div>
