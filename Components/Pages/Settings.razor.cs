@@ -171,14 +171,11 @@ public partial class Settings : ComponentBase, IDisposable
         MoneroNodePassword ??= string.Empty;
 
         // Does not throw an exception if fails?
-        // Also does not persist after restart
-        await HavenoXmrNodeService.SetMoneroNodeAsync(MoneroNodeUrl, MoneroNodeUsername, MoneroNodePassword);
+        await HavenoXmrNodeService.SetAutoSwitchAsync(false);
+        await HavenoXmrNodeService.SetMoneroNodeAsync(MoneroNodeUrl, MoneroNodeUsername, MoneroNodePassword, 0);
 
         var response = await HavenoXmrNodeService.GetMoneroNodeAsync();
         ConnectedMoneroNodeUrl = response.Url;
-
-        // Since it does not seem to save
-        await SecureStorageHelper.SetAsync("monero-node-url", MoneroNodeUrl);
 
         ShowConnectToMoneroNodeModal = false;
         MoneroNodeUrl = string.Empty;
@@ -356,8 +353,6 @@ public partial class Settings : ComponentBase, IDisposable
 
         DaemonInfoSingleton.OnDaemonInfoFetch += HandleDaemonInfoFetch;
         DaemonConnectionSingleton.OnConnectionChanged += HandleDaemonConnectionChanged;
-
-        StateHasChanged();
 
         await base.OnInitializedAsync();
     }

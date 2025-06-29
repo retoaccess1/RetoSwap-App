@@ -7,7 +7,7 @@
 <Modal Title="Restore account" ModalButtonOptions="ModalButtonOptions.NONE" @bind-IsOpen="ShowRestoreModal" OnOkPressed="RestoreFromBackupAsync" OkButtonText="Restore">
     <p class="regular-p-grey">Warning! This will delete your current account. Make sure you have made a backup</p>
 </Modal>
-<Modal Title="Connecting to remote node" @bind-IsOpen="ShowConnectToRemoteNodeModal" ModalButtonOptions="ModalButtonOptions.NONE">
+<Modal Title="Connecting" ModalButtonOptions="ModalButtonOptions.NONE" IsOpen="ShowConnectToRemoteNodeModal" IsOpenChanged="@(async (isOpen) => { ShowConnectToRemoteNodeModal = isOpen; if (!isOpen) await CancelConnectToRemoteNodeAsync(); })">
     @if (IsConnected)
     {
         <p class="regular-p-grey">Connected successfully</p>
@@ -21,7 +21,7 @@
         <button class="button-cancel" @onclick="CancelConnectToRemoteNodeAsync">Cancel</button>
     }
 </Modal>
-<Modal Title="Error" ModalButtonOptions="ModalButtonOptions.OK" IsOpen="@(!string.IsNullOrEmpty(ConnectionError))" IsOpenChanged="(e) => { if (!e) { ConnectionError = null; } }">
+<Modal Title="Error" ModalButtonOptions="ModalButtonOptions.OK" IsOpen="@(!string.IsNullOrEmpty(ConnectionError))" IsOpenChanged="(isOpen) => { if (!isOpen) ConnectionError = null; }">
     <p class="regular-p-grey">@ConnectionError</p>
 </Modal>
 <Modal Title="Configure Monero node" ModalButtonOptions="ModalButtonOptions.OK_CANCEL" @bind-IsOpen="ShowConnectToMoneroNodeModal" OnOkPressed="ConnectToMoneroNodeAsync" OkButtonText="Connect">
@@ -37,8 +37,8 @@
 <div class="settings-main">
     <div class="info-container">
         <p class="bold-p">Build information</p>
-        <p>App version: @Version</p>
-        <p>Haveno version: @HavenoVersion</p>
+        <p>App version: @(string.IsNullOrEmpty(Version) ? "Loading..." : Version)</p>
+        <p>Haveno version: @(string.IsNullOrEmpty(HavenoVersion) ? "Loading..." : HavenoVersion)</p>
         <p>Daemon status: @(IsConnected ? "Connected" : "Disconnected")</p>
         <br />
         <p class="bold-p">Monero node</p>
@@ -46,15 +46,16 @@
         {
             <p>Status: @(XMRNodeIsRunning ? "Running" : "Stopped")</p>
         }
-        <p class="url">Url: @ConnectedMoneroNodeUrl</p>
+        <p class="url">Url: @(string.IsNullOrEmpty(ConnectedMoneroNodeUrl) ? "Loading..." : ConnectedMoneroNodeUrl)</p>
     </div>
     <button @onclick="() => ShowConnectToMoneroNodeModal = true">Configure Monero node</button>
     <br/>
+    <p class="bold-p">Preferences</p>
     <div class="dropdown">
         <SearchableDropdown InitialValue="@Countries.First().Key" Items="Countries" Disabled="true" Text="Language" Placeholder="Choose language"></SearchableDropdown>
     </div>
     <div class="dropdown">
-        <SearchableDropdown InitialValue="@PreferredCurrency" Items="Currencies" Text="Preferred currency" Placeholder="Choose currency" OnSubmit="HandlePreferredCurrencySubmitAsync"></SearchableDropdown>
+        <SearchableDropdown InitialValue="@PreferredCurrency" Items="Currencies" Text="Currency" Placeholder="Choose currency" OnSubmit="HandlePreferredCurrencySubmitAsync"></SearchableDropdown>
     </div>
     <div class="backup-buttons">
         <button class="backup-btn button-green" @onclick="BackupAsync">Backup account</button>

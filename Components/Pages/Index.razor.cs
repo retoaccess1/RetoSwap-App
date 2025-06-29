@@ -76,15 +76,6 @@ public partial class Index : ComponentBase
             // Tell user
         }
 
-        var moneroNodeUrl = await SecureStorageHelper.GetAsync<string>("monero-node-url");
-        if (!string.IsNullOrEmpty(moneroNodeUrl))
-        {
-            var moneroNodeUsername = await SecureStorageHelper.GetAsync<string>("monero-node-username") ?? string.Empty;
-            var moneroNodePassword = await SecureStorageHelper.GetAsync<string>("monero-node-password") ?? string.Empty;
-
-            await HavenoXmrNodeService.SetMoneroNodeAsync(moneroNodeUrl, moneroNodeUsername, moneroNodePassword);
-        }
-
         HandleDaemonStartInfoChange("Initializing wallet");
         await HavenoDaemonService.WaitWalletInitializedAsync(initializingTokenSource.Token);
 
