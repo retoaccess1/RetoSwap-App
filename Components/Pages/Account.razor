@@ -40,26 +40,9 @@
 
         <InfoRow Label="Payment method" Value="@PaymentMethodsHelper.PaymentMethodsDictionary[SelectedPaymentAccount.PaymentMethod.Id]"></InfoRow>
 
-        @* could use helper here *@
-
-        switch (SelectedPaymentAccount.PaymentMethod.Id)
+        @foreach (var keyVal in SelectedPaymentAccount.PaymentAccountPayload.Convert())
         {
-            case "NATIONAL_BANK":
-
-                break;
-            case "F2F":
-
-                break;
-            case "ZELLE":
-                <InfoRow Label="Account owner full name" Value="@SelectedPaymentAccount.PaymentAccountPayload.ZelleAccountPayload.HolderName"></InfoRow>
-                <InfoRow Label="Email or mobile no." Value="@SelectedPaymentAccount.PaymentAccountPayload.ZelleAccountPayload.EmailOrMobileNr"></InfoRow>
-                break;
-            case "REVOLUT":
-                <InfoRow Label="Username" Value="@SelectedPaymentAccount.PaymentAccountPayload.RevolutAccountPayload.Username"></InfoRow>
-                break;
-            default:
-                <InfoRow Label="Username" Value="@SelectedPaymentAccount.AccountName"></InfoRow>
-                break;
+            <InfoRow IsExpandable="true" Label="@keyVal.Key" Value="@keyVal.Value"></InfoRow>
         }
 
         <div class="supported-currencies">
@@ -92,8 +75,10 @@
     {
         <EditForm EditContext="_editContext" class="input-fields" OnValidSubmit="CreatePaymentAccountAsync">
             <DataAnnotationsValidator />
-            @foreach (var field in PaymentAccountForm.Fields)
+            @for (int i = 0; i < PaymentAccountForm.Fields.Count; i++)
             {
+                var field = PaymentAccountForm.Fields[i];
+
                 switch (field.Id)
                 {
                     case FieldId.TRADE_CURRENCIES:
@@ -105,7 +90,7 @@
                                     @foreach (var supportedCurrencyCode in SupportedCurrencyCodes)
                                     {
                                         <div class="checkbox-container">
-                                        <InputCheckbox @bind-Value="@supportedCurrencyCode.IsSelected" />
+                                        <InputCheckbox @bind-Value="@supportedCurrencyCode.IsSelected" @bind-Value:after="HandleCurrencyChange" />
 
                                         @if (Enum.TryParse(typeof(Currency), supportedCurrencyCode.Code, out var currency))
                                         {
@@ -134,21 +119,16 @@
                         </div>
                         break;
                     case FieldId.SALT:
-                        @*                         <div class="field">
-                            <label>@field.Label</label>
-                            <InputText readonly="true" @bind-Value="field.Value"></InputText>
-                            <ValidationMessage For="() => field.Label" />
-                        </div> *@
                         break;
                     case FieldId.COUNTRY:
                         <div class="field">
                             @if (SelectedPaymentMethodId == "F2F" || SelectedPaymentMethodId == "MONEY_GRAM")
                             {
-                                <SearchableDropdown OnSubmit="HandleCountryChanged" Placeholder="Select country" Text="@field.Label" Items="@(CountryCodeHelper.CountryCodeDictionary)"/>
+                                <SearchableDropdown OnSubmit="(country) => HandleCountryChanged(country, FieldId.COUNTRY)" Placeholder="Select country" Text="@field.Label" Items="@(CountryCodeHelper.CountryCodeDictionary)"/>
                             }
                             else
                             {
-                                <SearchableDropdown OnSubmit="HandleCountryChanged" Placeholder="Select country" Text="@field.Label" Items="@(field.SupportedCountries.ToDictionary(x => x.Code, x => $"{x.Name} ({x.Code})"))"/>
+                                <SearchableDropdown OnSubmit="(country) => HandleCountryChanged(country, FieldId.COUNTRY)" Placeholder="Select country" Text="@field.Label" Items="@(field.SupportedCountries.ToDictionary(x => x.Code, x => $"{x.Name} ({x.Code})"))"/>
                             }
                         </div>
                         break;
@@ -185,11 +165,92 @@
                         }
                         break;
                     default:
-                        <div class="field">
-                            <label>@field.Label</label>
-                            <InputText placeholder="" @bind-Value="field.Value"></InputText>
-                            <ValidationMessage For="() => field.Label" />
-                        </div>
+                        {
+                            if (SelectedPaymentMethodId == "SWIFT")
+                            {
+                                if (field.Label.Contains("Receiving Bank SWIFT"))
+                                {
+                                    <div class=@(ReceivingBankCollapsed ? "collapsible collapsible-collapsed" : "collapsible") @onclick="() => ReceivingBankCollapsed = !ReceivingBankCollapsed">
+                                        <p>Receiving bank</p>
+                                        <ion-icon name=@(ReceivingBankCollapsed ? "chevron-down-outline" : "chevron-up-outline")></ion-icon>
+                                    </div>
+                                    <div class=@(ReceivingBankCollapsed ? "swift-first-section section-collapsed" : "swift-first-section")>
+                                        @for (int j = i; j < PaymentAccountForm.Fields.Count; j++)
+                                        {
+                                            var field2 = PaymentAccountForm.Fields[j];
+                                            if (field2.Label.Contains("Intermediary Bank SWIFT"))
+                                            {
+                                                i = j - 1;
+                                                break;
+                                            }
+
+                                            if (field2.Id == FieldId.BANK_COUNTRY_CODE)
+                                            {
+                                                <div class="field">
+                                                    <SearchableDropdown OnSubmit="(country) => HandleCountryChanged(country, FieldId.BANK_COUNTRY_CODE)" Placeholder="Select country" Text="@field2.Label" Items="@(CountryCodeHelper.CountryCodeDictionary)"/>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                
+                                                <div class="field">
+                                                    <label>@field2.Label</label>
+                                                    <InputText placeholder="" @bind-Value="field2.Value"></InputText>
+                                                    <ValidationMessage For="() => field2.Label" />
+                                                </div>      
+                                            }
+                                        }
+                                    </div>
+
+                                    continue;
+                                }
+                                else if (field.Label.Contains("Intermediary Bank SWIFT"))
+                                {
+                                    <div class=@(IntermediaryBankCollapsed ? "collapsible collapsible-collapsed" : "collapsible") @onclick="() => IntermediaryBankCollapsed = !IntermediaryBankCollapsed">
+                                        <p>Intermediary bank</p>
+                                        <ion-icon name=@(IntermediaryBankCollapsed ? "chevron-down-outline" : "chevron-up-outline")></ion-icon>
+                                    </div>
+                                    <div class=@(IntermediaryBankCollapsed ? "swift-second-section section-collapsed" : "swift-second-section")>
+                                        <div class="custom-account-name">
+                                            <InputCheckbox @bind-Value="UseIntermediaryBankEnabled"/>
+                                            <label>Use intermediary bank</label>
+                                        </div>
+                                        @for (int j = i; j < PaymentAccountForm.Fields.Count; j++)
+                                        {
+                                            var field2 = PaymentAccountForm.Fields[j];
+                                            if (field2.Label.Contains("Account owner full name"))
+                                            {
+                                                i = j - 1;
+                                                break;
+                                            }
+                                        
+                                            if (field2.Id == FieldId.INTERMEDIARY_COUNTRY_CODE)
+                                            {
+                                                <div class="field">
+                                                    <SearchableDropdown OnSubmit="(country) => HandleCountryChanged(country, FieldId.INTERMEDIARY_COUNTRY_CODE)" Placeholder="Select country" Text="@field2.Label" Items="@(CountryCodeHelper.CountryCodeDictionary)"/>
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                                
+                                                <div class="field">
+                                                    <label>@field2.Label</label>
+                                                    <InputText placeholder="" @bind-Value="field2.Value"></InputText>
+                                                    <ValidationMessage For="() => field2.Label" />
+                                                </div>      
+                                            }   
+                                        }
+                                    </div>  
+
+                                    continue;
+                                }
+                            }
+                            <div class="field">
+                                <label>@field.Label</label>
+                                <InputText placeholder="" @bind-Value="field.Value"></InputText>
+                                <ValidationMessage For="() => field.Label" />
+                            </div>  
+                        }
                         break;
                 }
             }

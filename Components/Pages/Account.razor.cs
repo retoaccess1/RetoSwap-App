@@ -24,8 +24,6 @@ public partial class Account : ComponentBase
     public PaymentAccount? SelectedPaymentAccount { get; set; }
 
     public Dictionary<string, string> TraditionalPaymentMethodStrings { get; set; } = [];
-    public Dictionary<string, string> CryptoPaymentMethodStrings { get; set; } = [];
-    public Dictionary<string, string> VisiblePaymentMethodStrings { get; set; } = [];
     public List<SelectedCurrency> SupportedCurrencyCodes { get; set; } = [];
     public List<SelectedAcceptedCountry> AcceptedNonEUSEPACountries { get; set; } = [];
     public List<SelectedAcceptedCountry> AcceptedEUSEPACountries { get; set; } = [];
@@ -40,6 +38,9 @@ public partial class Account : ComponentBase
     public SearchableDropdown PaymentMethodSearchableDropdown { get; set; } = default!;
 
     public bool CustomAccountNameEnabled { get; set; }
+    public bool UseIntermediaryBankEnabled { get; set; }
+    public bool ReceivingBankCollapsed { get; set; }
+    public bool IntermediaryBankCollapsed { get; set; } = true;
 
     [Parameter]
     [SupplyParameterFromQuery]
@@ -48,24 +49,8 @@ public partial class Account : ComponentBase
     public string? AccountToDelete { get; set; }
     public bool ShowDeleteAccountModal { get; set; }
 
-    public int SelectedTabIndex 
-    { 
-        get;
-        set
-        {
-            field = value;
-            switch (field)
-            {
-                case 0:
-                    VisiblePaymentMethodStrings = TraditionalPaymentMethodStrings;
-                    break;
-                case 1:
-                    VisiblePaymentMethodStrings = CryptoPaymentMethodStrings;
-                    break;
-                default: break;
-            }
-        }
-    }
+    public PaymentAccountFormField? AccountNameField { get; set; }
+    public PaymentAccountFormField? CopyFromField { get; set; }
 
     public string SelectedPaymentMethodId 
     { 
@@ -110,14 +95,16 @@ public partial class Account : ComponentBase
             // TODO cache this and clear when daemon version changes
             var paymentAccountForm = Task.Run(() => PaymentAccountService.GetPaymentAccountFormAsync(SelectedPaymentMethodId)).GetAwaiter().GetResult();
 
-            // Add a default account name
-            var accountNameField = paymentAccountForm.Fields.FirstOrDefault(x => x.Id == FieldId.ACCOUNT_NAME);
-            if (accountNameField is not null)
+            PaymentAccountForm = paymentAccountForm;
+
+            AccountNameField = PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == FieldId.ACCOUNT_NAME);
+
+            var fieldId = GetPaymentAccountName(SelectedPaymentMethodId);
+            if (fieldId is not null)
             {
-                accountNameField.Value = SelectedPaymentMethodId;
+                CopyFromField = PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == fieldId);
             }
 
-            PaymentAccountForm = paymentAccountForm;
 
             var acceptedCountriesField = PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == FieldId.ACCEPTED_COUNTRY_CODES);
             if (acceptedCountriesField is not null)
@@ -138,6 +125,45 @@ public partial class Account : ComponentBase
     } = string.Empty;
 
     public bool IsFetching { get; set; }
+
+    public FieldId? GetPaymentAccountName(string id)
+    {
+        switch (id)
+        {
+            case "PAY_BY_MAIL":
+                return FieldId.HOLDER_ADDRESS;
+            case "MONEY_GRAM":
+            case "FASTER_PAYMENTS":
+            case "STRIKE":
+                return FieldId.HOLDER_NAME;
+            case "F2F":
+                return FieldId.CITY;
+            case "AUSTRALIA_PAYID":
+                return FieldId.BANK_ACCOUNT_NAME;
+            case "UPHOLD":
+                return FieldId.ACCOUNT_ID;
+            case "REVOLUT":
+                return FieldId.USERNAME;
+            case "SEPA":
+            case "SEPA_INSTANT":
+            case "ZELLE":
+                return FieldId.EMAIL_OR_MOBILE_NR;
+            case "SWIFT":
+                return FieldId.BENEFICIARY_NAME;
+            case "CASH_APP":
+                return FieldId.EMAIL_OR_MOBILE_NR_OR_CASHTAG;
+            case "VENMO":
+            case "PAYPAL":
+                return FieldId.EMAIL_OR_MOBILE_NR_OR_USERNAME;
+            case "PAYSAFE":
+            case "WISE":
+            case "PAXUM":
+                return FieldId.EMAIL;
+            case "BLOCK_CHAINS":
+            case "CASH_AT_ATM":
+            default: return null;
+        }
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -183,12 +209,12 @@ public partial class Account : ComponentBase
         await base.OnInitializedAsync();
     }
 
-    public void HandleCountryChanged(string country)
+    public void HandleCountryChanged(string country, FieldId fieldId)
     {
         if (PaymentAccountForm is null)
             return;
 
-        var countryField = PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == FieldId.COUNTRY);
+        var countryField = PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == fieldId);
         if (countryField is not null)
         {
             countryField.Value = country;
@@ -214,7 +240,7 @@ public partial class Account : ComponentBase
 
         try
         {
-            var response = Task.Run(() => PaymentAccountService.ValidateFormFieldAsync(new ValidateFormFieldRequest
+            Task.Run(() => PaymentAccountService.ValidateFormFieldAsync(new ValidateFormFieldRequest
             {
                 FieldId = field.Id,
                 Form = PaymentAccountForm,
@@ -226,7 +252,21 @@ public partial class Account : ComponentBase
             _messageStore.Add(() => field.Label, ex.GetErrorMessage());
         }
 
+        if (!CustomAccountNameEnabled && AccountNameField is not null && CopyFromField is not null && field.Id == CopyFromField.Id)
+        {
+            AccountNameField.Value = $"{TraditionalPaymentMethodStrings[SelectedPaymentMethodId]}: {CopyFromField.Value}";
+        }
+
         _editContext.NotifyValidationStateChanged();
+    }
+
+    public void HandleCurrencyChange()
+    {
+        if (CustomAccountNameEnabled)
+            return;
+
+        if (AccountNameField is not null && CopyFromField is null)
+            AccountNameField.Value = $"{TraditionalPaymentMethodStrings[SelectedPaymentMethodId]}: {string.Join(", ", SupportedCurrencyCodes.Where(x => x.IsSelected).Select(x => x.Code))}";
     }
 
     public async Task DeleteAccountAsync(string paymentAccountId)
@@ -260,6 +300,8 @@ public partial class Account : ComponentBase
 
         try
         {
+            PaymentAccountForm.Fields = PaymentAccountForm.Fields.Where(x => !string.IsNullOrEmpty(x.Value)).ToList();
+
             var request = new CreatePaymentAccountRequest
             {
                 PaymentAccountForm = PaymentAccountForm

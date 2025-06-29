@@ -1,26 +1,19 @@
 ﻿using HavenoSharp.Models;
+using System.Reflection;
 using System.Text.RegularExpressions;
 
-namespace Manta.Helpers;
+namespace Manta.Extensions;
 
-public static partial class PaymentAccountToFieldsHelper
+public static partial class PaymentAccountToFieldsExtensions
 {
     static IEnumerable<string> SplitCamelCase(this string input)
     {
         return CamelCaseRegex().Split(input).Where(str => !string.IsNullOrEmpty(str));
     }
 
-    /// <summary>
-    /// Convert a PaymentAccountPayload to a list of field name and field values
-    /// </summary>
-    /// <returns></returns>
-    public static IEnumerable<KeyValuePair<string, string>> Convert(this PaymentAccountPayload paymentAccountPayload)
+    private static IEnumerable<KeyValuePair<string, string>> GetFields(PropertyInfo? propertyInfo, object orignalObj)
     {
-        var paymentAccount = typeof(PaymentAccountPayload).GetProperties()
-            .Where(x => x.GetValue(paymentAccountPayload) is not null && x.Name != "Parser" && x.Name != "Id" && x.Name != "MaxTradePeriod" && x.Name != "ExcludeFromJsonData" && x.Name != "PaymentMethodId" && x.Name != "MessageCase" && x.Name != "Descriptor")
-            .FirstOrDefault();
-
-        var val = paymentAccount?.GetValue(paymentAccountPayload);
+        var val = propertyInfo?.GetValue(orignalObj);
 
         var properties = val?.GetType().GetProperties()
             .Where(x => x.Name != "Parser" && x.Name != "Descriptor");
@@ -28,7 +21,7 @@ public static partial class PaymentAccountToFieldsHelper
         if (properties is null)
             yield break;
 
-        foreach(var property in properties)
+        foreach (var property in properties)
         {
             var value = property.GetValue(val);
             if (value is null)
@@ -61,6 +54,19 @@ public static partial class PaymentAccountToFieldsHelper
                 default: continue;
             }
         }
+    }
+
+    /// <summary>
+    /// Convert a PaymentAccountPayload to a list of field name and field values
+    /// </summary>
+    /// <returns></returns>
+    public static IEnumerable<KeyValuePair<string, string>> Convert(this PaymentAccountPayload paymentAccountPayload)
+    {
+        var paymentAccountPropertyInfo = typeof(PaymentAccountPayload).GetProperties()
+            .Where(x => x.GetValue(paymentAccountPayload) is not null && x.Name != "Parser" && x.Name != "Id" && x.Name != "MaxTradePeriod" && x.Name != "ExcludeFromJsonData" && x.Name != "PaymentMethodId" && x.Name != "MessageCase" && x.Name != "Descriptor")
+            .FirstOrDefault();
+
+        return GetFields(paymentAccountPropertyInfo, paymentAccountPayload);
     }
 
     [GeneratedRegex(@"([A-Z]?[a-z]+)")]

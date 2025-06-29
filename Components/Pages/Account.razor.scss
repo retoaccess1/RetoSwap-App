@@ -5,7 +5,7 @@
 }
 
 label {
-    font-weight: bold;
+    /*font-weight: bold;*/
 }
 
 .accounts-text {
@@ -76,6 +76,8 @@ label {
 
             label {
                 margin-left: 6px;
+                white-space: nowrap;
+                overflow-x: hidden;
             }
         }
     }
@@ -129,4 +131,33 @@ label {
 
 ::-webkit-scrollbar-thumb:hover {
     background: #555;
+}
+
+.swift-first-section, .swift-second-section {
+    max-height: 500px;
+    overflow: hidden;
+    transition: max-height 0.5s;
+    /*background-color: #141414;*/
+    margin-bottom: 10px;
+}
+
+.collapsible {
+    display: flex;
+    background-color: #141414;
+    align-items: center;
+    justify-content: space-between;
+    height: 42px;
+    padding: 0 16px 0;
+    border-radius: 20px;
+    /*border-radius: 20px 20px 0 0;*/
+    margin-top: 10px;
+}
+
+.collapsible-collapsed {
+    border-radius: 20px;
+}
+
+.section-collapsed {
+    max-height: 0;
+    padding: 0;
 }
