@@ -126,7 +126,7 @@
     [Parameter]
     public EventCallback<TValue> ValueChanged { get; set; }
 
-    public async Task OnItemClick(TValue item)
+    public void OnItemClick(TValue item)
     {
         Value = item;
     }
