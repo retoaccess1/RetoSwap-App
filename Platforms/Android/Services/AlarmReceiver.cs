@@ -59,10 +59,10 @@ public static class AlarmUtils
 
     public static void ScheduleExactAlarm(Context context)
     {
-        if (!AlarmManagerCanScheduleExactAlarms(context))
-        {
-            RequestExactAlarmPermission(context);
-        }
+        //if (!AlarmManagerCanScheduleExactAlarms(context))
+        //{
+        //    RequestExactAlarmPermission(context);
+        //}
 
         // Tune this, or let user decide - higher frequency will use more battery
         var mintuesDelay = 10;
@@ -101,7 +101,7 @@ public class AlarmReceiver : BroadcastReceiver
 
         var notificationSingleton = scope.ServiceProvider.GetRequiredService<NotificationSingleton>();
 
-        //Task.Run(notificationSingleton.BackgroundSync);
+        Task.Run(async () => await notificationSingleton.PollAsync());
 
         // Chaining alarms basically
         AlarmUtils.ScheduleExactAlarm(context);

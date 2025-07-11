@@ -28,6 +28,15 @@
     {
         NavigationManager.LocationChanged += HandleLocationChanged;
         KeyboardService.KeyboardStateChanged += HandleKeyboardChanged;
+
+        #if ANDROID
+        MainActivity.OnNotificationNavigate += HandleNotificationNavigate;
+        #endif
+    }
+
+    private void HandleNotificationNavigate(string urlToOpen)
+    {
+        NavigationManager.NavigateTo(urlToOpen);
     }
 
     private void HandleLocationChanged(object? sender, LocationChangedEventArgs e)

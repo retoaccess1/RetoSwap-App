@@ -14,7 +14,7 @@ public class WindowsNotificationManagerService : INotificationManagerService
         return;
     }
 
-    public void SendNotification(string title, string message, DateTime? notifyTime = null)
+    public void SendNotification(string title, string message, string? urlToOpen = null, DateTime? notifyTime = null)
     {
         return;
     }

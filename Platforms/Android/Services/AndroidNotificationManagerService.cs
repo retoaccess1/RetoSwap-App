@@ -3,6 +3,7 @@ using Android.Content;
 using Android.Graphics;
 using Android.OS;
 using AndroidX.Core.App;
+using Microsoft.AspNetCore.Components;
 
 namespace Manta.Services;
 
@@ -36,7 +37,7 @@ public class AndroidNotificationManagerService : INotificationManagerService
             throw new Exception("_compatManager was null");
     }
 
-    public void SendNotification(string title, string message, DateTime? notifyTime = null)
+    public void SendNotification(string title, string message, string? urlToOpen = null, DateTime? notifyTime = null)
     {
         if (!_channelInitialized)
         {
@@ -69,7 +70,7 @@ public class AndroidNotificationManagerService : INotificationManagerService
         }
         else
         {
-            Show(title, message);
+            Show(title, message, urlToOpen);
         }
     }
 
@@ -84,9 +85,13 @@ public class AndroidNotificationManagerService : INotificationManagerService
         NotificationReceived?.Invoke(null, args);
     }
 
-    public void Show(string title, string message)
+    public void Show(string title, string message, string? urlToOpen = null)
     {
         Intent intent = new(Platform.AppContext, typeof(MainActivity));
+        if (!string.IsNullOrEmpty(urlToOpen))
+        {
+            intent.PutExtra("urlToOpen", urlToOpen);
+        }
 
         intent.PutExtra(TitleKey, title);
         intent.PutExtra(MessageKey, message);
@@ -103,6 +108,7 @@ public class AndroidNotificationManagerService : INotificationManagerService
             .SetContentTitle(title)
             .SetContentText(message)
             .SetLargeIcon(BitmapFactory.DecodeResource(Platform.AppContext.Resources, Resource.Drawable.haveno))
+            .SetAutoCancel(true)
             .SetSmallIcon(Resource.Drawable.haveno);
 
         Notification notification = builder.Build();

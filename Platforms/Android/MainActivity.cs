@@ -14,6 +14,8 @@ namespace Manta;
     DataHost = "termux_callback")]
 public class MainActivity : MauiAppCompatActivity
 {
+    public static Action<string>? OnNotificationNavigate;
+
     public MainActivity()
     {
 
@@ -31,7 +33,11 @@ public class MainActivity : MauiAppCompatActivity
 
     private void HandleIntent(Intent intent)
     {
-        // TODO Handle notification. if message, navigate to chat, if trade navigate to trade
+        var urlToOpen = intent.GetStringExtra("urlToOpen");
+        if (urlToOpen is not null)
+        {
+            OnNotificationNavigate?.Invoke(urlToOpen);
+        }
     }
 
     protected override void OnCreate(Bundle? savedInstanceState)
