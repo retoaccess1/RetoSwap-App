@@ -5,10 +5,12 @@
              x:Class="Manta.MainPage"
              BackgroundColor="{DynamicResource PageBackgroundColor}">
 
-    <BlazorWebView x:Name="blazorWebView" HostPage="wwwroot/index.html">
-        <BlazorWebView.RootComponents>
-            <RootComponent Selector="#app" ComponentType="{x:Type local:Components.Routes}" />
-        </BlazorWebView.RootComponents>
-    </BlazorWebView>
+    <StackLayout x:Name="stackLayout" BackgroundColor="DarkSlateGrey">
+        <BlazorWebView x:Name="blazorWebView" HostPage="wwwroot/index.html" HorizontalOptions="FillAndExpand" VerticalOptions="FillAndExpand">
+            <BlazorWebView.RootComponents>
+                <RootComponent Selector="#app" ComponentType="{x:Type local:Components.Routes}" />
+            </BlazorWebView.RootComponents>
+        </BlazorWebView>
+    </StackLayout>
 
 </ContentPage>
