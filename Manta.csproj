@@ -25,7 +25,7 @@
     <ApplicationTitle>Manta</ApplicationTitle>
 
     <!-- App Identifier -->
-    <ApplicationId>com.companyname.manta</ApplicationId>
+    <ApplicationId>com.haveno</ApplicationId>
 
     <!-- Versions -->
     <ApplicationDisplayVersion>1.0.0</ApplicationDisplayVersion>
@@ -133,7 +133,7 @@
     <PackageReference Include="CommunityToolkit.Maui" Version="8.0.1" />
     <PackageReference Include="Grpc.Net.Client" Version="2.67.0" />
     <PackageReference Include="Grpc.Net.Client.Web" Version="2.70.0" />
-    <PackageReference Include="HavenoSharp" Version="1.0.12" />
+    <PackageReference Include="HavenoSharp" Version="1.0.15" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.AutoActivation" Version="9.3.0" />
     <PackageReference Include="Microsoft.Maui.Controls" Version="8.0.100" />
     <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="8.0.100" />

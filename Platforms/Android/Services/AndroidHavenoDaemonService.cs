@@ -102,7 +102,7 @@ public class AndroidHavenoDaemonService : HavenoDaemonServiceBase
         var receiver = new ProgressReceiver();
         receiver.OnProgressChanged += progressCb;
 
-        var filter = new IntentFilter("com.companyname.manta.BACKEND_PROGRESS");
+        var filter = new IntentFilter("com.haveno.BACKEND_PROGRESS");
 
         if (OperatingSystem.IsAndroidVersionAtLeast(33))
         {
@@ -137,7 +137,7 @@ public class AndroidHavenoDaemonService : HavenoDaemonServiceBase
         var startBackendIntent = new Intent(Platform.AppContext, typeof(BackendService))
                         .SetAction("ACTION_STOP_BACKEND");
 
-        ContextCompat.StartForegroundService(Platform.AppContext, startBackendIntent);
+        Platform.AppContext.StartService(startBackendIntent);
 
         return Task.CompletedTask;
     }

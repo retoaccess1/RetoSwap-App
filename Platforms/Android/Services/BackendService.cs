@@ -3,13 +3,12 @@ using Android.Content;
 using Android.OS;
 using Android.Runtime;
 using AndroidX.Core.App;
-using System.Runtime.InteropServices;
 using System.Text;
 
 namespace Manta.Services;
 
-[Service(Name = "com.companyname.manta.BackendService", Enabled = true, Exported = false, Permission = "android.permission.BIND_VPN_SERVICE", ForegroundServiceType = Android.Content.PM.ForegroundService.TypeDataSync)]
-[IntentFilter(["com.companyname.manta.ACTION_START_BACKEND", "com.companyname.manta.ACTION_STOP_BACKEND"])]
+[Service(Name = "com.haveno.BackendService", Enabled = true, Exported = false, Permission = "android.permission.BIND_VPN_SERVICE", ForegroundServiceType = Android.Content.PM.ForegroundService.TypeDataSync)]
+[IntentFilter(["com.haveno.ACTION_START_BACKEND", "com.haveno.ACTION_STOP_BACKEND"])]
 public class BackendService : Service
 {
     private string _notificationChannelId = "BackendServiceChannel";
@@ -93,8 +92,6 @@ public class BackendService : Service
         if (intent is null)
             return StartCommandResult.RedeliverIntent;
 
-        ShowNotification();
-
         switch (intent.Action) 
         {
             case "ACTION_STOP_BACKEND":
@@ -108,6 +105,8 @@ public class BackendService : Service
                     if (password is null)
                         return StartCommandResult.RedeliverIntent;
 
+                    ShowNotification();
+
                     Task.Run(() => StartBackend(password));
                 }
                 break;
@@ -119,7 +118,7 @@ public class BackendService : Service
 
     void UpdateProgress(string progress, bool isDone = false)
     {
-        var intent = new Intent("com.companyname.manta.BACKEND_PROGRESS");
+        var intent = new Intent("com.haveno.BACKEND_PROGRESS");
         intent.PutExtra("progress", progress);
         if (isDone)
             intent.PutExtra("isDone", isDone);
@@ -138,16 +137,6 @@ public class BackendService : Service
 
         var havenoDaemonService = serviceProvider.GetRequiredService<IHavenoDaemonService>();
         var daemonPath = havenoDaemonService.GetDaemonPath();
-
-        //var activity = Platform.CurrentActivity;
-        //if (activity is not null)
-        //{
-        //    var powerManager = (PowerManager?)activity.ApplicationContext?.GetSystemService(PowerService);
-
-        //    _wakeLock = powerManager?.NewWakeLock(WakeLockFlags.Partial, "HavenoDaemon:WakeLock");
-
-        //    _wakeLock?.Acquire();
-        //}
 
         // Tor does not always connect successfully, need to timeout and give the user the option to restart
         _ = Task.Factory.StartNew(() =>
@@ -223,9 +212,7 @@ public class BackendService : Service
         _daemonCts?.Cancel();
         _torCts?.Cancel();
 
-        //_wakeLock?.Release();
-        //_wakeLock?.Dispose();
-        //_wakeLock = null;
+        StopSelf();
     }
 
     public override IBinder? OnBind(Intent? intent)
