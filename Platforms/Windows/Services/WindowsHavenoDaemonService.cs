@@ -81,6 +81,7 @@ public class WindowsHavenoDaemonService : HavenoDaemonServiceBase
                         $"--apiPassword={password} " +
                         "--apiPort=3201 " +
                         "--passwordRequired=false " +
+                        "--disableRateLimits=true " +
                         "--useNativeXmrWallet=false",
 
             WorkingDirectory = currentDirectory
@@ -117,11 +118,11 @@ public class WindowsHavenoDaemonService : HavenoDaemonServiceBase
 
     public override Task StopHavenoDaemonAsync()
     {
-        throw new NotImplementedException();
+        return Task.CompletedTask;
     }
 
     public override Task InstallHavenoDaemonAsync(IProgress<double> progressCb)
     {
-        throw new NotImplementedException();
+        return Task.CompletedTask;
     }
 }
