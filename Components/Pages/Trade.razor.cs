@@ -282,7 +282,7 @@ public partial class Trade : ComponentBase, IDisposable
         NavigationManager.NavigateTo("trades?title=Trades&SelectedTabIndex=2");
     }
 
-    public async Task GoToDisputeAsync()
+    public void GoToDispute()
     {
         NavigationManager.NavigateTo($"trades/{TradeInfo.TradeId}/chat?disputeTradeId={TradeInfo.TradeId}&title=Trade%20{TradeInfo.ShortId}%20chat&arbitrator={TradeInfo.ArbitratorNodeAddress.Split(".")[0]}&tradePeer={TradeInfo.TradePeerNodeAddress.Split(".")[0]}&myAddress={TradeInfo.Offer.OwnerNodeAddress.Split(".")[0]}");
     }

@@ -1,4 +1,5 @@
 ﻿using Blazored.LocalStorage;
+using HavenoSharp.Services;
 using HavenoSharp.Singletons;
 using Manta.Helpers;
 using Manta.Models;
@@ -6,7 +7,6 @@ using Manta.Services;
 using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
 using Grpc.Net.Client.Web;
-using HavenoSharp.Services;
 
 namespace Manta.Components.Pages;
 
