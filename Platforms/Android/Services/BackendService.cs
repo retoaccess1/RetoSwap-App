@@ -19,8 +19,6 @@ public class BackendService : Service
     private CancellationTokenSource? _daemonCts;
     private TaskCompletionSource? _torReadyTCS;
 
-    private PowerManager.WakeLock? _wakeLock; 
-
     public BackendService()
     {
         
@@ -190,7 +188,7 @@ public class BackendService : Service
             Proot.AppHome = daemonPath;
 
             // Don't need to set a new password whenever starting daemon
-            using var streamReader = Proot.RunProotUbuntuCommand("bash", _daemonCts.Token, "-c", $"{Path.Combine(daemonPath, "haveno-daemon-mobile")} --disableRateLimits=true --baseCurrencyNetwork=XMR_STAGENET --useLocalhostForP2P=false --useDevPrivilegeKeys=false --nodePort=9999 --appName=haveno-XMR_STAGENET_user1 --apiPassword={password} --apiPort=3201 --passwordRequired=false --useNativeXmrWallet=false --torControlHost=127.0.0.1 --torControlPort=9051");
+            using var streamReader = Proot.RunProotUbuntuCommand("java", _daemonCts.Token, "-jar", $"{Path.Combine(daemonPath, "daemon.jar")}", "--disableRateLimits=true", "--baseCurrencyNetwork=XMR_STAGENET", "--useLocalhostForP2P=false", "--useDevPrivilegeKeys=false", "--nodePort=9999", "--appName=haveno-XMR_STAGENET", $"--apiPassword={password}", "--apiPort=3201", "--passwordRequired=false", "--useNativeXmrWallet=false", "--torControlHost=127.0.0.1", "--torControlPort=9061");
 
             string? line;
             while ((line = streamReader.ReadLine()) is not null)
@@ -201,7 +199,6 @@ public class BackendService : Service
                 if (line.Contains("Init wallet"))
                 {
                     UpdateProgress("Initializing wallet", true);
-
                 }
             }
         }, TaskCreationOptions.LongRunning);

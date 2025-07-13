@@ -1,18 +1,9 @@
 ﻿using Grpc.Core;
 using HavenoSharp.Services;
 using Manta.Helpers;
-using System.IO.Compression;
 using System.Runtime.InteropServices;
 
 namespace Manta.Services;
-
-//public enum HavenoInstallationStatus
-//{
-//    None,
-//    NotInstalled,
-//    InstalledLatest,
-//    InstalledOutOfDate
-//}
 
 public interface IHavenoDaemonService
 {
@@ -38,6 +29,7 @@ public abstract class HavenoDaemonServiceBase : IHavenoDaemonService
 
     protected string _os;
     protected string _daemonPath;
+    protected string _latestDaemonVersion = "1.1.2.5";
 
     public HavenoDaemonServiceBase(IHavenoWalletService walletService, IHavenoVersionService versionService, IHavenoAccountService accountService, string daemonPath)
     {
@@ -57,53 +49,20 @@ public abstract class HavenoDaemonServiceBase : IHavenoDaemonService
 
     public string GetDaemonPath() => _daemonPath;
 
-    protected async Task<string> GetHavenoLatestVersionAsync()
-    {
-        var selectedRepo = _havenoRepos[0];
-
-        using var client = new HttpClient();
-        var response = await client.GetAsync($"https://github.com/{selectedRepo}/releases/latest");
-
-        var latestVersion = response.RequestMessage?.RequestUri?.ToString().Split("tag/v").ElementAt(1);
-        if (latestVersion is null)
-            throw new Exception("Could not parse latest version");  // Bad if this fails, could get stuck - fallback to older known version or should we just not parse as versions
-
-        return latestVersion;
-    }
-
     protected async Task<string?> GetHavenoLocalVersionAsync()
     {
-        if (Directory.GetFiles(_daemonPath).Contains("version"))
-            return null; // Not installed
-
-        using var fileStream = File.Open(Path.Combine(_daemonPath, "version"), FileMode.OpenOrCreate, FileAccess.ReadWrite);
-        using var reader = new StreamReader(fileStream);
-
-        var currentHavenoVersion = await reader.ReadToEndAsync();
-        reader.Close();
-
-        return currentHavenoVersion;
+        return await SecureStorageHelper.GetAsync<string>("daemon-version");
     }
 
     public virtual async Task TryUpdateHavenoAsync(IProgress<double> progressCb)
     {
         var currentHavenoVersion = await GetHavenoLocalVersionAsync();
-        if (string.IsNullOrEmpty(currentHavenoVersion))
+        if (string.IsNullOrEmpty(currentHavenoVersion) || currentHavenoVersion == _latestDaemonVersion)
             return;
 
-        var latestVersion = await GetHavenoLatestVersionAsync();
-
-        // Do we even need to check that the version is greater? Already fetching the latest version
-        // Would be more robust if convention changes
-        if (Version.Parse(latestVersion) > Version.Parse(currentHavenoVersion))
-        {
-            var shouldUpdate = await Application.Current!.MainPage!.DisplayAlert("Update available", $"There is a new version available: v{latestVersion}. Current version is: v{currentHavenoVersion}.\nWould you like to update?", "Yes", "No");
-            if (shouldUpdate)
-            {
-                var selectedRepo = _havenoRepos[0];
-                await FetchHavenoDaemonAsync(selectedRepo, latestVersion, progressCb);
-            }
-        }
+        var selectedRepo = _havenoRepos[0];
+        await FetchHavenoDaemonAsync(selectedRepo, _latestDaemonVersion, progressCb);
+        await SecureStorageHelper.SetAsync("daemon-version", _latestDaemonVersion);
     }
 
     protected async Task FetchHavenoDaemonAsync(string selectedRepo, string version, IProgress<double> progressCb)
@@ -111,48 +70,53 @@ public abstract class HavenoDaemonServiceBase : IHavenoDaemonService
         progressCb.Report(102f);
 
         using var client = new HttpClient();
-        using var stream = await HttpClientHelper.DownloadWithProgressAsync($"https://github.com/{selectedRepo}/releases/download/v{version}/{_os}.zip", progressCb, client);
+        using var stream = await HttpClientHelper.DownloadWithProgressAsync($"https://github.com/{selectedRepo}/releases/download/v{version}/daemon-{_os}.jar", progressCb, client);
 
         if (Directory.Exists(_daemonPath))
             Directory.Delete(_daemonPath, true);
+        else 
+            Directory.CreateDirectory(_daemonPath);
 
-        ZipFile.ExtractToDirectory(stream, _daemonPath);
+        using var fileStream = File.Create(Path.Combine(_daemonPath, "daemon.jar"));
+        await stream.CopyToAsync(fileStream);
 
-        using var fileStream = File.Open(Path.Combine(_daemonPath, "version"), FileMode.OpenOrCreate, FileAccess.ReadWrite);
-        using var writer = new StreamWriter(fileStream);
-        writer.Write(version);
-        writer.Close();
+        fileStream.Close();
     }
 
     // First time setup
     protected async Task DownloadHavenoDaemonAsync(IProgress<double> progressCb)
     {
         var selectedRepo = _havenoRepos[0];
-        var latestVersion = await GetHavenoLatestVersionAsync();
-
-        await FetchHavenoDaemonAsync(selectedRepo, latestVersion, progressCb);
+        await FetchHavenoDaemonAsync(selectedRepo, _latestDaemonVersion, progressCb);
+        await SecureStorageHelper.SetAsync("daemon-version", _latestDaemonVersion);
     }
 
+    // Retry parameter?
     public async Task<bool> IsHavenoDaemonRunningAsync(CancellationToken cancellationToken = default)
     {
-        try
+        for (int i = 0; i < 5 && !cancellationToken.IsCancellationRequested; i++)
         {
-            // Will tell us its running but not if its initialized
-            await _versionService.GetVersionAsync(cancellationToken: cancellationToken);
+            try
+            {
+                // Will tell us its running but not if its initialized
+                await _versionService.GetVersionAsync(cancellationToken: cancellationToken);
 
-            return true;
-        }
-        catch (TaskCanceledException)
-        {
-            throw;
-        }
-        catch (RpcException)
-        {
-            // Might be running but wrong password?
-        }
-        catch (Exception)
-        {
+                return true;
+            }
+            catch (TaskCanceledException)
+            {
+                throw;
+            }
+            catch (RpcException)
+            {
+                // Might be running but wrong password?
+            }
+            catch (Exception)
+            {
 
+            }
+
+            await Task.Delay(100, cancellationToken);
         }
 
         return false;

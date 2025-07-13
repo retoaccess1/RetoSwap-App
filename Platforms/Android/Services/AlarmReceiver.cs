@@ -8,18 +8,18 @@ namespace Manta.Services;
 
 public static class AlarmUtils
 {
+    public static PendingIntent? GetAlarmPendingIntent(Context context)
+    {
+        return PendingIntent.GetBroadcast(context, 0, new Intent(context, typeof(AlarmReceiver)), PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable);
+    }
+
     public static void CancelAlarm(Context context)
     {
         var alarmManager = (AlarmManager?)context.GetSystemService(Context.AlarmService);
         if (alarmManager is null)
             return;
 
-        var intent = new Intent(context, typeof(AlarmReceiver));
-
-        var pendingIntent = PendingIntent.GetBroadcast(
-            context, 0, intent, PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable
-        );
-
+        var pendingIntent = GetAlarmPendingIntent(context);
         if (pendingIntent is null)
             return;
 
@@ -59,11 +59,6 @@ public static class AlarmUtils
 
     public static void ScheduleExactAlarm(Context context)
     {
-        //if (!AlarmManagerCanScheduleExactAlarms(context))
-        //{
-        //    RequestExactAlarmPermission(context);
-        //}
-
         // Tune this, or let user decide - higher frequency will use more battery
         var mintuesDelay = 10;
 

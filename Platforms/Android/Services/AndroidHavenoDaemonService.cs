@@ -54,13 +54,13 @@ public class AndroidHavenoDaemonService : HavenoDaemonServiceBase
         Proot.RunProotUbuntuCommand("ln", "-s", "/etc/java-21-openjdk/security/java.security", $"/usr/lib/jvm/java-21-openjdk-{arch}/conf/security/java.security");
         Proot.RunProotUbuntuCommand("ln", "-s", "/etc/java-21-openjdk/security/java.policy", $"/usr/lib/jvm/java-21-openjdk-{arch}/conf/security/java.policy");
         Proot.RunProotUbuntuCommand("ln", "-s", "/etc/java-21-openjdk/security/default.policy", $"/usr/lib/jvm/java-21-openjdk-{arch}/lib/security/default.policy");
-        Proot.RunProotUbuntuCommand("chmod", "+x", Path.Combine(_daemonPath, "haveno-daemon-mobile"));
+        Proot.RunProotUbuntuCommand("chmod", "+x", Path.Combine(_daemonPath, "daemon.jar"));
     }
 
     public override async Task TryUpdateHavenoAsync(IProgress<double> progressCb)
     {
         await base.TryUpdateHavenoAsync(progressCb);
-        Proot.RunProotUbuntuCommand("chmod", "+x", Path.Combine(_daemonPath, "haveno-daemon-mobile"));
+        Proot.RunProotUbuntuCommand("chmod", "+x", Path.Combine(_daemonPath, "daemon.jar"));
     }
 
     public override async Task<bool> GetIsDaemonInstalledAsync()
