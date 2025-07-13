@@ -93,9 +93,7 @@ public partial class Account : ComponentBase
                 .ToList();
 
             // TODO cache this and clear when daemon version changes
-            var paymentAccountForm = Task.Run(() => PaymentAccountService.GetPaymentAccountFormAsync(SelectedPaymentMethodId)).GetAwaiter().GetResult();
-
-            PaymentAccountForm = paymentAccountForm;
+            PaymentAccountForm = Task.Run(() => PaymentAccountService.GetPaymentAccountFormAsync(SelectedPaymentMethodId)).GetAwaiter().GetResult();
 
             AccountNameField = PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == FieldId.ACCOUNT_NAME);
 
@@ -104,7 +102,6 @@ public partial class Account : ComponentBase
             {
                 CopyFromField = PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == fieldId);
             }
-
 
             var acceptedCountriesField = PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == FieldId.ACCEPTED_COUNTRY_CODES);
             if (acceptedCountriesField is not null)
@@ -300,7 +297,9 @@ public partial class Account : ComponentBase
 
         try
         {
-            PaymentAccountForm.Fields = PaymentAccountForm.Fields.Where(x => !string.IsNullOrEmpty(x.Value)).ToList();
+            // Do this properly, use UseIntermediaryBankEnabled etc
+            if (PaymentAccountForm.Id == FormId.SWIFT)
+                PaymentAccountForm.Fields = PaymentAccountForm.Fields.Where(x => !string.IsNullOrEmpty(x.Value)).ToList();
 
             var request = new CreatePaymentAccountRequest
             {

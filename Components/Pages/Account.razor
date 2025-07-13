@@ -6,8 +6,6 @@
 <div class="account-main">
     <p class="accounts-text">My accounts</p>
     <div class="accounts">
-        @* <Tabs TabNames="@(["Traditional", "Crypto"])" @bind-SelectedTabIndex="@SelectedTabIndex"></Tabs> *@
-
         @if (PaymentAccounts.Count == 0)
         {
             <p>No accounts</p>
@@ -18,7 +16,6 @@
             {
                 <div class=@(account.CreationDate == SelectedPaymentAccount?.CreationDate ? "account active-account" : "account") @onclick="() => HandleAccountClick(account)">
                     <p>@PaymentMethodsHelper.PaymentMethodsDictionary[account.PaymentMethod.Id]</p>
-                    @* <p>@account.AccountName</p> *@
                     <img src="icons/x.svg" @onclick:stopPropagation="true" @onclick:preventDefault="true" @onclick="() => { AccountToDelete = account.Id; ShowDeleteAccountModal = true; }" />
                 </div>
             }
