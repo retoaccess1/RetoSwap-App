@@ -53,7 +53,10 @@
     ModalButtonOptions="ModalButtonOptions.CANCEL"
     OnCancelPressed="@(() => { IsInstallTypeModalOpen = true; InstallationErrorMessage = null; })"
     CancelButtonText="Close">
-    <p class="installation-error-text">@InstallationErrorMessage</p>
+    @* needs a copy btn*@
+    <div class="installation-error" style="max-height: 60vh;overflow-y: auto;">
+        <p class="installation-error-text">@InstallationErrorMessage</p>
+    </div>
 </Modal>
 <Modal IsOpen="IsDaemonStartInfoModalOpen || DaemonStartInfo != string.Empty" Title="Initializing" ModalButtonOptions="ModalButtonOptions.NONE" IsCloseable="false">
     <p class="regular-p-grey init-text-top">Haveno is starting, please wait</p>
