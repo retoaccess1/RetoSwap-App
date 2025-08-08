@@ -21,11 +21,13 @@
     <EnableDefaultCssItems>false</EnableDefaultCssItems>
     <Nullable>enable</Nullable>
 
-    <!-- Display name -->
-    <ApplicationTitle>Manta</ApplicationTitle>
-
-    <!-- App Identifier -->
+    <!-- CHANGE THESE -->
+    <ApplicationTitle>Haveno</ApplicationTitle>
     <ApplicationId>com.haveno</ApplicationId>
+    <DaemonUrl>https://github.com/atsamd21/haveno/releases/download/v1.2.0</DaemonUrl>
+    <Network>XMR_STAGENET</Network>
+    <HavenoAppName>haveno-dev</HavenoAppName>
+    <!-- CHANGE THESE -->
 
     <!-- Versions -->
     <ApplicationDisplayVersion>1.0.0</ApplicationDisplayVersion>
@@ -49,6 +51,23 @@
     <JavaMaximumHeapSize>4G</JavaMaximumHeapSize>
   </PropertyGroup>
 
+  <ItemGroup>
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadata">
+      <_Parameter1>HavenoAppName</_Parameter1>
+      <_Parameter2>$(HavenoAppName)</_Parameter2>
+    </AssemblyAttribute>
+
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadata">
+      <_Parameter1>Network</_Parameter1>
+      <_Parameter2>$(Network)</_Parameter2>
+    </AssemblyAttribute>
+
+    <AssemblyAttribute Include="System.Reflection.AssemblyMetadata">
+      <_Parameter1>DaemonUrl</_Parameter1>
+      <_Parameter2>$(DaemonUrl)</_Parameter2>
+    </AssemblyAttribute>
+  </ItemGroup>
+  
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-android|AnyCPU'">
     <PublishTrimmed>False</PublishTrimmed>
     <JavaMaximumHeapSize>4G</JavaMaximumHeapSize>
@@ -58,8 +77,10 @@
     <!-- App Icon -->
     <MauiIcon Include="Resources\AppIcon\havenologo.png" ForegroundFile="Resources\AppIcon\havenologo.png" Color="#000000" />
 
-    <!-- Splash Screen -->
+    <!-- CHANGE THESE -->
+    <MauiIcon Include="Resources\AppIcon\havenologo.png" ForegroundFile="Resources\AppIcon\havenologo.png" Color="#000000" />
     <MauiSplashScreen Include="Resources\Splash\havenologo.svg" Color="#000000" BaseSize="512,256" />
+    <!-- CHANGE THESE -->
 
     <!-- Images -->
     <MauiImage Include="Resources\Images\*" />

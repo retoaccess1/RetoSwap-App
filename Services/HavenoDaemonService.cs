@@ -1,6 +1,7 @@
 ﻿using Grpc.Core;
 using HavenoSharp.Services;
 using Manta.Helpers;
+using Manta.Models;
 using System.Runtime.InteropServices;
 
 namespace Manta.Services;
@@ -25,11 +26,8 @@ public abstract class HavenoDaemonServiceBase : IHavenoDaemonService
     private readonly IHavenoAccountService _accountService;
     private readonly IHavenoWalletService _walletService;
 
-    private readonly string[] _havenoRepos = ["atsamd21/haveno", "haveno-dex/haveno"];
-
     protected string _os;
     protected string _daemonPath;
-    protected string _latestDaemonVersion = "1.1.2.5";
 
     public HavenoDaemonServiceBase(IHavenoWalletService walletService, IHavenoVersionService versionService, IHavenoAccountService accountService, string daemonPath)
     {
@@ -49,28 +47,27 @@ public abstract class HavenoDaemonServiceBase : IHavenoDaemonService
 
     public string GetDaemonPath() => _daemonPath;
 
-    protected async Task<string?> GetHavenoLocalVersionAsync()
+    protected async Task<string?> GetInstalledDaemonUrlAsync()
     {
-        return await SecureStorageHelper.GetAsync<string>("daemon-version");
+        return await SecureStorageHelper.GetAsync<string>("daemon-url");
     }
 
     public virtual async Task TryUpdateHavenoAsync(IProgress<double> progressCb)
     {
-        var currentHavenoVersion = await GetHavenoLocalVersionAsync();
-        if (string.IsNullOrEmpty(currentHavenoVersion) || currentHavenoVersion == _latestDaemonVersion)
+        var installedDaemonUrl = await GetInstalledDaemonUrlAsync();
+        if (string.IsNullOrEmpty(installedDaemonUrl) || installedDaemonUrl == AppConstants.DaemonUrl)
             return;
 
-        var selectedRepo = _havenoRepos[0];
-        await FetchHavenoDaemonAsync(selectedRepo, _latestDaemonVersion, progressCb);
-        await SecureStorageHelper.SetAsync("daemon-version", _latestDaemonVersion);
+        await FetchHavenoDaemonAsync(AppConstants.DaemonUrl, progressCb);
+        await SecureStorageHelper.SetAsync("daemon-url", AppConstants.DaemonUrl);
     }
 
-    protected async Task FetchHavenoDaemonAsync(string selectedRepo, string version, IProgress<double> progressCb)
+    protected async Task FetchHavenoDaemonAsync(string daemonUrl, IProgress<double> progressCb)
     {
         progressCb.Report(102f);
 
         using var client = new HttpClient();
-        using var stream = await HttpClientHelper.DownloadWithProgressAsync($"https://github.com/{selectedRepo}/releases/download/v{version}/daemon-{_os}.jar", progressCb, client);
+        using var stream = await HttpClientHelper.DownloadWithProgressAsync($"{daemonUrl}/daemon-{_os}.jar", progressCb, client);
 
         if (Directory.Exists(_daemonPath))
             Directory.Delete(_daemonPath, true);
@@ -86,9 +83,8 @@ public abstract class HavenoDaemonServiceBase : IHavenoDaemonService
     // First time setup
     protected async Task DownloadHavenoDaemonAsync(IProgress<double> progressCb)
     {
-        var selectedRepo = _havenoRepos[0];
-        await FetchHavenoDaemonAsync(selectedRepo, _latestDaemonVersion, progressCb);
-        await SecureStorageHelper.SetAsync("daemon-version", _latestDaemonVersion);
+        await FetchHavenoDaemonAsync(AppConstants.DaemonUrl, progressCb);
+        await SecureStorageHelper.SetAsync("daemon-url", AppConstants.DaemonUrl);
     }
 
     // Retry parameter?

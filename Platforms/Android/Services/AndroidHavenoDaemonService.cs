@@ -40,21 +40,29 @@ public class AndroidHavenoDaemonService : HavenoDaemonServiceBase
         _grpcChannelSingleton = grpcChannelSingleton;
     }
 
+    // IF THIS BREAKS AND SAYS SOMETHING LIKE FILE DOES NOT EXIST ETC BUT IT DOES IT'S PROBABLY DUE TO LINE ENDINGS IN LIBPROOTWRAPPER. SO I DONT KNOW WHY IT WOULD REVERT BUT IT DOES AND YOU NEED TO CHANGE THE LINE ENDINGS TO LF
     public override async Task InstallHavenoDaemonAsync(IProgress<double> progressCb)
     {
-        using var ubuntuDownloadStream = await Proot.DownloadUbuntu(progressCb);
-        await Proot.ExtractUbuntu(ubuntuDownloadStream, progressCb);
+        await Task.Run(async() =>
+        {
+            if (!await SecureStorageHelper.GetAsync<bool>("ubuntu-installed"))
+            {
+                using var ubuntuDownloadStream = await Proot.DownloadUbuntu(progressCb);
+                await Proot.ExtractUbuntu(ubuntuDownloadStream, progressCb);
+                await SecureStorageHelper.SetAsync("ubuntu-installed", true);
+            }
 
-        await DownloadHavenoDaemonAsync(progressCb);
+            await DownloadHavenoDaemonAsync(progressCb);
 
-        var arch = RuntimeInformation.OSArchitecture.ToString() == "X64" ? "amd64" : "arm64";
+            var arch = RuntimeInformation.OSArchitecture.ToString() == "X64" ? "amd64" : "arm64";
 
-        Proot.RunProotUbuntuCommand("rm", "/bin/java");
-        Proot.RunProotUbuntuCommand("ln", "-s", $"/usr/lib/jvm/java-21-openjdk-{arch}/bin/java", "/bin/java");
-        Proot.RunProotUbuntuCommand("ln", "-s", "/etc/java-21-openjdk/security/java.security", $"/usr/lib/jvm/java-21-openjdk-{arch}/conf/security/java.security");
-        Proot.RunProotUbuntuCommand("ln", "-s", "/etc/java-21-openjdk/security/java.policy", $"/usr/lib/jvm/java-21-openjdk-{arch}/conf/security/java.policy");
-        Proot.RunProotUbuntuCommand("ln", "-s", "/etc/java-21-openjdk/security/default.policy", $"/usr/lib/jvm/java-21-openjdk-{arch}/lib/security/default.policy");
-        Proot.RunProotUbuntuCommand("chmod", "+x", Path.Combine(_daemonPath, "daemon.jar"));
+            Proot.RunProotUbuntuCommand("rm", "/bin/java");
+            Proot.RunProotUbuntuCommand("ln", "-s", $"/usr/lib/jvm/java-21-openjdk-{arch}/bin/java", "/bin/java");
+            Proot.RunProotUbuntuCommand("ln", "-s", "/etc/java-21-openjdk/security/java.security", $"/usr/lib/jvm/java-21-openjdk-{arch}/conf/security/java.security");
+            Proot.RunProotUbuntuCommand("ln", "-s", "/etc/java-21-openjdk/security/java.policy", $"/usr/lib/jvm/java-21-openjdk-{arch}/conf/security/java.policy");
+            Proot.RunProotUbuntuCommand("ln", "-s", "/etc/java-21-openjdk/security/default.policy", $"/usr/lib/jvm/java-21-openjdk-{arch}/lib/security/default.policy");
+            Proot.RunProotUbuntuCommand("chmod", "+x", Path.Combine(_daemonPath, "daemon.jar"));
+        });
     }
 
     public override async Task TryUpdateHavenoAsync(IProgress<double> progressCb)
@@ -75,7 +83,7 @@ public class AndroidHavenoDaemonService : HavenoDaemonServiceBase
             if (!result.Contains("21"))
                 return false;
 
-            var localVersion = await GetHavenoLocalVersionAsync();
+            var localVersion = await GetInstalledDaemonUrlAsync();
             if (string.IsNullOrEmpty(localVersion))
                 return false;
 

@@ -3,6 +3,7 @@ using Android.Content;
 using Android.OS;
 using Android.Runtime;
 using AndroidX.Core.App;
+using Manta.Models;
 using System.Text;
 
 namespace Manta.Services;
@@ -11,7 +12,7 @@ namespace Manta.Services;
 [IntentFilter(["com.haveno.ACTION_START_BACKEND", "com.haveno.ACTION_STOP_BACKEND"])]
 public class BackendService : Service
 {
-    private string _notificationChannelId = "BackendServiceChannel";
+    private readonly string _notificationChannelId = "BackendServiceChannel";
     private NotificationCompat.Builder? _notificationBuilder;
     private NotificationManager? _notificationManager;
 
@@ -148,6 +149,8 @@ public class BackendService : Service
 #if DEBUG
                 Console.WriteLine(line);
 #endif
+                int lastPercentage = 0;
+
                 for (int i = 0; i < line.Length; i++)
                 {
                     if (line[i] == '%')
@@ -163,13 +166,18 @@ public class BackendService : Service
 
                         if (stringBuilder.Length > 0)
                         {
-                            var percentage = new string(stringBuilder.ToString().Reverse().ToArray());
+                            var percentage = int.Parse(stringBuilder.ToString().Reverse().ToArray());
 
-                            UpdateProgress($"Tor bootstrapping: {percentage}%");
-
-                            if (percentage == "100")
+                            if (percentage > lastPercentage)
                             {
-                                _torReadyTCS.SetResult();
+                                lastPercentage = percentage;
+
+                                UpdateProgress($"Tor bootstrapping: {percentage}%");
+
+                                if (percentage == 100)
+                                {
+                                    _torReadyTCS.SetResult();
+                                }
                             }
                         }
                     }
@@ -188,7 +196,24 @@ public class BackendService : Service
             Proot.AppHome = daemonPath;
 
             // Don't need to set a new password whenever starting daemon
-            using var streamReader = Proot.RunProotUbuntuCommand("java", _daemonCts.Token, "-jar", $"{Path.Combine(daemonPath, "daemon.jar")}", "--disableRateLimits=true", "--baseCurrencyNetwork=XMR_STAGENET", "--useLocalhostForP2P=false", "--useDevPrivilegeKeys=false", "--nodePort=9999", "--appName=haveno-XMR_STAGENET", $"--apiPassword={password}", "--apiPort=3201", "--passwordRequired=false", "--useNativeXmrWallet=false", "--torControlHost=127.0.0.1", "--torControlPort=9061");
+            //using var streamReader = Proot.RunProotUbuntuCommand("java", _daemonCts.Token, "-Xmx4G", "-jar", $"{Path.Combine(daemonPath, "daemon.jar")}", "--xmrNode=http://136.143.204.122:18089", "--walletRpcBindPort=4000", "--logLevel=INFO", "--maxMemory=2048", "--disableRateLimits=true", "--baseCurrencyNetwork=XMR_MAINNET", "--ignoreLocalXmrNode=true", "--useDevPrivilegeKeys=false", "--nodePort=9999", "--appName=haveno-reto", $"--apiPassword={password}", "--apiPort=3201", "--passwordRequired=false", "--useNativeXmrWallet=false", "--torControlHost=127.0.0.1", "--torControlPort=9061");
+
+            // Does not work either
+            //var hostEntry = Dns.GetHostEntry("xmr-node.cakewallet.com");
+
+            //IPAddress? ip = null;
+            //if (hostEntry.AddressList.Length > 0)
+            //{
+            //    ip = hostEntry.AddressList[0];
+            //}
+
+            //var xmrNode = AppConstants.Network == "XMR_MAINNET" ? $"--xmrNode=http://{ip}:18081" : "";
+
+            // For testing, using monero node found on monero.fail
+            var xmrNode = AppConstants.Network == "XMR_MAINNET" ? "--xmrNode=http://104.168.82.96:18081" : "";
+
+            // For some reason hostnames are bugged so have to specify monero node with ip address
+            using var streamReader = Proot.RunProotUbuntuCommand("java", _daemonCts.Token, "-Xmx2G", "-jar", $"{Path.Combine(daemonPath, "daemon.jar")}", xmrNode, "--walletRpcBindPort=4000", "--logLevel=INFO", "--maxMemory=1200", "--disableRateLimits=true", $"--baseCurrencyNetwork={AppConstants.Network}", "--ignoreLocalXmrNode=true", "--useDevPrivilegeKeys=false", "--nodePort=9999", $"--appName={AppConstants.HavenoAppName}", $"--apiPassword={password}", "--apiPort=3201", "--passwordRequired=false", "--useNativeXmrWallet=false", "--torControlHost=127.0.0.1", "--torControlPort=9061");
 
             string? line;
             while ((line = streamReader.ReadLine()) is not null)
