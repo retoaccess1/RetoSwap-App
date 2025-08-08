@@ -31,7 +31,7 @@
 <Modal IsOpen="IsTakingOffer" Title="Taking offer" ModalButtonOptions="ModalButtonOptions.NONE" OnCancelPressed="() => CancelOfferCts.Cancel()">
     <p class="regular-p-grey">Please wait</p>
 </Modal>
-<Modal Title="No payment account" IsOpen="UserDoesNotHaveAccount" ModalButtonOptions="ModalButtonOptions.OK" OkButtonText="Create account" OnOkPressed="@NavigateToAccount">
+<Modal IsCloseable="false" Title="No payment account" IsOpen="UserDoesNotHaveAccount" ModalButtonOptions="ModalButtonOptions.OK_CANCEL" CancelButtonText="Go back" OkButtonText="Create account" OnOkPressed="@NavigateToAccount" OnCancelPressed="@(() => NavigationManager.NavigateTo("BuySell"))">
     <p class="regular-p-grey">@AccountErrorMessage</p>
 </Modal>
 <Modal 
