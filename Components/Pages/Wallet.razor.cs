@@ -180,7 +180,7 @@ public partial class Wallet : ComponentBase, IDisposable
         if (Transaction is null)
             return;
 
-        var response = await WalletService.RelayXmrTxAsync(Transaction.Metadata);
+        var response = await WalletService.RelayXmrTxsAsync([Transaction.Metadata]);
 
         Amount = 0;
         WithdrawalAddress = string.Empty;

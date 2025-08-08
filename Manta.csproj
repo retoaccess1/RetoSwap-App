@@ -74,9 +74,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- App Icon -->
-    <MauiIcon Include="Resources\AppIcon\havenologo.png" ForegroundFile="Resources\AppIcon\havenologo.png" Color="#000000" />
-
+    
     <!-- CHANGE THESE -->
     <MauiIcon Include="Resources\AppIcon\havenologo.png" ForegroundFile="Resources\AppIcon\havenologo.png" Color="#000000" />
     <MauiSplashScreen Include="Resources\Splash\havenologo.svg" Color="#000000" BaseSize="512,256" />
@@ -84,7 +82,6 @@
 
     <!-- Images -->
     <MauiImage Include="Resources\Images\*" />
-    <MauiImage Update="Resources\Images\dotnet_bot.svg" BaseSize="168,208" />
 
     <!-- Custom Fonts -->
     <MauiFont Include="Resources\Fonts\*" />
@@ -156,7 +153,7 @@
     <PackageReference Include="CommunityToolkit.Maui" Version="8.0.1" />
     <PackageReference Include="Grpc.Net.Client" Version="2.67.0" />
     <PackageReference Include="Grpc.Net.Client.Web" Version="2.70.0" />
-    <PackageReference Include="HavenoSharp" Version="1.0.15" />
+    <PackageReference Include="HavenoSharp" Version="1.1.1" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.AutoActivation" Version="9.3.0" />
     <PackageReference Include="Microsoft.Maui.Controls" Version="8.0.100" />
     <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="8.0.100" />
