@@ -46,7 +46,10 @@ public partial class MainPage : ContentPage
 
     protected override void OnDisappearing()
     {
-        stackLayout.Children.Remove(blazorWebView);
+        if (!Navigation.ModalStack.Any())
+        {
+            stackLayout.Children.Remove(blazorWebView);
+        }
         base.OnDisappearing();
     }
 }

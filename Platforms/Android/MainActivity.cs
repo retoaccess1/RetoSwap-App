@@ -44,7 +44,11 @@ public class MainActivity : MauiAppCompatActivity
     {
         base.OnCreate(savedInstanceState);
 
+#if ANDROID35_0_OR_GREATER
+
+#elif ANDROID29_0_OR_GREATER
         Window?.SetNavigationBarColor(Android.Graphics.Color.ParseColor("#000000"));
+#endif
 
         var rootView = Window?.DecorView?.RootView;
         if (rootView != null)
@@ -54,7 +58,6 @@ public class MainActivity : MauiAppCompatActivity
 
         if (Intent is not null)
             HandleIntent(Intent);
-
 
         if (Intent is null)
             return;

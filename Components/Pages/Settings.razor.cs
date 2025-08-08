@@ -127,17 +127,14 @@ public partial class Settings : ComponentBase, IDisposable
         if (permissionStatus == PermissionStatus.Denied || permissionStatus == PermissionStatus.Unknown || permissionStatus == PermissionStatus.Disabled)
             return;
 
-        var cameraPage = new CameraPage();
-
         var current = Application.Current;
-
         if (current?.MainPage is null)
             throw new Exception("current.MainPage was null");
 
-        await current.MainPage.Navigation.PushModalAsync(cameraPage);
+        var cameraPage = new CameraPage();
+        await current.MainPage.Navigation.PushModalAsync(cameraPage, true);
 
         var scanResults = await cameraPage.WaitForResultAsync();
-
         var barcode = scanResults.FirstOrDefault();
         if (barcode is not null)
         {
@@ -158,7 +155,7 @@ public partial class Settings : ComponentBase, IDisposable
             }
         }
 
-        await current.MainPage.Navigation.PopModalAsync();
+        await current.MainPage.Navigation.PopModalAsync(true);
     }
 
     public async Task ConnectToMoneroNodeAsync()
