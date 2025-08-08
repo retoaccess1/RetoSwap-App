@@ -11,8 +11,8 @@
         <p>Please choose an installation type</p>
 
         <div class="buttons">
-            <button class="verify-modal-button button-green" @onclick="@(async (e) => { IsInstallTypeModalOpen = false; await HandleInstall(DaemonInstallOptions.Standalone); })">Standalone</button>
-            <button class="verify-modal-button button-green" @onclick="@(async (e) => { IsInstallTypeModalOpen = false; await HandleInstall(DaemonInstallOptions.RemoteNode); })">Remote node</button>
+            <button class="verify-modal-button button-green" @onclick="@(async (e) => { IsInstallTypeModalOpen = false; await HandleInstallAsync(DaemonInstallOptions.Standalone); })">Standalone</button>
+            <button class="verify-modal-button button-green" @onclick="@(async (e) => { IsInstallTypeModalOpen = false; await HandleInstallAsync(DaemonInstallOptions.RemoteNode); })">Remote node</button>
         </div>
     </div>
 </Modal>

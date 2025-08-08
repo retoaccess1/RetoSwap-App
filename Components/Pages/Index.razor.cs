@@ -47,7 +47,7 @@ public partial class Index : ComponentBase
         });
     }
 
-    public async Task HandleInstall(DaemonInstallOptions daemonInstallOption)
+    public async Task HandleInstallAsync(DaemonInstallOptions daemonInstallOption)
     {
         // Should be able to change from local to remote node and manual to auto. account sync is not a current feature
         await SecureStorageHelper.SetAsync("daemon-installation-type", daemonInstallOption);
@@ -55,7 +55,10 @@ public partial class Index : ComponentBase
         switch (daemonInstallOption)
         {
             case DaemonInstallOptions.Standalone:
-                await InstallHavenoDaemonAsync();
+                if (!await InstallHavenoDaemonAsync()) 
+                    return;
+
+                await StartHaveno();
                 break;
             case DaemonInstallOptions.RemoteNode:
                 NavigationManager.NavigateTo("/Settings");
@@ -82,16 +85,13 @@ public partial class Index : ComponentBase
         NavigationManager.NavigateTo("/Market");
     }
 
-    public async Task InstallHavenoDaemonAsync()
+    public async Task<bool> InstallHavenoDaemonAsync()
     {
         IsInstallTypeModalOpen = false;
 
         var isDaemonInstalled = await HavenoDaemonService.GetIsDaemonInstalledAsync();
         if (isDaemonInstalled)
-        {
-            await StartHaveno();
-            return;
-        }
+            return true;
 
         DaemonSetupState = DaemonSetupState.InstallingDependencies;
         StateHasChanged();
@@ -123,6 +123,8 @@ public partial class Index : ComponentBase
             isDaemonInstalled = await HavenoDaemonService.GetIsDaemonInstalledAsync();
             if (!isDaemonInstalled)
                 throw new Exception("There was an error during the installation process");
+
+            return true;
         }
         catch (Exception e)
         {
@@ -131,10 +133,8 @@ public partial class Index : ComponentBase
             DaemonSetupState = DaemonSetupState.Initial;
             InstallationErrorMessage = e.ToString();
             StateHasChanged();
-            return;
+            return false;
         }
-
-        await StartHaveno();
     }
 
     protected override async Task OnInitializedAsync()
