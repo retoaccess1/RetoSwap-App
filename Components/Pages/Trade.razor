@@ -161,20 +161,8 @@
             {
                 if (TradeInfo.DisputeState == "NO_DISPUTE")
                 {
-                    if (IsNotCompletedInTime)
-                    {
-                        if (IsBuyer)
-                        {
-                            if (BuyerState < 4)
-                            {
-                                <button @onclick="async () => await OpenDisputeAsync(TradeInfo.TradeId)">Open support ticket</button>
-                            }
-                        }
-                        else if (SellerState < 4)
-                        {
-                            <button @onclick="async () => await OpenDisputeAsync(TradeInfo.TradeId)">Open support ticket</button>
-                        }
-                    }
+                    @* always have this option but user needs to confirm that they really want to open a dispute *@
+                    <button @onclick="async () => await OpenDisputeAsync(TradeInfo.TradeId)">Open support ticket</button>
                 }
                 else
                 {
