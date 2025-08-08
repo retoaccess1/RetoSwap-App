@@ -16,7 +16,8 @@ public partial class Market : ComponentBase, IDisposable
 
     private AxisChartOptions _axisChartOptions = new() 
     { 
-        MatchBoundsToSize = true 
+        MatchBoundsToSize = true,
+        XAxisLabelRotation = 45
     };
 
     private ChartOptions _options = new()
@@ -46,8 +47,8 @@ public partial class Market : ComponentBase, IDisposable
         get;
         set 
         { 
-            field = value; 
-            ProcessTradeStatistics(); 
+            field = value;
+            ProcessTradeStatistics();
         } 
     }
 
@@ -189,7 +190,7 @@ public partial class Market : ComponentBase, IDisposable
                 .Select(x => x.Key)
                 .ToList();
 
-            Year = Years.FirstOrDefault();
+            Year = Years.LastOrDefault();
         }
 
         var volumePerMonth = new double[12];
