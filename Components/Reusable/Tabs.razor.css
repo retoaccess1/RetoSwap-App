@@ -12,6 +12,9 @@
   padding: 12px;
   /*box-sizing: initial;*/
 }
+.tabs-main button:disabled {
+  opacity: 0.5;
+}
 .tabs-main .active {
   border-bottom: 2px solid #fff;
   color: #fff;

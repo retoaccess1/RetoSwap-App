@@ -11,6 +11,10 @@
         color: #fff;
         padding: 12px;
         /*box-sizing: initial;*/
+
+        &:disabled{
+            opacity: 0.5;
+        }
     }
 
     .active {

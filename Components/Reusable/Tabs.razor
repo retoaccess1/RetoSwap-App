@@ -5,15 +5,18 @@
 <div class=@(Center ? "tabs-main center" : "tabs-main")>
     @for (int i = 0; i < TabNames.Count; i++)
     {
-        // This shits fucking stupid
         int iCopy = i;
-        <button class=@(SelectedTabIndex == iCopy ? "active" : "regular-p-grey") @onclick="(e) => SelectedTabIndex = iCopy">@TabNames[iCopy]</button>
+        bool isDisabled = DisabledTabNames.Contains(TabNames[iCopy]);
+        <button disabled="@isDisabled" class=@(SelectedTabIndex == iCopy ? "active" : "regular-p-grey") @onclick="(e) => SelectedTabIndex = iCopy">@TabNames[iCopy]</button>
     }
 </div>
 
 @code {
     [Parameter]
     public List<string> TabNames { get; set; } = [];
+    // For now
+    [Parameter]
+    public List<string> DisabledTabNames { get; set; } = [];
     [Parameter]
     public string? Title { get; set; }
     [Parameter]
