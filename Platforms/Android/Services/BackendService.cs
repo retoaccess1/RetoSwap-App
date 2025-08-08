@@ -210,7 +210,7 @@ public class BackendService : Service
             //var xmrNode = AppConstants.Network == "XMR_MAINNET" ? $"--xmrNode=http://{ip}:18081" : "";
 
             // For testing, using monero node found on monero.fail
-            var xmrNode = AppConstants.Network == "XMR_MAINNET" ? "--xmrNode=http://104.168.82.96:18081" : "";
+            var xmrNode = AppConstants.Network == "XMR_MAINNET" ? "--xmrNode=http://104.168.82.96:18081" : "--xmrNode=http://45.63.8.26:38081";
 
             // For some reason hostnames are bugged so have to specify monero node with ip address
             using var streamReader = Proot.RunProotUbuntuCommand("java", _daemonCts.Token, "-Xmx2G", "-jar", $"{Path.Combine(daemonPath, "daemon.jar")}", xmrNode, "--walletRpcBindPort=4000", "--logLevel=INFO", "--maxMemory=1200", "--disableRateLimits=true", $"--baseCurrencyNetwork={AppConstants.Network}", "--ignoreLocalXmrNode=true", "--useDevPrivilegeKeys=false", "--nodePort=9999", $"--appName={AppConstants.HavenoAppName}", $"--apiPassword={password}", "--apiPort=3201", "--passwordRequired=false", "--useNativeXmrWallet=false", "--torControlHost=127.0.0.1", "--torControlPort=9061");
