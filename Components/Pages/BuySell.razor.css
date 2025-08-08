@@ -122,6 +122,9 @@
 .offers .offer .offer-link .offer-top .offer-currency img {
   margin: 0 2px 0;
 }
+.offers .offer .offer-link .offer-top .offer-currency i {
+  margin-right: 4px;
+}
 .offers .offer .offer-link .card {
   display: flex;
   align-items: center;

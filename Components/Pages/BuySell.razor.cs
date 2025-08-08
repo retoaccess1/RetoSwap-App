@@ -183,7 +183,7 @@ public partial class BuySell : ComponentBase, IDisposable
                 TraditionalPaymentMethods = PaymentMethodsHelper.PaymentMethodsDictionary
                     .Where(x => filteredPaymentMethodIds.Contains(x.Key)).ToDictionary();
 
-                var cryptoPaymentMethods= await PaymentAccountService.GetCryptoCurrencyPaymentMethodsAsync();
+                var cryptoPaymentMethods = await PaymentAccountService.GetCryptoCurrencyPaymentMethodsAsync();
 
                 var filteredCryptoPaymentMethodIds = cryptoPaymentMethods
                     .Select(x => x.Id);
@@ -260,7 +260,7 @@ public partial class BuySell : ComponentBase, IDisposable
             filteredOffers = filteredOffers.Where(x => x.BuyerSecurityDepositPct > 0);
         }
 
-        return [.. filteredOffers];
+        return [.. filteredOffers.OrderBy(x => x.MarketPriceMarginPct)];
     }
 
     private async Task FetchOffersAsync()
@@ -272,12 +272,13 @@ public partial class BuySell : ComponentBase, IDisposable
                 await PauseTokenSource.WaitWhilePausedAsync();
 
                 IsFetching = true;
+                await InvokeAsync(StateHasChanged);
 
                 Offers = await OfferService.GetOffersAsync(SelectedCurrencyCode, Direction == "BUY" ? "SELL" : "BUY");
+                Console.WriteLine($"Fetched {Offers.Count} offers");
 
                 IsFetching = false;
                 await InvokeAsync(StateHasChanged);
-                Console.WriteLine($"Fetched {Offers.Count} offers");
 
                 await Task.Delay(5_000, CancellationTokenSource.Token);
             }

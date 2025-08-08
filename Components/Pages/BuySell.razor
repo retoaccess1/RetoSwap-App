@@ -17,7 +17,7 @@
         }
     </div>
     <div class="account-type">
-        <Tabs @bind-SelectedTabIndex="OfferPaymentType" TabNames="@(["Fiat", "Crypto", "Other"])"></Tabs>
+        <Tabs @bind-SelectedTabIndex="OfferPaymentType" TabNames="@(["Fiat", "Crypto", "Other"])" DisabledTabNames="@(["Other"])"></Tabs>
         <div class="toggle-container">
             <p class=@(Direction == "BUY" ? "buy-txt txt-active" : "buy-txt")>Buy</p>
             <Toggle @bind-IsToggled="IsToggled"/>
@@ -57,7 +57,7 @@
                 <p class="offers-list-text">@FilteredOffers.Count Offers</p>
             </div>
         </div>
-        @if (IsFetching)
+        @if (FilteredOffers.Count == 0 && IsFetching)
         {
             <div class="offers-spinner-container">
                 <Spinner IsVisible="true"></Spinner>
@@ -72,6 +72,14 @@
                         <a class="offer-link" href=@($"buysell/offer?OfferId={offer.Id}&title=Offer")>
                             <div class="offer-top">
                                 <div class="offer-currency">
+                                    @if (offer.UseMarketBasedPrice)
+                                    {
+                                        <i class="bi bi-graph-up"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-lock-fill"></i>
+                                    }
                                     @if (offer.BaseCurrencyCode == "XMR")
                                     {
                                         @(Direction == "SELL" ? offer.BaseCurrencyCode : offer.CounterCurrencyCode)
@@ -85,14 +93,21 @@
                                         @(Direction == "SELL" ? offer.BaseCurrencyCode : "XMR")
                                     }
                                     |
-                                    @(Math.Round(double.Parse(offer.Price, CultureInfo.InvariantCulture), 2))
+                                    @(Math.Round(double.Parse(offer.Price, CultureInfo.InvariantCulture), (offer.PaymentMethodId == "BLOCK_CHAINS" ? 8 : 2)))
                                     @offer.CounterCurrencyCode
                                     (@Math.Round(offer.MarketPriceMarginPct, 2).ToString("0.00")%)
                                 </div>
                                 @if (!offer.IsMyOffer)
                                 {
                                     <div class="card">
-                                        <p>@offer.PaymentMethodShortName</p>
+                                        @if (offer.PaymentMethodId == "BLOCK_CHAINS")
+                                        {
+                                            <p>@offer.CounterCurrencyCode</p>
+                                        }
+                                        else
+                                        {
+                                            <p>@offer.PaymentMethodShortName</p>
+                                        }
                                     </div>
                                 }
                             </div>
