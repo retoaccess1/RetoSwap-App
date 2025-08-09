@@ -71,27 +71,27 @@ public class AndroidHavenoDaemonService : HavenoDaemonServiceBase
         Proot.RunProotUbuntuCommand("chmod", "+x", Path.Combine(_daemonPath, "daemon.jar"));
     }
 
-    public override async Task<bool> GetIsDaemonInstalledAsync()
+    public override async Task<(bool, string)> GetIsDaemonInstalledAsync()
     {
         try
         {
             var result = Proot.RunProotUbuntuCommand("echo", "check");
             if (!result.Contains("check"))
-                return false;
+                return (false, "Proot check failed");
 
             result = Proot.RunProotUbuntuCommand("java", "--version");
             if (!result.Contains("21"))
-                return false;
+                return (false, "Java check failed");
 
-            var localVersion = await GetInstalledDaemonUrlAsync();
-            if (string.IsNullOrEmpty(localVersion))
-                return false;
+            var installedDaemonUrl = await GetInstalledDaemonUrlAsync();
+            if (string.IsNullOrEmpty(installedDaemonUrl))
+                return (false, "GetInstalledDaemonUrlAsync");
 
-            return true;
+            return (true, string.Empty);
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            return false;
+            return (false, e.ToString());
         }
     }
 

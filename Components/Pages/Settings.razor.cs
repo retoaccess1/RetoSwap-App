@@ -243,7 +243,7 @@ public partial class Settings : ComponentBase, IDisposable
             // Theres a small issue if orbot is running at the same time as it listens to the same ports that the Termux tor instance listens on, however users should not be regularly switching hosting modes
             await SecureStorageHelper.SetAsync("daemon-installation-type", DaemonInstallOptions.Standalone);
 
-            if (await HavenoDaemonService.GetIsDaemonInstalledAsync())
+            if ((await HavenoDaemonService.GetIsDaemonInstalledAsync()).Item1)
             {
                 await HavenoDaemonService.TryStartLocalHavenoDaemonAsync(Guid.NewGuid().ToString(), "http://127.0.0.1:3201");
             }

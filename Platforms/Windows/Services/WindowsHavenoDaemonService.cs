@@ -19,23 +19,23 @@ public class WindowsHavenoDaemonService : HavenoDaemonServiceBase
         _grpcChannelSingleton = grpcChannelSingleton;
     }
 
-    public override async Task<bool> GetIsDaemonInstalledAsync()
+    public override async Task<(bool, string)> GetIsDaemonInstalledAsync()
     {
         var directories = Directory.GetDirectories(_daemonPath);
         if (directories.Length == 0)
         {
-            return false;
+            return (false, "");
         }
         else
         {
             var havenoDirectory = directories.Where(x => x.Contains(_os, StringComparison.CurrentCultureIgnoreCase)).FirstOrDefault();
             if (havenoDirectory is not null)
             {
-                return true;
+                return (true, "");
             }
             else
             {
-                return false;
+                return (false, "");
             }
         }
     }

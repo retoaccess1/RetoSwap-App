@@ -8,7 +8,7 @@ namespace Manta.Services;
 
 public interface IHavenoDaemonService
 {
-    Task<bool> GetIsDaemonInstalledAsync();
+    Task<(bool, string)> GetIsDaemonInstalledAsync();
     Task InstallHavenoDaemonAsync(IProgress<double> progressCb);
     Task<bool> TryStartLocalHavenoDaemonAsync(string password, string host, Action<string>? progressCb = default);
     Task<bool> TryStartTorAsync();
@@ -43,7 +43,7 @@ public abstract class HavenoDaemonServiceBase : IHavenoDaemonService
     public abstract Task<bool> TryStartLocalHavenoDaemonAsync(string password, string host, Action<string>? progressCb = default);
     public abstract Task<bool> TryStartTorAsync();
     public abstract Task StopHavenoDaemonAsync();
-    public abstract Task<bool> GetIsDaemonInstalledAsync();
+    public abstract Task<(bool, string)> GetIsDaemonInstalledAsync();
 
     public string GetDaemonPath() => _daemonPath;
 

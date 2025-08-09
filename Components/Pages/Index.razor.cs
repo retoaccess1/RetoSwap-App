@@ -90,7 +90,7 @@ public partial class Index : ComponentBase
         IsInstallTypeModalOpen = false;
 
         var isDaemonInstalled = await HavenoDaemonService.GetIsDaemonInstalledAsync();
-        if (isDaemonInstalled)
+        if (isDaemonInstalled.Item1)
             return true;
 
         DaemonSetupState = DaemonSetupState.InstallingDependencies;
@@ -121,8 +121,8 @@ public partial class Index : ComponentBase
             await HavenoDaemonService.InstallHavenoDaemonAsync(progressCb);
 
             isDaemonInstalled = await HavenoDaemonService.GetIsDaemonInstalledAsync();
-            if (!isDaemonInstalled)
-                throw new Exception("There was an error during the installation process");
+            if (!isDaemonInstalled.Item1)
+                throw new Exception(isDaemonInstalled.Item2);
 
             return true;
         }
@@ -157,7 +157,7 @@ public partial class Index : ComponentBase
             {
                 case DaemonInstallOptions.Standalone:
                     var isDaemonInstalled = await HavenoDaemonService.GetIsDaemonInstalledAsync();
-                    if (!isDaemonInstalled)
+                    if (!isDaemonInstalled.Item1)
                     {
                         // If install failed or partially completed etc
                         IsInstallTypeModalOpen = true;
