@@ -75,12 +75,12 @@ public class AndroidHavenoDaemonService : HavenoDaemonServiceBase
     {
         try
         {
-            var result = Proot.RunProotUbuntuCommand("echo", "check");
-            if (!result.Contains("check"))
-                return (false, "Proot check failed");
+            var output = Proot.RunProotUbuntuCommand("echo", "check");
+            if (!output.Contains("check"))
+                return (false, $"Proot check failed with output: {output}");
 
-            result = Proot.RunProotUbuntuCommand("java", "--version");
-            if (!result.Contains("21"))
+            output = Proot.RunProotUbuntuCommand("java", "--version");
+            if (!output.Contains("21"))
                 return (false, "Java check failed");
 
             var installedDaemonUrl = await GetInstalledDaemonUrlAsync();
