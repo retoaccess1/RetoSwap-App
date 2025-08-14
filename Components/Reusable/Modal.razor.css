@@ -30,6 +30,10 @@
 .generic-modal .verify-modal .top {
   display: flex;
   flex-direction: column;
+  /*            .child-content {
+      max-height: 60vh;
+      overflow-y: auto;
+  }*/
 }
 .generic-modal .verify-modal .top ::deep p {
   /*               line-break: anywhere;

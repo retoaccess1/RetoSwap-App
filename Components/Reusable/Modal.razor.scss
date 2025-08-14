@@ -30,6 +30,10 @@
         .top {
             display: flex;
             flex-direction: column;
+            /*            .child-content {
+                max-height: 60vh;
+                overflow-y: auto;
+            }*/
 
             ::deep p {
                 /*               line-break: anywhere;

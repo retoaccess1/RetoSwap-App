@@ -11,7 +11,9 @@
                         <i class="bi-x-lg close" @onclick:stopPropagation="true" @onclick:preventDefault="true" @onclick="@((e) => IsOpen = false)"></i>
                     }
                 </div>
-                @ChildContent
+                <div class="child-content">
+                    @ChildContent
+                </div>
             </div>
             @if (ModalButtonOptions != ModalButtonOptions.NONE)
             {
