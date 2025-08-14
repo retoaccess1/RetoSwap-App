@@ -6,9 +6,21 @@
 .trade-main .trade-main-top {
   display: flex;
   justify-content: space-between;
-}
-.trade-main .role {
+  align-items: center;
+  background-color: #121212;
+  border-radius: 12px;
+  padding: 14px;
   margin-bottom: 10px;
+}
+.trade-main .trade-main-top .role {
+  /*margin-bottom: 10px;*/
+}
+.trade-main .trade-main-top a {
+  height: 18px;
+}
+.trade-main .trade-main-top a ion-icon {
+  height: 18px;
+  width: 18px;
 }
 .trade-main .process .process-step {
   display: flex;
@@ -81,4 +93,12 @@
 
 .slider-wrapper {
   margin-bottom: 10px;
+}
+
+.no-deposit {
+  display: flex;
+  margin-bottom: 10px;
+}
+.no-deposit img {
+  margin-right: 6px;
 }

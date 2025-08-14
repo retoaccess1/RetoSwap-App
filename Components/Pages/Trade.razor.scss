@@ -6,11 +6,26 @@
     .trade-main-top {
         display: flex;
         justify-content: space-between;
+        align-items: center;
+        background-color: #121212;
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 10px;
+
+        .role {
+            /*margin-bottom: 10px;*/
+        }
+
+        a {
+            height: 18px;
+
+            ion-icon {
+                height: 18px;
+                width: 18px;
+            }
+        }
     }
 
-    .role {
-        margin-bottom: 10px;
-    }
 
     .process {
 
@@ -104,4 +119,13 @@
 
 .slider-wrapper {
     margin-bottom: 10px;
+}
+
+.no-deposit {
+    display: flex;
+    margin-bottom: 10px;
+
+    img {
+        margin-right: 6px;
+    }
 }

@@ -45,6 +45,8 @@ public partial class Trade : ComponentBase, IDisposable
 
     public string? DisputeMessage { get; set; }
 
+    public bool IsDisputeModalOpen { get; set; }
+
     protected override async Task OnInitializedAsync()
     {
         while (true)
@@ -71,7 +73,12 @@ public partial class Trade : ComponentBase, IDisposable
                     MaxTradePeriod = new TimeSpan(PaymentMethod.MaxTradePeriod * 10_000);
 
                     // This is wrong, should be from the time of the first blockchain conf
-                    TradeExpiresDateUTC = TradeInfo.Date.ToDateTime().Add(MaxTradePeriod);
+                    //TradeExpiresDateUTC = TradeInfo.Date.ToDateTime().Add(MaxTradePeriod);
+
+                    if (long.TryParse(TradeInfo.DeadlineTime, out var deadlineTimeout))
+                    {
+                        TradeExpiresDateUTC = deadlineTimeout.ToDateTime();
+                    }
 
                     // Really only need to do this if trade is not completed - fix 
                     var utcNow = DateTime.UtcNow;

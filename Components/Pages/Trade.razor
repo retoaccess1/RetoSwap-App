@@ -20,12 +20,12 @@
                 {
                     <li class="process-step">
                         @{
-                            var stepCompletedOrCurrent = i < SellerState;
+                            var stepCompletedOrCurrent = i < BuyerState;
                         }
 
                         @if (i + 1 < BuyerState)
                         {
-                            <i class=@($"bi bi-check-circle-fill + {(stepCompletedOrCurrent ? "completed-step" : "")}")></i>
+                            <i class=@($"bi bi-check-circle-fill " + (stepCompletedOrCurrent ? "completed-step" : ""))></i>
                         }
                         else
                         {
@@ -81,7 +81,7 @@
 
                         @if (i + 1 < SellerState)
                         {
-                            <i class=@($"bi bi-check-circle-fill + {(stepCompletedOrCurrent ? "completed-step" : "")}")></i>
+                            <i class=@($"bi bi-check-circle-fill " + (stepCompletedOrCurrent ? "completed-step" : ""))></i>
                         }
                         else
                         {
@@ -118,6 +118,13 @@
         }
         <div class="info">
             <p class="bold-p info-txt">Trade info</p>
+            @if (TradeInfo.Offer.BuyerSecurityDepositPct == 0)
+            {
+                <div class="no-deposit">
+                    <img src="icons/warning.svg" />
+                    <p>This is a no deposit offer</p>
+                </div>
+            }
             <div class="amount-price-info">
                 <div class="price-info">
                     @if (TradeInfo.Offer.BaseCurrencyCode == "XMR")
@@ -152,17 +159,14 @@
             }
             <InfoRow IsExpandable="true" Label="Maker deposit transaction ID" Value="@TradeInfo.MakerDepositTxId"></InfoRow>
             <InfoRow Label="Max allowed trade period" Value="@TimeHelper.FormatDuration((long)MaxTradePeriod.TotalMilliseconds)"></InfoRow>
-            @* <InfoRow Label="Expires" Value="N/A"></InfoRow> *@
-            <InfoRow Label="Expires" Value="@TradeExpiresDateUTC.ToLocalTime().ToString()"></InfoRow>
+            <InfoRow Label="Expires" Value="@TradeExpiresDateUTC.ToString()"></InfoRow>
         </div>
         <div class="dispute">
-            @* refactor this lol *@
             @if (PaymentMethod is not null)
             {
                 if (TradeInfo.DisputeState == "NO_DISPUTE")
                 {
-                    @* always have this option but user needs to confirm that they really want to open a dispute *@
-                    <button @onclick="async () => await OpenDisputeAsync(TradeInfo.TradeId)">Open support ticket</button>
+                    <button @onclick="() => IsDisputeModalOpen = true">Open support ticket</button>
                 }
                 else
                 {
@@ -172,3 +176,7 @@
         </div>
     </div>
 }
+
+<Modal @bind-IsOpen="IsDisputeModalOpen" Title="Open support ticket" ModalButtonOptions="ModalButtonOptions.OK_CANCEL" OnOkPressed="async () => await OpenDisputeAsync(TradeInfo?.TradeId ?? string.Empty)">
+    <p class="regular-p-grey">Are you sure you want to open a support ticket?</p>
+</Modal>
