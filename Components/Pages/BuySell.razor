@@ -36,22 +36,20 @@
     {
         // Fix when minimized clears inputs
         <div class="inputs">
-            @if (!IsCollapsed)
-            {
+            <div hidden="@IsCollapsed" class=@(IsCollapsed ? "dropdown-collapsed" : "")>
                 <div class="dropdown">
-                    <SearchableDropdown @ref="CurrencySearchableDropdown" Placeholder="Show all" Items="@VisibleCurrencyCodes" Text="Currency" OnSubmit="@((val) => SelectedCurrencyCode = val)" />
+                    <SearchableDropdown @ref="CurrencySearchableDropdown" InitialValue="@SelectedCurrencyCode" Placeholder="Show all" Items="@VisibleCurrencyCodes" Text="Currency" OnSubmit="@((val) => SelectedCurrencyCode = val)" />
                 </div>
                 <div class="dropdown">
-                    <SearchableDropdown @ref="PaymentMethodSearchableDropdown" Placeholder="Show all" Items="@VisiblePaymentMethods" Text="Payment method" OnSubmit="@((val) => SelectedPaymentMethod = val)" />
+                    <SearchableDropdown @ref="PaymentMethodSearchableDropdown" InitialValue="@SelectedPaymentMethod" Placeholder="Show all" Items="@VisiblePaymentMethods" Text="Payment method" OnSubmit="@((val) => SelectedPaymentMethod = val)" />
                 </div>
                 @if (Direction == "BUY")
                 {
                     <div class="no-deposit">
-                        <InputCheckbox type="checkbox" id="no-deposit" @bind-Value="ShowNoDepositOffers" />
-                        <label for="no-deposit">No deposit</label>
-                    </div>                    
+                        <Toggle @bind-IsToggled="ShowNoDepositOffers" Text="Show no deposit offers" />
+                    </div>
                 }
-            }
+            </div>
             <div class="offers-list-text-container">
                 <p class="offers-list-text">@(Direction == "BUY" ? "Buy XMR from" : "Sell XMR to")</p>
                 <p class="offers-list-text">@FilteredOffers.Count Offers</p>

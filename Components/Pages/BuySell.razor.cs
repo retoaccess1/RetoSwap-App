@@ -42,6 +42,7 @@ public partial class BuySell : ComponentBase, IDisposable
             if (field != value)
             {
                 field = value;
+                Helpers.Preferences.Set(Helpers.Preferences.SelectedCurrencyCode, value);
                 ResetFetch();
             }
         }
@@ -55,6 +56,7 @@ public partial class BuySell : ComponentBase, IDisposable
             if (field != value)
             {
                 field = value;
+                Helpers.Preferences.Set(Helpers.Preferences.SelectedPaymentMethod, value);
                 ResetFetch();
             }
         }
@@ -69,10 +71,10 @@ public partial class BuySell : ComponentBase, IDisposable
     public Dictionary<string, string> VisiblePaymentMethods { get; set; } = [];
 
     public bool IsCreatingOffer { get; set; }
-    public int OfferPaymentType 
-    { 
-        get; 
-        set 
+    public int OfferPaymentType
+    {
+        get;
+        set
         {
             field = value;
             switch (field)
@@ -90,15 +92,17 @@ public partial class BuySell : ComponentBase, IDisposable
                 default: break;
             }
 
-            // Revisit, is this wanted?
-            CurrencySearchableDropdown.Clear();
-            PaymentMethodSearchableDropdown.Clear();
+            // Clear these as the different tabs don't support the same options
+            CurrencySearchableDropdown?.Clear();
+            PaymentMethodSearchableDropdown?.Clear();
             SelectedCurrencyCode = string.Empty;
             SelectedPaymentMethod = string.Empty;
-        } 
+
+            Helpers.Preferences.Set(Helpers.Preferences.OfferPaymentType, value);
+        }
     }
 
-    public bool ShowNoDepositOffers { get; set; }
+    public bool ShowNoDepositOffers { get; set { field = value; Helpers.Preferences.Set(Helpers.Preferences.ShowNoDepositOffers, value); } }
     public string Direction 
     { 
         get; 
@@ -117,10 +121,11 @@ public partial class BuySell : ComponentBase, IDisposable
 
     public bool IsToggled
     {
-        get; 
+        get;
         set
         {
             field = value;
+            Helpers.Preferences.Set(Helpers.Preferences.IsToggled, value);
             Direction = value ? "SELL" : "BUY";
             ResetFetch();
         }
@@ -130,8 +135,8 @@ public partial class BuySell : ComponentBase, IDisposable
     public string CurrentMarketPrice { get; set; } = string.Empty;
     public NumberFormatInfo PreferredCurrencyFormat { get; set; } = default!;
 
-    public SearchableDropdown CurrencySearchableDropdown { get; set; } = default!;
-    public SearchableDropdown PaymentMethodSearchableDropdown { get; set; } = default!;
+    public SearchableDropdown? CurrencySearchableDropdown { get; set; } = default;
+    public SearchableDropdown? PaymentMethodSearchableDropdown { get; set; } = default;
 
     public bool IsCollapsed { get; set; } = true;
 
@@ -221,6 +226,12 @@ public partial class BuySell : ComponentBase, IDisposable
             await Task.Delay(5_000);
         }
 
+        OfferPaymentType = Helpers.Preferences.Get<int?>(Helpers.Preferences.OfferPaymentType) ?? 0;
+        IsToggled = Helpers.Preferences.Get<bool?>(Helpers.Preferences.IsToggled) ?? false;
+        SelectedCurrencyCode = Helpers.Preferences.Get<string?>(Helpers.Preferences.SelectedCurrencyCode) ?? string.Empty;
+        ShowNoDepositOffers = Helpers.Preferences.Get<bool?>(Helpers.Preferences.ShowNoDepositOffers) ?? true;
+        SelectedPaymentMethod = Helpers.Preferences.Get<string?>(Helpers.Preferences.SelectedPaymentMethod) ?? string.Empty;
+
         await base.OnInitializedAsync();
     }
 
@@ -251,11 +262,7 @@ public partial class BuySell : ComponentBase, IDisposable
             }
         }
 
-        if (ShowNoDepositOffers)
-        {
-            filteredOffers = filteredOffers.Where(x => x.BuyerSecurityDepositPct == 0);
-        }
-        else
+        if (!ShowNoDepositOffers)
         {
             filteredOffers = filteredOffers.Where(x => x.BuyerSecurityDepositPct > 0);
         }
