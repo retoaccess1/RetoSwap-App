@@ -1,13 +1,14 @@
 ﻿@* give this a background that covers screen like modal so user can click out of the input more easily *@
 @* show all default option*@
+@* this needs to be fixed properly using bind-value! *@
 
 <div class=@($"searchable-dropdown-main {(_isActive ? "rotate" : "")} {(Disabled ? "disabled" : "")} {Class}")>
     <p class="text">@Text</p>
     <input type="text"
     readonly="@Disabled"
     placeholder="@Placeholder"
-    @onfocusout="() => _isActive = false"
-    @onfocusin="() => {if(Disabled) return; _isActive = true;}"
+    @onfocusout="async () => { _isActive = false; if (!Items.ContainsValue(_searchTerm) && !string.IsNullOrEmpty(_lastValidKey)) await OnItemClick(_lastValidKey); }"
+    @onfocusin="() => { if (Disabled) return; _isActive = true; }"
     @bind="_searchTerm"
     @oninput="OnSearchTermChange"
     class=@(_visibleItems.Count == 0 || !_isActive ? "input-hidden" : "input-visible") />
@@ -25,6 +26,7 @@
 
 @code {
     private Dictionary<string, string> _visibleItems = [];
+    private string _lastValidKey = string.Empty;
     private string _searchTerm = string.Empty;
     private bool _shouldRender = true;
 
@@ -133,6 +135,7 @@
         {
             if (field != value)
             {
+                _lastValidKey = value ?? string.Empty;
                 _shouldRender = true;
             }
 
@@ -146,6 +149,7 @@
         {
             _visibleItems = Items;
             _searchTerm = string.Empty;
+            _lastValidKey = string.Empty;
             await OnSubmit.InvokeAsync(string.Empty);
         }
         else
@@ -160,6 +164,7 @@
     public async Task OnItemClick(string key)
     {
         _searchTerm = Items[key];
+        _lastValidKey = key;
         await OnSubmit.InvokeAsync(key);
         _visibleItems = Items.Where(x => x.Value.ToLower().Contains((key).ToLower())).ToDictionary();
         _shouldRender = true;
@@ -175,6 +180,7 @@
     public void Clear()
     {
         _searchTerm = string.Empty;
+        _lastValidKey = string.Empty;
         _shouldRender = true;
     }
 }
