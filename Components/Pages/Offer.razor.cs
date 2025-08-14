@@ -29,7 +29,7 @@ public partial class Offer : ComponentBase, IDisposable
     public bool ShowExtraInfoModal { get; set; }
     public bool ShowPassphraseModal { get; set; }
 
-    public string Passphrase { get; set; } = string.Empty;
+    public string Passphrase { get; set { field = value.Trim(); } } = string.Empty;
 
     public OfferInfo? OfferInfo { get; set; }
 
