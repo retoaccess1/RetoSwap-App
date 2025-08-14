@@ -18,6 +18,8 @@ public partial class Wallet : ComponentBase, IDisposable
     public ILocalStorageService LocalStorage { get; set; } = default!;
     [Inject]
     public IHavenoWalletService WalletService { get; set; } = default!;
+    [Inject]
+    public NavigationManager NavigationManager { get; set; } = default!;
 
     public WalletInfo? Balance { get; set; }
     public List<string> Addresses { get; set; } = [];
@@ -63,6 +65,12 @@ public partial class Wallet : ComponentBase, IDisposable
         { 
             try
             {
+                if (!Helpers.Preferences.Get<bool>(Helpers.Preferences.SeedBackupDone))
+                {
+                    NavigationManager.NavigateTo("/wallet/seedbackup?title=Seed%20Backup");
+                    return;
+                }
+
                 PreferredCurrency = await LocalStorage.GetItemAsStringAsync("preferredCurrency") ?? CurrencyCultureInfo.FallbackCurrency;
                 PreferredCurrencyFormat = CurrencyCultureInfo.GetFormatForCurrency((Currency)Enum.Parse(typeof(Currency), PreferredCurrency))!;
 

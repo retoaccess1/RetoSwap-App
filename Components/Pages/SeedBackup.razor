@@ -1,0 +1,38 @@
+﻿@page "/wallet/seedbackup"
+
+<div class="seedbackup-main">
+    @switch (Step)
+    {
+        case 0:
+            <p>Please write down your recovery phrase.</p>
+            <br/>
+
+            for (int i = 0; i < SeedWords.Count; i++)
+            {
+                <div class="seed-word">
+                    <p>@(i+1)</p>
+                    <input value="@SeedWords[i]" disabled="@true"/>
+                </div>
+            }
+
+            <button class="button-green" @onclick="() => Step = 1">Next</button>
+            break;
+        case 1:
+            <p>Please confirm that you have written down your recovery phrase by filling in the five blank fields.</p>
+            <br/>
+
+            for (int i = 0; i < RemovedSeedWords.Count; i++)
+            {
+                int iCopy = i;
+                <div class=@($"seed-word")>
+                    <p>@(i+1)</p>
+                    <input value="@RemovedSeedWords[iCopy].Word" @oninput="(e) => HandleOnInput(e.Value.ToString(), iCopy)" disabled="@(!RemovedIndices.Contains(iCopy))" class=@(RemovedIndices.Contains(iCopy) ? (RemovedSeedWords[iCopy].IsCorrect ? "word-valid" : "word-invalid") : "")/>
+                </div>
+            }
+
+            <button class="button-grey" @onclick="GoBack">Go back</button>
+            <button disabled="@(!IsValid)" class="button-green" @onclick="Submit">Submit</button>
+            break;
+        default: break;
+    }
+</div>

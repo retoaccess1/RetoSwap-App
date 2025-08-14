@@ -1,0 +1,30 @@
+﻿.seedbackup-main {
+  display: flex;
+  flex-direction: column;
+}
+.seedbackup-main .seed-word {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.seedbackup-main .seed-word p {
+  margin-right: 10px;
+  width: 20px;
+  border-radius: 100px;
+  background-color: #121212;
+  height: 40px;
+  width: 40px;
+  min-width: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.seedbackup-main button {
+  margin-bottom: 10px;
+}
+.seedbackup-main .word-invalid {
+  border: 1px solid orange;
+}
+.seedbackup-main .word-valid {
+  border: 1px solid #0CB952;
+}
