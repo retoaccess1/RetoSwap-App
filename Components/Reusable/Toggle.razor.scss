@@ -25,7 +25,10 @@
 
     p {
         margin-left: 10px;
-        text-transform: capitalize;
+
+        &:first-letter {
+            text-transform: uppercase;
+        }
     }
 }
 

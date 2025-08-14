@@ -23,7 +23,9 @@
 }
 .toggle-main p {
   margin-left: 10px;
-  text-transform: capitalize;
+}
+.toggle-main p:first-letter {
+  text-transform: uppercase;
 }
 
 .inactive {
