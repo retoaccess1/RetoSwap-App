@@ -71,8 +71,8 @@ public abstract class HavenoDaemonServiceBase : IHavenoDaemonService
 
         if (Directory.Exists(_daemonPath))
             Directory.Delete(_daemonPath, true);
-        else 
-            Directory.CreateDirectory(_daemonPath);
+
+        Directory.CreateDirectory(_daemonPath);
 
         using var fileStream = File.Create(Path.Combine(_daemonPath, "daemon.jar"));
         await stream.CopyToAsync(fileStream);
