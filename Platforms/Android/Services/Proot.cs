@@ -83,6 +83,7 @@ public static class Proot
             throw new Exception("Could not set file permissions");
         }
 
+        // Can be problematic due to symlinks
         if (Directory.Exists(_rootfsDir))
             Directory.Delete(_rootfsDir, true);
 
