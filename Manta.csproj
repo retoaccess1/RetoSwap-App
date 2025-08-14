@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <TargetFrameworks>net8.0-android;net8.0-ios;net8.0-maccatalyst</TargetFrameworks>
+    <TargetFrameworks>net9.0-android;net9.0-ios;net9.0-maccatalyst</TargetFrameworks>
     <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net9.0-windows10.0.19041.0</TargetFrameworks>
     <!-- Uncomment to also build the tizen app. You will need to install tizen by following this: https://github.com/Samsung/Tizen.NET -->
     <!-- <TargetFrameworks>$(TargetFrameworks);net8.0-tizen</TargetFrameworks> -->
@@ -70,6 +70,15 @@
   
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net8.0-android|AnyCPU'">
     <PublishTrimmed>False</PublishTrimmed>
+    <JavaMaximumHeapSize>4G</JavaMaximumHeapSize>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-android|AnyCPU'">
+    <AndroidPackageFormat>apk</AndroidPackageFormat>
+    <JavaMaximumHeapSize>4G</JavaMaximumHeapSize>
+  </PropertyGroup>
+  
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net9.0-android|AnyCPU'">
     <JavaMaximumHeapSize>4G</JavaMaximumHeapSize>
   </PropertyGroup>
 
@@ -150,16 +159,16 @@
 
   <ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
-    <PackageReference Include="CommunityToolkit.Maui" Version="8.0.1" />
-    <PackageReference Include="Grpc.Net.Client" Version="2.67.0" />
-    <PackageReference Include="Grpc.Net.Client.Web" Version="2.70.0" />
+    <PackageReference Include="CommunityToolkit.Maui" Version="12.2.0" />
+    <PackageReference Include="Grpc.Net.Client" Version="2.71.0" />
+    <PackageReference Include="Grpc.Net.Client.Web" Version="2.71.0" />
     <PackageReference Include="HavenoSharp" Version="1.1.1" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.AutoActivation" Version="9.3.0" />
-    <PackageReference Include="Microsoft.Maui.Controls" Version="8.0.100" />
-    <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="8.0.100" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="8.0.100" />
-    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="8.0.1" />
-    <PackageReference Include="MudBlazor" Version="8.5.1" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.AutoActivation" Version="9.8.0" />
+    <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.90" />
+    <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.90" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.WebView.Maui" Version="9.0.90" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.8" />
+    <PackageReference Include="MudBlazor" Version="8.11.0" />
     <PackageReference Include="ZXing.Net.Maui" Version="0.4.0" />
     <PackageReference Include="ZXing.Net.Maui.Controls" Version="0.4.0" />
   </ItemGroup>
