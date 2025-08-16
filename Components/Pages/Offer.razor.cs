@@ -83,13 +83,19 @@ public partial class Offer : ComponentBase, IDisposable
             }
 
             if (OfferInfo is not null)  // Price changes...
-                FiatAmount = decimal.Parse(OfferInfo.Price, CultureInfo.InvariantCulture) * MoneroAmount;
+                CounterCurrencyAmount = decimal.Parse(OfferInfo.Price, CultureInfo.InvariantCulture) * MoneroAmount;
         } 
     }
 
-    public CancellationTokenSource CancelOfferCts { get; set; } = new();
+    public decimal CounterCurrencyAmount 
+    {
+        get; 
+        set
+        { 
+            field = Math.Round(value, (OfferInfo?.PaymentMethodId == "BLOCK_CHAINS" ? 8 : 2)); 
+        } 
+    }
 
-    public decimal FiatAmount { get { return Math.Round(field, 0); } set { field = value; } }
     public string SelectedPaymentAccountId { get; set; } = string.Empty;
     public Dictionary<string, string> PaymentAccounts { get; set; } = [];
 
@@ -132,7 +138,7 @@ public partial class Offer : ComponentBase, IDisposable
                 return;
             }
 
-            var currencyCode = OfferInfo.PaymentMethodId == "BLOCK_CHAINS" ? OfferInfo.BaseCurrencyCode : OfferInfo.CounterCurrencyCode;
+            var currencyCode = OfferInfo.CounterCurrencyCode;
 
             sameTypePaymentAccounts = sameTypePaymentAccounts
                 .Where(x => x.TradeCurrencies.Select(x => x.Code).Contains(currencyCode)).ToList();
@@ -151,7 +157,7 @@ public partial class Offer : ComponentBase, IDisposable
             PaymentAccounts = sameTypePaymentAccounts.ToDictionary(x => x.Id, x => x.AccountName);
 
             AvailableBalance = BalanceSingleton.WalletInfo?.AvailableXMRBalance ?? 0;
-            FiatAmount = decimal.Parse(OfferInfo.Price, CultureInfo.InvariantCulture) * MoneroAmount;
+            CounterCurrencyAmount = decimal.Parse(OfferInfo.Price, CultureInfo.InvariantCulture) * MoneroAmount;
             MoneroAmount = OfferInfo.Amount.ToMonero();
 
             BalanceSingleton.OnBalanceFetch += HandleBalanceFetch;

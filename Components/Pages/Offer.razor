@@ -4,7 +4,7 @@
     <div class="dropdown">
         <SearchableDropdown Disabled="@(PaymentAccounts.Count < 2)" InitialValue="@SelectedPaymentAccountId" Text="Trading account" Placeholder="Trading account" Items="@PaymentAccounts" OnSubmit="(val) => SelectedPaymentAccountId = val"></SearchableDropdown>
     </div>
-    <label>Amount to @(OfferInfo?.Direction == "BUY" ? "sell" : "buy")</label>
+    <label>Amount of XMR to @(OfferInfo?.Direction == "BUY" ? "sell" : "buy")</label>
     <input disabled="@(UserDoesNotHaveAccount || OfferInfo?.MinAmount == OfferInfo?.Amount)" step="0.01" min="@OfferInfo?.MinAmount.ToMonero()" max="@OfferInfo?.Amount.ToMonero()" @bind="@MoneroAmount" type="number" />
     @if (OfferInfo?.MinAmount == OfferInfo?.Amount)
     {
@@ -15,7 +15,7 @@
         <p class="range">Min/Max: @OfferInfo?.MinAmount.ToMonero() XMR - @OfferInfo?.Amount.ToMonero() XMR</p>
     }
     <label>Total in @OfferInfo?.CounterCurrencyCode</label>
-    <input readonly @bind="@FiatAmount" type="number" step="0.01" />
+    <input readonly @bind="@CounterCurrencyAmount" type="number" step="0.01" />
 
     <div class="funding-section">
         <InfoRow Label="Available funds" Value="@(AvailableBalance.ToMonero() + " XMR")"></InfoRow>
@@ -35,7 +35,7 @@
     <button class="button-cancel" @onclick="Cancel">Cancel</button>
 </div>
 
-<Modal IsOpen="IsTakingOffer" Title="Taking offer" ModalButtonOptions="ModalButtonOptions.NONE" OnCancelPressed="() => CancelOfferCts.Cancel()">
+<Modal IsOpen="IsTakingOffer" Title="Taking offer" ModalButtonOptions="ModalButtonOptions.NONE">
     <p class="regular-p-grey">Please wait</p>
 </Modal>
 <Modal IsCloseable="false" Title="No payment account" IsOpen="UserDoesNotHaveAccount" ModalButtonOptions="ModalButtonOptions.OK_CANCEL" CancelButtonText="Go back" OkButtonText="Create account" OnOkPressed="@NavigateToAccount" OnCancelPressed="@(() => NavigationManager.NavigateTo("BuySell"))">
