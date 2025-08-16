@@ -17,6 +17,9 @@ public class AdjustedPrices
 
 public partial class CreateOffer : ComponentBase, IDisposable
 {
+    // Should probably be a global at this point
+    private const ulong _minSecurityDepositAmount = 100_000_000_000;
+
     [Inject]
     public IHavenoPaymentAccountService PaymentAccountService { get; set; } = default!;
     [Inject]
@@ -27,7 +30,19 @@ public partial class CreateOffer : ComponentBase, IDisposable
     public BalanceSingleton BalanceSingleton { get; set; } = default!;
 
     [Parameter]
-    public string Direction { get; set; } = string.Empty;
+    public string Direction 
+    { 
+        get; 
+        set 
+        {
+            if (field == value)
+                return;
+
+            field = value;
+            Clear();
+        } 
+    } = string.Empty;
+
     [Parameter]
     public EventCallback OnCloseCreateOffer { get; set; }
     [Inject]
@@ -70,6 +85,7 @@ public partial class CreateOffer : ComponentBase, IDisposable
     public ulong AvailableXMRBalance { get; set; }
     public bool NoMarketPrice { get; set; }
     public bool IsFiat { get; set; }
+    public bool UseMinimumSecurityDeposit { get; set; }
 
     public string SelectedCurrencyCode
     {
@@ -90,11 +106,6 @@ public partial class CreateOffer : ComponentBase, IDisposable
             }
 
             Clear();
-
-            if (!IsFiat)
-            {
-                SecurityDepositPct = 10m;
-            }
         }
     } = string.Empty;
 
@@ -118,12 +129,17 @@ public partial class CreateOffer : ComponentBase, IDisposable
                 TradeFee = (ulong)(piconeroAmount * makerFeePct);
                 ulong securityDepositAmount = (ulong)(piconeroAmount * (SecurityDepositPct / 100));
 
-                if (securityDepositAmount < 100_000_000_000)
+                if (securityDepositAmount < _minSecurityDepositAmount)
                 {
-                    securityDepositAmount = 100_000_000_000;
+                    securityDepositAmount = _minSecurityDepositAmount;
+                    UseMinimumSecurityDeposit = true;
+                }
+                else
+                {
+                    UseMinimumSecurityDeposit = false;
                 }
 
-                RequiredFunds = piconeroAmount + securityDepositAmount + TradeFee;
+                RequiredFunds = securityDepositAmount + TradeFee;
             }
             else
             {
@@ -132,17 +148,22 @@ public partial class CreateOffer : ComponentBase, IDisposable
                 TradeFee = (ulong)(piconeroAmount * tradeFeePct);
                 ulong depositAmount = (ulong)(piconeroAmount * (SecurityDepositPct / 100));
 
-                if (depositAmount < 100_000_000_000)
+                if (depositAmount < _minSecurityDepositAmount)
                 {
-                    depositAmount = 100_000_000_000;
+                    depositAmount = _minSecurityDepositAmount;
+                    UseMinimumSecurityDeposit = true;
+                }
+                else
+                {
+                    UseMinimumSecurityDeposit = false;
                 }
 
-                RequiredFunds = depositAmount + TradeFee;
+                RequiredFunds = piconeroAmount + depositAmount + TradeFee;
             }
 
             if (BalanceSingleton.MarketPriceInfoDictionary.TryGetValue(SelectedCurrencyCode, out var priceForOneXMR))
             {
-                TradeFeeFiat = Math.Round(TradeFee.ToMonero() * priceForOneXMR, 2);
+                TradeFeeFiat = Math.Round(TradeFee.ToMonero() * priceForOneXMR, Enum.TryParse(typeof(Helpers.CryptoCurrency), SelectedCurrencyCode, out _) ? 8 : 2);
             }
         } 
     }
@@ -160,6 +181,8 @@ public partial class CreateOffer : ComponentBase, IDisposable
         {
             field = value;
             SecurityDepositPct = 15m;
+            // Quick fix to show correct trade fee
+            MoneroAmount = MoneroAmount;
         }
     }
 
@@ -180,6 +203,8 @@ public partial class CreateOffer : ComponentBase, IDisposable
         FixedPrice = 0;
         SecurityDepositPct = 15m;
         TradeFee = 0;
+        UseFixedPrice = false;
+        BuyerAsTakerWithoutDeposit = false;
     }
 
     // Gives the adjusted amounts so that the fiat value is a whole number
@@ -200,22 +225,8 @@ public partial class CreateOffer : ComponentBase, IDisposable
         var adjustedPrices = new AdjustedPrices
         {
             FiatPrice = isFiat ? Math.Round(adjustedMktPrice * unadjustedMoneroAmount) : Math.Round(adjustedMktPrice * unadjustedMoneroAmount, 8),
-            AdjustedMktPrice = Math.Round(adjustedMktPrice, 4)
+            AdjustedMktPrice = isFiat ? Math.Round(adjustedMktPrice, 4) : Math.Round(adjustedMktPrice, 8)
         };
-
-        if (!isFiat)
-        {
-            if (Direction == "BUY")
-            {
-                var oneCryptoInXMR = 1 / priceForOneXMR;
-                adjustedPrices.FixedPrice = Math.Round(oneCryptoInXMR + (oneCryptoInXMR * percent), 8);
-            }
-            else
-            {
-                var oneCryptoInXMR = 1 / priceForOneXMR;
-                adjustedPrices.FixedPrice = Math.Round(oneCryptoInXMR - (oneCryptoInXMR * percent), 8);
-            }
-        }
 
         if (adjustedMktPrice != 0m)
         {
@@ -251,8 +262,8 @@ public partial class CreateOffer : ComponentBase, IDisposable
                         if (IsFiat)
                             FixedPrice = adjustedPrices.AdjustedMktPrice;
                         else {
-                            FixedPrice = adjustedPrices.FixedPrice;
-                            FiatPrice = Math.Round(1 / FixedPrice * MoneroAmount, 8);
+                            FixedPrice = adjustedPrices.AdjustedMktPrice;
+                            FiatPrice = Math.Round(FixedPrice * MoneroAmount, 8);
                         }
                     }
 
@@ -286,8 +297,8 @@ public partial class CreateOffer : ComponentBase, IDisposable
                             if (IsFiat)
                                 FixedPrice = adjustedPrices.AdjustedMktPrice;
                             else {
-                                FixedPrice = adjustedPrices.FixedPrice;
-                                FiatPrice = Math.Round(1 / FixedPrice * MoneroAmount, 8);
+                                FixedPrice = adjustedPrices.AdjustedMktPrice;
+                                FiatPrice = Math.Round(FixedPrice * MoneroAmount, 8);
                             }
                         }
                     }
@@ -306,12 +317,20 @@ public partial class CreateOffer : ComponentBase, IDisposable
                     if (value == 0)
                         return;
 
-                    if (IsFiat)
+                    if (true)
                     {
                         var percent = value / priceForOneXMR;
 
-                        MarketPriceMarginPct = Math.Round(percent - 1m, 2) * 100m;
-                        FiatPrice = Math.Round(MoneroAmount * value);
+                        MarketPriceMarginPct = Math.Round(percent - 1m, 4) * 100m;
+
+                        if (IsFiat)
+                        {
+                            FiatPrice = Math.Round(MoneroAmount * value);
+                        }
+                        else
+                        {
+                            FiatPrice = MoneroAmount * value;
+                        }
 
                         if (MoneroAmount == MinimumMoneroAmount)
                         {
@@ -347,7 +366,7 @@ public partial class CreateOffer : ComponentBase, IDisposable
                     decimal adjustedMktPrice;
                     var percent = MarketPriceMarginPct / 100m;
 
-                    if (IsFiat)
+                    if (true)
                     {
                         if (Direction == "BUY")
                         {
@@ -359,16 +378,24 @@ public partial class CreateOffer : ComponentBase, IDisposable
                         }
 
                         FixedPrice = adjustedMktPrice;
-                        FiatPrice = Math.Round(adjustedMktPrice * MoneroAmount);
+
+                        if (IsFiat)
+                        {
+                            FiatPrice = Math.Round(adjustedMktPrice * MoneroAmount);
+                        }
+                        else
+                        {
+                            FiatPrice = adjustedMktPrice * MoneroAmount;
+                        }
 
                         if (MoneroAmount == MinimumMoneroAmount)
                         {
-                            MoneroAmount = Math.Round(FiatPrice / adjustedMktPrice, 4);
+                            MoneroAmount = Math.Round(FiatPrice / adjustedMktPrice, IsFiat ? 4 : 8);
                             MinimumMoneroAmount = MoneroAmount;
                         }
                         else
                         {
-                            MoneroAmount = Math.Round(FiatPrice / adjustedMktPrice, 4);
+                            MoneroAmount = Math.Round(FiatPrice / adjustedMktPrice, IsFiat ? 4 : 8);
 
                             if (MoneroAmount < MinimumMoneroAmount || MinimumMoneroAmount == 0m)
                             {
@@ -376,21 +403,21 @@ public partial class CreateOffer : ComponentBase, IDisposable
                             }
                         }
                     }
-                    else
-                    {
-                        if (Direction == "BUY")
-                        {
-                            var oneCryptoInXMR = 1 / priceForOneXMR;
-                            FixedPrice = Math.Round(oneCryptoInXMR + (oneCryptoInXMR * percent), 8);
-                            FiatPrice = Math.Round(1 / FixedPrice * MoneroAmount, 8);
-                        }
-                        else
-                        {
-                            var oneCryptoInXMR = 1 / priceForOneXMR;
-                            FixedPrice = Math.Round(oneCryptoInXMR - (oneCryptoInXMR * percent), 8);
-                            FiatPrice = Math.Round(1 / FixedPrice * MoneroAmount, 8);
-                        }
-                    }
+                    //else
+                    //{
+                    //    if (Direction == "BUY")
+                    //    {
+                    //        var oneCryptoInXMR = 1 / priceForOneXMR;
+                    //        FixedPrice = Math.Round(oneCryptoInXMR + (oneCryptoInXMR * percent), 8);
+                    //        FiatPrice = Math.Round(1 / FixedPrice * MoneroAmount, 8);
+                    //    }
+                    //    else
+                    //    {
+                    //        var oneCryptoInXMR = 1 / priceForOneXMR;
+                    //        FixedPrice = Math.Round(oneCryptoInXMR - (oneCryptoInXMR * percent), 8);
+                    //        FiatPrice = Math.Round(1 / FixedPrice * MoneroAmount, 8);
+                    //    }
+                    //}
                 }
                 break;
             case "FiatPrice":
@@ -403,15 +430,23 @@ public partial class CreateOffer : ComponentBase, IDisposable
                     }
 
                     decimal adjustedMktPrice;
+
                     var percent = MarketPriceMarginPct / 100m;
 
-                    if (Direction == "BUY")
+                    if (UseFixedPrice)
                     {
-                        adjustedMktPrice = priceForOneXMR - (priceForOneXMR * percent);
+                        adjustedMktPrice = FixedPrice;
                     }
                     else
                     {
-                        adjustedMktPrice = priceForOneXMR + (priceForOneXMR * percent);
+                        if (Direction == "BUY")
+                        {
+                            adjustedMktPrice = priceForOneXMR - (priceForOneXMR * percent);
+                        }
+                        else
+                        {
+                            adjustedMktPrice = priceForOneXMR + (priceForOneXMR * percent);
+                        }
                     }
 
                     if (MoneroAmount == MinimumMoneroAmount)
@@ -493,6 +528,9 @@ public partial class CreateOffer : ComponentBase, IDisposable
                 UseMarketBasedPrice = true,
                 BuyerAsTakerWithoutDeposit = BuyerAsTakerWithoutDeposit
             };
+
+            if (BuyerAsTakerWithoutDeposit)
+                request.IsPrivateOffer = true;
 
             if (UseFixedPrice)
             {

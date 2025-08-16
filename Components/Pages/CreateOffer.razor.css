@@ -18,10 +18,14 @@
 .create-offer-main .dropdown {
   margin-bottom: 10px;
 }
-.create-offer-main input[type=number] {
+.create-offer-main input[type=number], .create-offer-main input[type=text] {
   margin-bottom: 10px;
 }
 
+/*label {
+    margin-bottom: 10px;
+}
+*/
 .price-toggle {
   margin-bottom: 10px;
 }

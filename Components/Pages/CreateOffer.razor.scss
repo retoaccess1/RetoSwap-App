@@ -23,11 +23,15 @@
         margin-bottom: 10px;
     }
 
-    input[type=number] {
+    input[type=number], input[type=text] {
         margin-bottom: 10px;
     }
 }
 
+/*label {
+    margin-bottom: 10px;
+}
+*/
 .price-toggle {
     margin-bottom: 10px;
 }
