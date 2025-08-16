@@ -159,7 +159,10 @@ public partial class BuySell : ComponentBase, IDisposable
             if (OfferFetchTask is not null)
                 await OfferFetchTask;
 
-            OfferFetchTask = FetchOffersAsync();
+            CancellationTokenSource.Dispose();
+            CancellationTokenSource = new();
+
+            OfferFetchTask = Task.Run(FetchOffersAsync);
 
             ResetSemaphore.Release();
         });

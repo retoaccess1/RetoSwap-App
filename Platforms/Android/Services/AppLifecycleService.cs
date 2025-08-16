@@ -60,11 +60,12 @@ public class AppLifecycleService : Java.Lang.Object, Android.App.Application.IAc
                 if (serviceProvider is not null)
                 {
                     _cancellationTokenSource.Cancel();
-                    _cancellationTokenSource.Dispose();
-                    _cancellationTokenSource = new();
 
                     var notificationSingleton = serviceProvider.GetRequiredService<NotificationSingleton>();
                     Task.Run(notificationSingleton.StopNotificationListenerAsync).GetAwaiter().GetResult();
+
+                    _cancellationTokenSource.Dispose();
+                    _cancellationTokenSource = new();
                 }
             }
             finally
