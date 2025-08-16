@@ -76,6 +76,9 @@ public partial class BuySell : ComponentBase, IDisposable
         get;
         set
         {
+            if (field == value)
+                return;
+
             field = value;
             switch (field)
             {
@@ -102,7 +105,19 @@ public partial class BuySell : ComponentBase, IDisposable
         }
     }
 
-    public bool ShowNoDepositOffers { get; set { field = value; Helpers.Preferences.Set(Helpers.Preferences.ShowNoDepositOffers, value); } }
+    public bool ShowNoDepositOffers 
+    { 
+        get; 
+        set 
+        {
+            if (field == value)
+                return;
+
+            field = value; 
+            Helpers.Preferences.Set(Helpers.Preferences.ShowNoDepositOffers, value); 
+        } 
+    }
+
     public string Direction 
     { 
         get; 
@@ -124,6 +139,9 @@ public partial class BuySell : ComponentBase, IDisposable
         get;
         set
         {
+            if (field == value)
+                return;
+
             field = value;
             Helpers.Preferences.Set(Helpers.Preferences.IsToggled, value);
             Direction = value ? "SELL" : "BUY";
@@ -153,8 +171,6 @@ public partial class BuySell : ComponentBase, IDisposable
 
         Task.Run(async() => {
             CancellationTokenSource.Cancel();
-            CancellationTokenSource.Dispose();
-            CancellationTokenSource = new();
 
             if (OfferFetchTask is not null)
                 await OfferFetchTask;
@@ -232,8 +248,8 @@ public partial class BuySell : ComponentBase, IDisposable
         OfferPaymentType = Helpers.Preferences.Get<int?>(Helpers.Preferences.OfferPaymentType) ?? 0;
         IsToggled = Helpers.Preferences.Get<bool?>(Helpers.Preferences.IsToggled) ?? false;
         SelectedCurrencyCode = Helpers.Preferences.Get<string?>(Helpers.Preferences.SelectedCurrencyCode) ?? string.Empty;
-        ShowNoDepositOffers = Helpers.Preferences.Get<bool?>(Helpers.Preferences.ShowNoDepositOffers) ?? true;
         SelectedPaymentMethod = Helpers.Preferences.Get<string?>(Helpers.Preferences.SelectedPaymentMethod) ?? string.Empty;
+        ShowNoDepositOffers = Helpers.Preferences.Get<bool?>(Helpers.Preferences.ShowNoDepositOffers) ?? true;
 
         await base.OnInitializedAsync();
     }
