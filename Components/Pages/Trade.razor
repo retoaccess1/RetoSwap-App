@@ -159,7 +159,7 @@
             }
             <InfoRow IsExpandable="true" Label="Maker deposit transaction ID" Value="@TradeInfo.MakerDepositTxId"></InfoRow>
             <InfoRow Label="Max allowed trade period" Value="@TimeHelper.FormatDuration((long)MaxTradePeriod.TotalMilliseconds)"></InfoRow>
-            <InfoRow Label="Expires" Value="@TradeExpiresDateUTC.ToString()"></InfoRow>
+            <InfoRow Label="Expires" Value="@(IsNotCompletedInTime ? "Trade not completed in time" : TradeExpiresDateUTC.ToString())"></InfoRow>
         </div>
         <div class="dispute">
             @if (PaymentMethod is not null)
@@ -177,6 +177,13 @@
     </div>
 }
 
-<Modal @bind-IsOpen="IsDisputeModalOpen" Title="Open support ticket" ModalButtonOptions="ModalButtonOptions.OK_CANCEL" OnOkPressed="async () => await OpenDisputeAsync(TradeInfo?.TradeId ?? string.Empty)">
+<Modal 
+    @bind-IsOpen="IsDisputeModalOpen" 
+    Title="Open support ticket" 
+    ModalButtonOptions="ModalButtonOptions.OK_CANCEL" 
+    OkButtonText="Open support ticket"
+    OnOkPressed="async () => await OpenDisputeAsync(TradeInfo?.TradeId ?? string.Empty)">
     <p class="regular-p-grey">Are you sure you want to open a support ticket?</p>
+    <br/>
+    <p class="regular-p-grey">When you open a support ticket the trade will be interrupted and handled by an arbitrator.</p>
 </Modal>
