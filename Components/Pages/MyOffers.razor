@@ -74,7 +74,7 @@
                         <div class="offer-top-right">
                             <p>@offer.PaymentMethodShortName</p>
                             <div class="amounts">
-                                @(Math.Round(double.Parse(offer.Price, CultureInfo.InvariantCulture), 2))
+                                @(Math.Round(double.Parse(offer.Price, CultureInfo.InvariantCulture), (offer.PaymentMethodId == "BLOCK_CHAINS" ? 8 : 2)))
                                 @offer.CounterCurrencyCode
                                 (@Math.Round(offer.MarketPriceMarginPct, 2).ToString("0.00")%)
                             </div>
