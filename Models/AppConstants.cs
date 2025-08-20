@@ -8,6 +8,8 @@ public static class AppConstants
     public static readonly string Network;
     public static readonly string HavenoAppName;
 
+    public const string ApplicationId = "com.haveno";
+
     static AppConstants()
     {
         HavenoAppName = Assembly.GetExecutingAssembly()

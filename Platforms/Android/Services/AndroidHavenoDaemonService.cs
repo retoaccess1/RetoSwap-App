@@ -110,7 +110,7 @@ public class AndroidHavenoDaemonService : HavenoDaemonServiceBase
         var receiver = new ProgressReceiver();
         receiver.OnProgressChanged += progressCb;
 
-        var filter = new IntentFilter("com.haveno.BACKEND_PROGRESS");
+        var filter = new IntentFilter($"{AppConstants.ApplicationId}.BACKEND_PROGRESS");
 
         if (OperatingSystem.IsAndroidVersionAtLeast(33))
         {
@@ -142,10 +142,10 @@ public class AndroidHavenoDaemonService : HavenoDaemonServiceBase
 
     public override Task StopHavenoDaemonAsync()
     {
-        var startBackendIntent = new Intent(Platform.AppContext, typeof(BackendService))
+        var stopBackendIntent = new Intent(Platform.AppContext, typeof(BackendService))
                         .SetAction("ACTION_STOP_BACKEND");
 
-        Platform.AppContext.StartService(startBackendIntent);
+        Platform.AppContext.StartService(stopBackendIntent);
 
         return Task.CompletedTask;
     }

@@ -8,8 +8,8 @@ using System.Text;
 
 namespace Manta.Services;
 
-[Service(Name = "com.haveno.BackendService", Enabled = true, Exported = false, Permission = "android.permission.BIND_VPN_SERVICE", ForegroundServiceType = Android.Content.PM.ForegroundService.TypeDataSync)]
-[IntentFilter(["com.haveno.ACTION_START_BACKEND", "com.haveno.ACTION_STOP_BACKEND"])]
+[Service(Name = $"{AppConstants.ApplicationId}.BackendService", Enabled = true, Exported = false, Permission = "android.permission.BIND_VPN_SERVICE", ForegroundServiceType = Android.Content.PM.ForegroundService.TypeDataSync)]
+[IntentFilter([$"{AppConstants.ApplicationId}.ACTION_START_BACKEND", $"{AppConstants.ApplicationId}.ACTION_STOP_BACKEND"])]
 public class BackendService : Service
 {
     private readonly string _notificationChannelId = "BackendServiceChannel";
@@ -117,7 +117,7 @@ public class BackendService : Service
 
     void UpdateProgress(string progress, bool isDone = false)
     {
-        var intent = new Intent("com.haveno.BACKEND_PROGRESS");
+        var intent = new Intent($"{AppConstants.ApplicationId}.BACKEND_PROGRESS");
         intent.PutExtra("progress", progress);
         if (isDone)
             intent.PutExtra("isDone", isDone);
