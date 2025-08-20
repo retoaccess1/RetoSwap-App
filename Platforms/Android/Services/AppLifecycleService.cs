@@ -31,18 +31,21 @@ public class AppLifecycleService : Java.Lang.Object, Android.App.Application.IAc
 
             PauseTokenSource.Resume();
 
-            try
+            if (SecureStorageHelper.Get<DaemonInstallOptions>("daemon-installation-type") == DaemonInstallOptions.RemoteNode)
             {
-                var serviceProvider = IPlatformApplication.Current?.Services;
-                if (serviceProvider is not null)
+                try
                 {
-                    var notificationSingleton = serviceProvider.GetRequiredService<NotificationSingleton>();
-                    notificationSingleton.Start(_cancellationTokenSource.Token);
+                    var serviceProvider = IPlatformApplication.Current?.Services;
+                    if (serviceProvider is not null)
+                    {
+                        var notificationSingleton = serviceProvider.GetRequiredService<NotificationSingleton>();
+                        notificationSingleton.Start(_cancellationTokenSource.Token);
+                    }
                 }
-            }
-            catch
-            {
+                catch
+                {
 
+                }
             }
         }
     }
@@ -53,24 +56,27 @@ public class AppLifecycleService : Java.Lang.Object, Android.App.Application.IAc
 
         lock (_lock)
         {
-            try
+            if (SecureStorageHelper.Get<DaemonInstallOptions>("daemon-installation-type") == DaemonInstallOptions.RemoteNode)
             {
-                // Unregister and switch to polling with alarm
-                var serviceProvider = IPlatformApplication.Current?.Services;
-                if (serviceProvider is not null)
+                try
                 {
-                    _cancellationTokenSource.Cancel();
+                    // Unregister and switch to polling with alarm
+                    var serviceProvider = IPlatformApplication.Current?.Services;
+                    if (serviceProvider is not null)
+                    {
+                        _cancellationTokenSource.Cancel();
 
-                    var notificationSingleton = serviceProvider.GetRequiredService<NotificationSingleton>();
-                    Task.Run(notificationSingleton.StopNotificationListenerAsync).GetAwaiter().GetResult();
+                        var notificationSingleton = serviceProvider.GetRequiredService<NotificationSingleton>();
+                        Task.Run(notificationSingleton.StopNotificationListenerAsync).GetAwaiter().GetResult();
 
-                    _cancellationTokenSource.Dispose();
-                    _cancellationTokenSource = new();
+                        _cancellationTokenSource.Dispose();
+                        _cancellationTokenSource = new();
+                    }
                 }
-            }
-            finally
-            {
+                finally
+                {
 
+                }
             }
 
             PauseTokenSource.Pause();

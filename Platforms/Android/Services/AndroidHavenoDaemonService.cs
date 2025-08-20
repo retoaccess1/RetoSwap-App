@@ -3,7 +3,10 @@ using AndroidX.Core.Content;
 using HavenoSharp.Services;
 using HavenoSharp.Singletons;
 using Manta.Helpers;
+using Manta.Models;
+using Manta.Singletons;
 using System.Runtime.InteropServices;
+using System.Threading;
 
 namespace Manta.Services;
 
@@ -29,15 +32,18 @@ public class ProgressReceiver : BroadcastReceiver
 public class AndroidHavenoDaemonService : HavenoDaemonServiceBase
 {
     private readonly GrpcChannelSingleton _grpcChannelSingleton;
+    private readonly NotificationSingleton _notificationSingleton;
 
     public AndroidHavenoDaemonService(
         GrpcChannelSingleton grpcChannelSingleton, 
         IHavenoWalletService walletService, 
         IHavenoVersionService versionService, 
-        IHavenoAccountService accountService
+        IHavenoAccountService accountService,
+        NotificationSingleton notificationSingleton
         ) : base( walletService, versionService, accountService, Path.Combine(Proot.HomeDir, "daemon"))
     {
         _grpcChannelSingleton = grpcChannelSingleton;
+        _notificationSingleton = notificationSingleton;
     }
 
     // IF THIS BREAKS AND SAYS SOMETHING LIKE FILE DOES NOT EXIST ETC BUT IT DOES IT'S PROBABLY DUE TO LINE ENDINGS IN LIBPROOTWRAPPER. SO I DONT KNOW WHY IT WOULD REVERT BUT IT DOES AND YOU NEED TO CHANGE THE LINE ENDINGS TO LF
@@ -129,6 +135,8 @@ public class AndroidHavenoDaemonService : HavenoDaemonServiceBase
 
         await receiver.CompletedTCS.Task;
 
+        _notificationSingleton.Start();
+
         receiver.OnProgressChanged -= progressCb;
         Platform.AppContext.UnregisterReceiver(receiver);
 
@@ -140,13 +148,13 @@ public class AndroidHavenoDaemonService : HavenoDaemonServiceBase
         throw new NotImplementedException();
     }
 
-    public override Task StopHavenoDaemonAsync()
+    public override async Task StopHavenoDaemonAsync()
     {
         var stopBackendIntent = new Intent(Platform.AppContext, typeof(BackendService))
                         .SetAction("ACTION_STOP_BACKEND");
 
         Platform.AppContext.StartService(stopBackendIntent);
 
-        return Task.CompletedTask;
+        await _notificationSingleton.StopNotificationListenerAsync();
     }
 }
