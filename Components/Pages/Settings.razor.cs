@@ -8,6 +8,8 @@ using Manta.Singletons;
 using Microsoft.AspNetCore.Components;
 using Grpc.Net.Client.Web;
 using Manta.Services;
+using System.Net;
+using System.Threading.Tasks;
 
 namespace Manta.Components.Pages;
 
@@ -64,11 +66,82 @@ public partial class Settings : ComponentBase, IDisposable
     public bool ShowRestoreModal { get; set; }
 
     public bool ShowConnectToMoneroNodeModal { get; set; }
+
+    Timer? ValidateMoneroNodeUrlTimer { get; set; }
+
+    public string? IsMoneroNodeUrlInvalidReason { get; set; }
+    public bool IsMoneroNodeUrlInvalid { get; set; }
+
     public string? MoneroNodePassword { get; set { field = value?.Trim(); } }
-    public string? MoneroNodeUrl { get; set { field = value?.Trim(); } }
+    public string? MoneroNodeUrl 
+    { 
+        get; 
+        set 
+        { 
+            field = value?.Trim();
+
+            if (field is null)
+                return;
+
+            ValidateMoneroNodeUrlTimer?.Dispose();
+            ValidateMoneroNodeUrlTimer = new(async(e) => await ValidateUrl(field), null, 1000, Timeout.Infinite);
+        } 
+    }
+
     public string? MoneroNodeUsername { get; set { field = value?.Trim(); } }
 
     public string ConnectedMoneroNodeUrl { get; set; } = string.Empty;
+
+    public async Task ValidateUrl(string field)
+    {
+        try
+        {
+        // TODO update this to allow onion addresses
+        
+            if (field == string.Empty)
+            {
+                IsMoneroNodeUrlInvalidReason = null;
+                return;
+            }
+
+            var protocol = field.Split("http://");
+            if (protocol.Length < 2)
+            {
+                protocol = field.Split("https://");
+            }
+            if (protocol.Length < 2)
+            {
+                IsMoneroNodeUrlInvalidReason = "Please include http:// or https:// at the beginning of your URL.";
+                return;
+            }
+
+            var addressAndPort = protocol[1].Split(":");
+            if (addressAndPort.Length < 2)
+            {
+                IsMoneroNodeUrlInvalidReason = null;
+                return;
+            }
+
+            if (!IPAddress.TryParse(addressAndPort[0], out _))
+            {
+                //IsMoneroNodeUrlInvalidReason = "Please use an IP address or onion address and not a hostname.";
+                IsMoneroNodeUrlInvalidReason = "Please use an IP address and not a hostname.";
+                return;
+            }
+
+            if (!int.TryParse(addressAndPort[1], out _))
+            {
+                IsMoneroNodeUrlInvalidReason = "Please include a valid port number.";
+                return;
+            }
+
+            IsMoneroNodeUrlInvalidReason = null;
+        }
+        finally
+        {
+            await InvokeAsync(StateHasChanged);
+        }
+    }
 
     public async Task RestoreFromBackupAsync()
     {
@@ -208,7 +281,7 @@ public partial class Settings : ComponentBase, IDisposable
         GrpcChannelSingleton.CreateChannel(host, Password, new HttpClient(new GrpcWebHandler(GrpcWebMode.GrpcWeb, new AndroidSocks5Handler())));
 #endif
 
-        await HavenoDaemonService.StopHavenoDaemonAsync();
+        //await HavenoDaemonService.StopHavenoDaemonAsync();
 
         RemoteNodeConnectCts = new();
 

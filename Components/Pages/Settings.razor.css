@@ -50,6 +50,10 @@
   font-weight: 400;
 }
 
+.configure div {
+  margin-bottom: 10px;
+}
+
 .url {
   white-space: nowrap;
 }

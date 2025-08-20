@@ -26,12 +26,20 @@
 </Modal>
 <Modal Title="Configure Monero node" ModalButtonOptions="ModalButtonOptions.OK_CANCEL" @bind-IsOpen="ShowConnectToMoneroNodeModal" OnOkPressed="ConnectToMoneroNodeAsync" OkButtonText="Connect">
     <div class="configure">
-        <label>Url</label>
-        <input @bind="MoneroNodeUrl" />
-        <label>Username</label>
-        <input @bind="MoneroNodeUsername" />
-        <label>Password</label>
-        <input @bind="MoneroNodePassword" />
+        <div>
+            <label>Url</label>
+            <input @bind="MoneroNodeUrl" @bind:event="oninput" />
+            <p class="note">Example: http://192.168.0.1:18081</p>
+            <p class="note">@IsMoneroNodeUrlInvalidReason</p>
+        </div>
+        <div>
+            <label>Username</label>
+            <input @bind="MoneroNodeUsername" />
+        </div>
+        <div>
+            <label>Password</label>
+            <input @bind="MoneroNodePassword" />
+        </div>
     </div>
 </Modal>
 <div class="settings-main">
@@ -80,5 +88,5 @@
         <p class="note">Note: you need to have Orbot installed</p>
         <button @onclick="ConnectToRemoteNodeAsync">Connect to remote node</button>
     </div>
-    <Toggle OnToggledChanged="HandleRemoteNodeToggleAsync" @bind-IsToggled="IsRemoteNodeToggled" Text="Use remote node" />
+    <Toggle Disabled="true" OnToggledChanged="HandleRemoteNodeToggleAsync" @bind-IsToggled="IsRemoteNodeToggled" Text="Use remote node" />
 </div>
