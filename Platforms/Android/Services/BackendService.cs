@@ -209,8 +209,13 @@ public class BackendService : Service
 
             //var xmrNode = AppConstants.Network == "XMR_MAINNET" ? $"--xmrNode=http://{ip}:18081" : "";
 
+            //172.104.233.248
+            //172.233.40.189
+
             // For testing, using monero node found on monero.fail
-            var xmrNode = AppConstants.Network == "XMR_MAINNET" ? "--xmrNode=http://104.168.82.96:18081" : "--xmrNode=http://45.63.8.26:38081";
+            //var xmrNode = AppConstants.Network == "XMR_MAINNET" ? "--xmrNode=http://104.168.82.96:18081" : "--xmrNode=http://45.63.8.26:38081";
+            //var xmrNode = AppConstants.Network == "XMR_MAINNET" ? "--xmrNode=http://172.104.233.248:18081" : "--xmrNode=http://45.63.8.26:38081";
+            var xmrNode = AppConstants.Network == "XMR_MAINNET" ? "--xmrNode=http://38.105.209.54:18089" : "--xmrNode=http://45.63.8.26:38081";
 
 #if DEBUG
             var logLevel = "--logLevel=INFO";
