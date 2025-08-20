@@ -15,7 +15,7 @@
             foreach (var account in PaymentAccounts)
             {
                 <div class=@(account.CreationDate == SelectedPaymentAccount?.CreationDate ? "account active-account" : "account") @onclick="() => HandleAccountClick(account)">
-                    <p>@PaymentMethodsHelper.PaymentMethodsDictionary[account.PaymentMethod.Id]</p>
+                    <p>@account.AccountName</p>
                     <img src="icons/x.svg" @onclick:stopPropagation="true" @onclick:preventDefault="true" @onclick="() => { AccountToDelete = account.Id; ShowDeleteAccountModal = true; }" />
                 </div>
             }
@@ -54,7 +54,7 @@
             </div>
             <div class="field">
                 <label>Cryptocurrency address</label>
-                <InputText placeholder="" @bind-Value="CreateCryptoCurrencyPaymentAccountRequest.Address"></InputText>
+                <InputText placeholder="" @bind-Value="CreateCryptoCurrencyPaymentAccountRequest.Address" @bind-Value:after="HandleCryptoAddressChange"></InputText>
             </div>
             <div class="field">
                 <InfoRow Label="Limitations" Value="@($"Max {((ulong)MaxTradeLimit).ToMonero()} XMR / Max trade duration: {TimeHelper.FormatDuration(MaxTradePeriod)}")"></InfoRow>

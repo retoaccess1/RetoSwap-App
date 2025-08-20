@@ -257,6 +257,14 @@ public partial class Account : ComponentBase
         _editContext.NotifyValidationStateChanged();
     }
 
+    public void HandleCryptoAddressChange()
+    {
+        if (!CustomAccountNameEnabled && AccountNameField is not null && CreateCryptoCurrencyPaymentAccountRequest is not null)
+        {
+            CreateCryptoCurrencyPaymentAccountRequest.AccountName = $"{CreateCryptoCurrencyPaymentAccountRequest.CurrencyCode}: {CreateCryptoCurrencyPaymentAccountRequest?.Address}";
+        }
+    }
+
     public void HandleCurrencyChange()
     {
         if (CustomAccountNameEnabled)

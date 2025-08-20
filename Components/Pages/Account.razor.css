@@ -19,16 +19,23 @@ label {
 }
 .accounts .account {
   display: flex;
-  padding: 0 16px 0;
+  padding: 0 38px 0 16px;
   border: 1px solid #414141;
   border-radius: 40px;
   background-color: #121212;
   margin: 6px 0 6px;
   align-items: center;
   height: 40px;
+  white-space: nowrap;
+  position: relative;
+}
+.accounts .account p {
+  overflow-x: hidden;
+  text-overflow: ellipsis;
 }
 .accounts .account img {
-  margin-left: auto;
+  position: absolute;
+  right: 16px;
 }
 .accounts .active-account {
   background-color: #808080;
