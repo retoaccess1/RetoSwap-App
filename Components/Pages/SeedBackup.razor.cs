@@ -46,7 +46,7 @@ public partial class SeedBackup : ComponentBase
 
     public void HandleOnInput(string word, int i)
     {
-        RemovedSeedWords[i].Word = word;
+        RemovedSeedWords[i].Word = word.ToLower();
         RemovedSeedWords[i].IsCorrect = RemovedSeedWords[i].Word == SeedWords[i];
     }
 
