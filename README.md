@@ -21,7 +21,7 @@ There are two modes
 2. Remote node - https://github.com/atsamd21/Haveno-remote-node. This requires Orbot with "Power user mode" enabled in settings. Or other Tor SOCKS5 proxy on port 9050. Orbot can be installed either via the Play Store or github as an APK: https://github.com/guardianproject/orbot-android/releases.
 
 ## Network operators
-Follow the <a href="https://github.com/atsamd21/Haveno-app/CONFIGURATION.MD" target="_blank">instructions</a> on how to configure the app for your network.
+Follow the <a href="https://github.com/atsamd21/Haveno-app/blob/master/CONFIGURATION.MD" target="_blank">instructions</a> on how to configure the app for your network.
 
 ## Developers
 Run the project from <a href="https://visualstudio.microsoft.com/downloads/" target="_blank">Visual Studio 2022</a> community edition.
