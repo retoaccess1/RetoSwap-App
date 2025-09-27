@@ -57,14 +57,15 @@ jobs:
       - name: Change line endings to LF
         run: |
             $dirs = @(
-              "${{ inputs.project-folder }}\Platforms\Android\JniLibs\arm64-v8a",
-              "${{ inputs.project-folder }}\Platforms\Android\JniLibs\x86_64"
+                "${{ inputs.project-folder }}\Platforms\Android\JniLibs\arm64-v8a",
+                "${{ inputs.project-folder }}\Platforms\Android\JniLibs\x86_64"
             )
 
             foreach ($dir in $dirs) {
-              Get-ChildItem -Path $dir -Recurse -File | ForEach-Object {
-                (Get-Content $_.FullName -Raw) -replace "`r`n","`n" | Set-Content $_.FullName -NoNewline
-              }
+                $file = Join-Path $dir "libprootwrapper.so"
+                if (Test-Path $file) {
+                (Get-Content $file -Raw) -replace "`r`n","`n" | Set-Content $file -NoNewline
+                }
             }
         shell: pwsh
 
