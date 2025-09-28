@@ -77,3 +77,15 @@ jobs:
         with:
             name: android-apk
             path: ${{ inputs.project-folder }}/bin/${{ inputs.build-config }}/${{ inputs.dotnet-version-target }}-android/publish/*.apk
+        
+      - name: Rename APK
+        run: |
+            mv "${{ inputs.project-folder }}/bin/${{ inputs.build-config }}/${{ inputs.dotnet-version-target }}-android/publish/com.haveno-Signed.apk" "${{ inputs.project-folder }}/bin/${{ inputs.build-config }}/${{ inputs.dotnet-version-target }}-android/publish/haveno.apk"
+        shell: bash
+
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+        files: |
+            ${{ inputs.project-folder }}/bin/${{ inputs.build-config }}/${{ inputs.dotnet-version-target }}-android/publish/haveno.apk
