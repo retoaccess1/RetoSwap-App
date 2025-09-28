@@ -87,5 +87,5 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
         with:
-        files: |
-            ${{ inputs.project-folder }}/bin/${{ inputs.build-config }}/${{ inputs.dotnet-version-target }}-android/publish/haveno.apk
+            files: |
+                ${{ inputs.project-folder }}/bin/${{ inputs.build-config }}/${{ inputs.dotnet-version-target }}-android/publish/haveno.apk
