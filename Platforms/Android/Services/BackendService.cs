@@ -215,7 +215,13 @@ public class BackendService : Service
             // For testing, using monero node found on monero.fail
             //var xmrNode = AppConstants.Network == "XMR_MAINNET" ? "--xmrNode=http://104.168.82.96:18081" : "--xmrNode=http://45.63.8.26:38081";
             //var xmrNode = AppConstants.Network == "XMR_MAINNET" ? "--xmrNode=http://172.104.233.248:18081" : "--xmrNode=http://45.63.8.26:38081";
-            var xmrNode = AppConstants.Network == "XMR_MAINNET" ? "--xmrNode=http://38.105.209.54:18089" : "--xmrNode=http://45.63.8.26:38081";
+            //var xmrNode = AppConstants.Network == "XMR_MAINNET" ? "--xmrNode=http://38.105.209.54:18089" : "--xmrNode=http://45.63.8.26:38081";
+            var xmrNode = AppConstants.Network == "XMR_MAINNET" ? "--xmrNode=http://38.105.209.54:18089" : "--xmrNode=http://3.10.182.182:38081";
+
+            // STAGENET NODES
+            // TODO need more monero nodes, might need to parse daemon output to tell if there was a monerod connection error
+            //192.99.8.110
+            //3.10.182.182
 
 #if DEBUG
             var logLevel = "--logLevel=INFO";
