@@ -1,5 +1,6 @@
 ﻿@inject NavigationManager NavigationManager
 @inherits LayoutComponentBase
+@implements IDisposable
 
 <div class="page">
     @if (IsIndex)
@@ -22,16 +23,18 @@
 
 @code {
     private bool _keyboardIsOpen;
-    public bool IsIndex { get; set; } = true;
+    public bool IsIndex { get; set; }
 
     protected override void OnInitialized()
     {
         NavigationManager.LocationChanged += HandleLocationChanged;
         KeyboardService.KeyboardStateChanged += HandleKeyboardChanged;
 
-        #if ANDROID
+#if ANDROID
         MainActivity.OnNotificationNavigate += HandleNotificationNavigate;
-        #endif
+#endif
+
+        IsIndex = NavigationManager.ToBaseRelativePath(NavigationManager.Uri) == string.Empty;
     }
 
     private void HandleNotificationNavigate(string urlToOpen)
@@ -43,6 +46,16 @@
     {
         IsIndex = string.IsNullOrEmpty(e.Location.Replace(NavigationManager.BaseUri, ""));
         StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= HandleLocationChanged;
+        KeyboardService.KeyboardStateChanged -= HandleKeyboardChanged;
+
+        #if ANDROID
+        MainActivity.OnNotificationNavigate -= HandleNotificationNavigate;
+        #endif
     }
 
     private void HandleKeyboardChanged(bool isOpen)
