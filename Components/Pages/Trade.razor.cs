@@ -161,6 +161,7 @@ public partial class Trade : ComponentBase, IDisposable
                 BuyerState = 1;
                 break;
             case "DEPOSIT_TXS_UNLOCKED_IN_BLOCKCHAIN":
+            case "DEPOSIT_TXS_FINALIZED_IN_BLOCKCHAIN":
                 SellerState = 2;
                 BuyerState = 2;
                 break;

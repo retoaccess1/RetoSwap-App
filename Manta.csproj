@@ -162,7 +162,7 @@
     <PackageReference Include="CommunityToolkit.Maui" Version="12.2.0" />
     <PackageReference Include="Grpc.Net.Client" Version="2.71.0" />
     <PackageReference Include="Grpc.Net.Client.Web" Version="2.71.0" />
-    <PackageReference Include="HavenoSharp" Version="1.1.1" />
+    <PackageReference Include="HavenoSharp" Version="1.1.2" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.AutoActivation" Version="9.8.0" />
     <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.90" />
     <PackageReference Include="Microsoft.Maui.Controls.Compatibility" Version="9.0.90" />
