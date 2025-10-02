@@ -72,7 +72,7 @@
     <PublishTrimmed>False</PublishTrimmed>
     <JavaMaximumHeapSize>4G</JavaMaximumHeapSize>
   </PropertyGroup>
-
+  
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net9.0-android|AnyCPU'">
     <AndroidPackageFormat>apk</AndroidPackageFormat>
     <JavaMaximumHeapSize>4G</JavaMaximumHeapSize>
@@ -85,8 +85,8 @@
   <ItemGroup>
     
     <!-- CHANGE THESE -->
-    <MauiIcon Include="Resources\AppIcon\havenologo.png" ForegroundFile="Resources\AppIcon\havenologo.png" Color="#000000" />
-    <MauiSplashScreen Include="Resources\Splash\havenologo.svg" Color="#000000" BaseSize="512,256" />
+    <MauiIcon Include="Resources\AppIcon\appiconfg.svg" ForegroundFile="Resources\AppIcon\appicon.svg" Color="#FFFFFF" ForegroundScale="0.80" />
+    <MauiSplashScreen Include="Resources\Splash\splash.svg" Color="#000000" BaseSize="512,256" />
     <!-- CHANGE THESE -->
 
     <!-- Images -->
