@@ -1,17 +1,9 @@
 ﻿#### This guide assumes that you have already set up Haveno for your network.
 ***********************************************
 
-1.  Merge https://github.com/haveno-dex/haveno/commit/6c4f070b9309f38091c2f4d905f86b3a16e76e03.
+1.  Merge https://github.com/haveno-dex/haveno/commit/fc788c6f646fdfb6bf97493d0368101709867174.
 
-    Run "make daemon" from the Haveno directory. The build script uses the current OS so you will need to run this for each architecture - windows x86_64, linux x86_64 and linux aarch64. Rename each .jar file with the corresponding arch name:
-
-    daemon-windows.jar 
-
-    daemon-linux-x86_64.jar
-
-    daemon-linux-aarch64.jar
-
-    You will need to host these files somewhere - GitHub releases works well. Save the url, you will need it for the next step.
+    This will allow GitHub actions to automatically build the daemon when a tag is created.
 
 2. Fork the haveno-app repository and open the Manta.csproj file in a text editor.
 
@@ -22,8 +14,8 @@
     | DaemonUrl             | Set this to the url from the previous step
     | Network               | Change this to XMR_MAINNET
     | HavenoAppName         | Change this to haveno-[SOMETHING], this works the same as the app data directory on desktop
-    | MauiIcon              | This is the app icon, you will need to add your own icon to Resources/AppIcon and update the icon name
-    | MauiSplashScreen      | This is the splash screen image shown when the app starts, add your own to Resources/Splash
+    | MauiIcon              | This is the app icon, you will need to update the SVG icon in Resources/AppIcon, make sure it is named appicon.svg
+    | MauiSplashScreen      | This is the splash screen image shown when the app starts, update the SVG in Resources/Splash
 
 ***********************************************
 
