@@ -3,7 +3,7 @@
 
 1.  Merge https://github.com/haveno-dex/haveno/commit/fc788c6f646fdfb6bf97493d0368101709867174.
 
-    This will allow GitHub actions to automatically build the daemon when a tag is created.
+    This will allow GitHub actions to automatically build the daemon when a tag is created. 
 
 2. Fork the haveno-app repository and open the Manta.csproj file in a text editor.
 
@@ -11,7 +11,7 @@
     |-----------------------|---------------------------------------
     | ApplicationTitle      | App name shown to the user
     | ApplicationId         | Change this to com.[SOMETHING], this is the app id that Android uses and not shown to the user
-    | DaemonUrl             | Set this to the url from the previous step
+    | DaemonUrl             | Url of where the daemon.jar files are hosted. If you're using GitHub actions, use the url of the release that was created
     | Network               | Change this to XMR_MAINNET
     | HavenoAppName         | Change this to haveno-[SOMETHING], this works the same as the app data directory on desktop
     | MauiIcon              | This is the app icon, you will need to update the SVG icon in Resources/AppIcon, make sure it is named appicon.svg
