@@ -2,6 +2,10 @@
     position: relative;
 
     input {
+        text-overflow: ellipsis;
+        overflow-x: hidden;
+        padding-right: 40px;
+        white-space: nowrap;
     }
 
     .text {
@@ -50,12 +54,11 @@
         .item-li {
             padding: 5px 0 5px;
 
-/*            &:last-child {
-                padding-bottom: 0;
-            }
-
             p {
-            }*/
+                text-overflow: ellipsis;
+                overflow-x: hidden;
+                white-space: nowrap;
+            }
         }
     }
 }
