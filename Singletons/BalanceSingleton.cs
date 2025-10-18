@@ -21,6 +21,31 @@ public class BalanceSingleton
         Task.Run(PollBalance);
     }
 
+    // string fixedPrice is stupid, make sure this is converted to a decimal in library
+    public decimal GetFixedPricePercentage(string currencyCode, string fixedPrice, string direction)
+    {
+        if (!decimal.TryParse(fixedPrice, out var decimalFixedPrice))
+        {
+            return 0m;
+        }
+
+        try
+        {
+            if (direction == "BUY")
+            {
+                return 100 - (decimalFixedPrice * 100 / MarketPriceInfoDictionary[currencyCode]);
+            }
+            else
+            {
+                return (decimalFixedPrice * 100 / MarketPriceInfoDictionary[currencyCode]) - 100;
+            }
+        }
+        catch
+        {
+            return 0m;
+        }
+    }
+
     public decimal ConvertMoneroToFiat(decimal moneroAmount, string currencyCode)
     {
         try
