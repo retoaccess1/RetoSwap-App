@@ -84,12 +84,6 @@
                                         <img src="icons/arrow-right.svg" />
                                         @(Direction == "SELL" ? offer.CounterCurrencyCode : offer.BaseCurrencyCode)                                        
                                     }
-     @*                                else 
-                                    {
-                                        @(Direction == "SELL" ? "XMR" : offer.BaseCurrencyCode)
-                                        <img src="icons/arrow-right.svg" />
-                                        @(Direction == "SELL" ? offer.BaseCurrencyCode : "XMR")
-                                    } *@
                                     |
                                     @(Math.Round(double.Parse(offer.Price, CultureInfo.InvariantCulture), (offer.PaymentMethodId == "BLOCK_CHAINS" ? 8 : 2)))
                                     @offer.CounterCurrencyCode
@@ -138,7 +132,6 @@
                                     <p>Deposit XMR: @Math.Round(offer.GetTakerDepositAmount().ToMonero(), 6) (@Math.Round(offer.GetTakerDepositPercent() * 100f)%)</p>
                                 }
                             </div>
-                            <p>Min/max: @(offer.Amount == offer.MinAmount ? $"{offer.Amount.ToMonero()} XMR" : $"{offer.MinAmount.ToMonero()} - {offer.Amount.ToMonero()} XMR")</p>
                         </a>
                     </li>
                 }
