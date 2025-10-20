@@ -7,7 +7,7 @@
         <p>Fee: @(ulong.Parse(Transaction?.Fee ?? "0", CultureInfo.InvariantCulture).ToMonero()) XMR</p>
     </div>
 </Modal>
-<Modal @bind-IsOpen="@CreatingTxModalIsOpen" Title="Creating transaction" OnOkPressed="WithdrawAsync">
+<Modal @bind-IsOpen="@CreatingTxModalIsOpen" Title="Creating transaction" ModalButtonOptions="ModalButtonOptions.NONE" IsCloseable="false">
     <Spinner IsFullscreen="false"></Spinner>
     <p class="regular-p-grey">Please wait</p>
 </Modal>
