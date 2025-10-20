@@ -1,6 +1,6 @@
 ﻿@page "/trades/{id}/trade"
 
-<Modal IsOpen="IsFetching" Title="Loading" ModalButtonOptions="ModalButtonOptions.NONE">
+<Modal @bind-IsOpen="IsFetching" Title="Loading" ModalButtonOptions="ModalButtonOptions.NONE">
     <p class="regular-p-grey">Please wait</p>
 </Modal>
 
