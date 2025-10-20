@@ -14,7 +14,7 @@ public static class Preferences
     public const string ShowNoDepositOffers = "show-no-deposit-offers";
     public const string IsToggled = "is-toggled";
     public const string OfferPaymentType = "offer-payment-type";
-    public const string UseCustomXmrNode = "use-custom-xmr-node";
+    public const string CustomXmrNode = "custom-xmr-node";
 
 #if ANDROID
     public static void Set<T>(string key, T? data)

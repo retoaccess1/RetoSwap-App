@@ -4,6 +4,7 @@ using Android.OS;
 using Android.Runtime;
 using AndroidX.Core.App;
 using Manta.Models;
+using System.Net.Sockets;
 using System.Text;
 
 namespace Manta.Services;
@@ -58,13 +59,13 @@ public class BackendService : Service
         {
             _notificationManager = (NotificationManager?)GetSystemService(Context.NotificationService);
             _notificationBuilder = new NotificationCompat.Builder(this, _notificationChannelId)
-                .SetSmallIcon(Resource.Drawable.small_icon)
-                .SetContentIntent(pendingIntent)
-                .SetPriority(NotificationCompat.PriorityMin)
-                .SetVisibility(NotificationCompat.VisibilitySecret)
-                .SetCategory(Notification.CategoryService)
-                .SetShowWhen(false)
-                .SetSilent(true)
+                .SetSmallIcon(Resource.Drawable.small_icon)?
+                .SetContentIntent(pendingIntent)?
+                .SetPriority(NotificationCompat.PriorityMin)?
+                .SetVisibility(NotificationCompat.VisibilitySecret)?
+                .SetCategory(Notification.CategoryService)?
+                .SetShowWhen(false)?
+                .SetSilent(true)?
                 .SetOngoing(true);
         }
 
@@ -137,57 +138,57 @@ public class BackendService : Service
         var havenoDaemonService = serviceProvider.GetRequiredService<IHavenoDaemonService>();
         var daemonPath = havenoDaemonService.GetDaemonPath();
 
-        // Tor does not always connect successfully, need to timeout and give the user the option to restart
-        _ = Task.Factory.StartNew(() =>
-        {
-            _torCts = new();
-            using var streamReader = Proot.RunProotUbuntuCommand("tor", _torCts.Token);
+//        // Tor does not always connect successfully, need to timeout and give the user the option to restart
+//        _ = Task.Factory.StartNew(() =>
+//        {
+//            _torCts = new();
+//            using var streamReader = Proot.RunProotUbuntuCommand("tor", _torCts.Token);
 
-            string? line;
-            while ((line = streamReader.ReadLine()) is not null)
-            {
-#if DEBUG
-                Console.WriteLine(line);
-#endif
-                int lastPercentage = 0;
+//            string? line;
+//            while ((line = streamReader.ReadLine()) is not null)
+//            {
+//#if DEBUG
+//                Console.WriteLine(line);
+//#endif
+//                int lastPercentage = 0;
 
-                for (int i = 0; i < line.Length; i++)
-                {
-                    if (line[i] == '%')
-                    {
-                        StringBuilder stringBuilder = new();
-                        for (int j = i - 1; j > 0; j--)
-                        {
-                            if (line[j] > '9' || line[j] < '0')
-                                break;
+//                for (int i = 0; i < line.Length; i++)
+//                {
+//                    if (line[i] == '%')
+//                    {
+//                        StringBuilder stringBuilder = new();
+//                        for (int j = i - 1; j > 0; j--)
+//                        {
+//                            if (line[j] > '9' || line[j] < '0')
+//                                break;
 
-                            stringBuilder.Append(line[j]);
-                        }
+//                            stringBuilder.Append(line[j]);
+//                        }
 
-                        if (stringBuilder.Length > 0)
-                        {
-                            var percentage = int.Parse(stringBuilder.ToString().Reverse().ToArray());
+//                        if (stringBuilder.Length > 0)
+//                        {
+//                            var percentage = int.Parse(stringBuilder.ToString().Reverse().ToArray());
 
-                            if (percentage > lastPercentage)
-                            {
-                                lastPercentage = percentage;
+//                            if (percentage > lastPercentage)
+//                            {
+//                                lastPercentage = percentage;
 
-                                UpdateProgress($"Tor bootstrapping: {percentage}%");
+//                                UpdateProgress($"Tor bootstrapping: {percentage}%");
 
-                                if (percentage == 100)
-                                {
-                                    _torReadyTCS.SetResult();
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }, TaskCreationOptions.LongRunning);
+//                                if (percentage == 100)
+//                                {
+//                                    _torReadyTCS.SetResult();
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }, TaskCreationOptions.LongRunning);
 
         _ = Task.Factory.StartNew(async () =>
         {
-            await _torReadyTCS.Task;
+            //await _torReadyTCS.Task;
 
             UpdateProgress("Starting daemon");
 
@@ -195,22 +196,47 @@ public class BackendService : Service
 
             Proot.AppHome = daemonPath;
 
-            string xmrNode;
+            // Fallback to default nodes i guess
+            string xmrNode = string.Empty;
+            List<string> xmrNodes = AppConstants.Network == "XMR_MAINNET" ? ["http://95.217.143.178:18081", "http://78.47.80.55:18081", "http://88.198.199.23:18081", "http://70.29.255.7:18081", "http://70.29.255.7:18089"] : ["http://3.10.182.182:38081", "http://23.137.57.100:38089", "http://192.99.8.110:38089", "http://37.187.74.171:38089", "http://88.99.195.15:38089"];
 
-            if (Helpers.Preferences.Get<bool>(Helpers.Preferences.UseCustomXmrNode))
+            if (!string.IsNullOrEmpty(Helpers.Preferences.Get<string>(Helpers.Preferences.CustomXmrNode)))
             {
-                xmrNode = string.Empty;
+                xmrNode = $"--xmrNode={Helpers.Preferences.Get<string>(Helpers.Preferences.CustomXmrNode)}";
             }
             else
             {
-                //xmrNode = AppConstants.Network == "XMR_MAINNET" ? "--xmrNode=http://38.105.209.54:18089" : "--xmrNode=http://45.63.8.26:38081";
-                // 95.217.143.178 = rucknium.me
-                xmrNode = AppConstants.Network == "XMR_MAINNET" ? "--xmrNode=http://95.217.143.178:18081" : "--xmrNode=http://3.10.182.182:38081";
+                // Really we just need to fix the domain name issue and figure out why even though --xmrNodes is specified it still tries to sync with Haveno's default nodes
+                // Might be due to which node was last successfully synced but either way something is overriding the cli argument
+                using var tcpClient = new TcpClient();
 
-                // STAGENET NODES
-                // TODO need more monero nodes, might need to parse daemon output to tell if there was a monerod connection error
-                //192.99.8.110
-                //3.10.182.182
+                string? node = null;
+                var random = new Random();
+
+                while (xmrNodes.Count > 0)
+                {
+                    node = xmrNodes[random.Next(xmrNodes.Count)];
+
+                    try
+                    {
+                        var split = node.Split(':');
+                        tcpClient.ConnectAsync(split[1].Remove(0, 2), int.Parse(split[2])).Wait(TimeSpan.FromSeconds(2));
+
+                        if (!tcpClient.Connected)
+                        {
+                            throw new Exception();
+                        }
+
+                        xmrNode = $"--xmrNode={node}";
+
+                        break;
+            }
+                    catch (Exception)
+                    {
+                        xmrNodes.Remove(node);
+                        continue;
+                    }
+                }
             }
 
 #if DEBUG
@@ -223,6 +249,7 @@ public class BackendService : Service
 
             // For some reason hostnames are bugged so have to specify monero node with ip address
             using var streamReader = Proot.RunProotUbuntuCommand("java", _daemonCts.Token, "-Xmx2G", "-jar", $"{Path.Combine(daemonPath, "daemon.jar")}", xmrNode, "--walletRpcBindPort=4000", logLevel, "--maxMemory=1200", "--disableRateLimits=true", $"--baseCurrencyNetwork={AppConstants.Network}", "--ignoreLocalXmrNode=true", "--useDevPrivilegeKeys=false", "--nodePort=9999", $"--appName={AppConstants.HavenoAppName}", $"--apiPassword={password}", "--apiPort=3201", "--passwordRequired=false", "--useNativeXmrWallet=false", "--torControlHost=127.0.0.1", "--torControlPort=9061");
+            using var streamReader = Proot.RunProotUbuntuCommand("java", _daemonCts.Token, "-Xmx2G", "-jar", $"{Path.Combine(daemonPath, "daemon.jar")}", xmrNode, logLevel, "--maxMemory=1200", "--disableRateLimits=true", $"--baseCurrencyNetwork={AppConstants.Network}", "--ignoreLocalXmrNode=true", "--useDevPrivilegeKeys=false", "--nodePort=9999", $"--appName={AppConstants.HavenoAppName}", $"--apiPassword={password}", "--apiPort=3201", "--passwordRequired=false", "--useNativeXmrWallet=false");
 
             string? line;
             while ((line = streamReader.ReadLine()) is not null)
