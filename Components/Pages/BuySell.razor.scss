@@ -148,7 +148,7 @@
             .card {
                 display: flex;
                 align-items: center;
-                background-color: darkgray;
+                /*background-color: darkgray;*/
                 width: fit-content;
                 padding: 2px 4px 2px;
                 border-radius: 4px;
@@ -161,7 +161,10 @@
             margin-top: 10px;
 
             p {
-                margin-bottom: 12px;
+
+                &:first-child {
+                    margin-right: 6px;
+                }
             }
         }
     }
@@ -176,7 +179,7 @@
     padding: 10px 0 10px;
 }
 
-.no-deposit {
+.no-deposit-toggle {
     display: flex;
     align-items: center;
     margin-bottom: 6px;
@@ -188,4 +191,16 @@
 
 .dropdown-collapsed {
     
+}
+
+.deposit-container {
+    display: flex;
+    align-items: center;
+    margin-top: 8px;
+
+    .no-deposit-img {
+        filter: invert(1);
+        height: 14px;
+        margin-right: 6px;
+    }
 }

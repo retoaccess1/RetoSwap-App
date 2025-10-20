@@ -128,7 +128,7 @@
 .offers .offer .offer-link .card {
   display: flex;
   align-items: center;
-  background-color: darkgray;
+  /*background-color: darkgray;*/
   width: fit-content;
   padding: 2px 4px 2px;
   border-radius: 4px;
@@ -138,8 +138,8 @@
 .offers .offer .amounts {
   margin-top: 10px;
 }
-.offers .offer .amounts p {
-  margin-bottom: 12px;
+.offers .offer .amounts p:first-child {
+  margin-right: 6px;
 }
 
 .create-offer-button {
@@ -151,11 +151,22 @@
   padding: 10px 0 10px;
 }
 
-.no-deposit {
+.no-deposit-toggle {
   display: flex;
   align-items: center;
   margin-bottom: 6px;
 }
-.no-deposit label {
+.no-deposit-toggle label {
   margin-left: 10px;
+}
+
+.deposit-container {
+  display: flex;
+  align-items: center;
+  margin-top: 8px;
+}
+.deposit-container .no-deposit-img {
+  filter: invert(1);
+  height: 14px;
+  margin-right: 6px;
 }

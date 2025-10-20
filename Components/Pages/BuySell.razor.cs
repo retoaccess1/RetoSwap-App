@@ -125,10 +125,10 @@ public partial class BuySell : ComponentBase, IDisposable
         {
             field = value;
 
-            if (value == "SELL" && ShowNoDepositOffers)
-            {
-                ShowNoDepositOffers = false;
-            }
+            //if (value == "SELL" && ShowNoDepositOffers)
+            //{
+            //    ShowNoDepositOffers = false;
+            //}
         } 
     } = "BUY";
 
@@ -249,7 +249,7 @@ public partial class BuySell : ComponentBase, IDisposable
         IsToggled = Helpers.Preferences.Get<bool?>(Helpers.Preferences.IsToggled) ?? false;
         SelectedCurrencyCode = Helpers.Preferences.Get<string?>(Helpers.Preferences.SelectedCurrencyCode) ?? string.Empty;
         SelectedPaymentMethod = Helpers.Preferences.Get<string?>(Helpers.Preferences.SelectedPaymentMethod) ?? string.Empty;
-        ShowNoDepositOffers = Helpers.Preferences.Get<bool?>(Helpers.Preferences.ShowNoDepositOffers) ?? true;
+        ShowNoDepositOffers = true;
 
         await base.OnInitializedAsync();
     }

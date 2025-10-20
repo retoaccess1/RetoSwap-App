@@ -45,8 +45,8 @@
                 </div>
                 @if (Direction == "BUY")
                 {
-                    <div class="no-deposit">
-                        <Toggle @bind-IsToggled="ShowNoDepositOffers" Text="Show no deposit offers" />
+                    <div class="no-deposit-toggle">
+                        <Toggle Disabled="true" @bind-IsToggled="ShowNoDepositOffers" Text="Show no deposit offers" />
                     </div>
                 }
             </div>
@@ -118,24 +118,24 @@
                                     {
                                         if (minVolume == volume)
                                         {
-                                            <p>Min/max: @(Math.Round(volume, (offer.PaymentMethodId == "BLOCK_CHAINS" ? 8 : 2)) + " ") @offer.CounterCurrencyCode</p>
+                                            <p>Min/max: @(Math.Round(volume, (offer.PaymentMethodId == "BLOCK_CHAINS" ? 8 : 2)) + " ") @offer.CounterCurrencyCode / @(offer.Amount == offer.MinAmount ? $"{offer.Amount.ToMonero()} XMR" : $"{offer.MinAmount.ToMonero()} - {offer.Amount.ToMonero()} XMR")</p>
                                         }
                                         else
                                         {
-                                            <p>Min/max: @($"{Math.Round(minVolume, (offer.PaymentMethodId == "BLOCK_CHAINS" ? 8 : 2))} - {Math.Round(volume, (offer.PaymentMethodId == "BLOCK_CHAINS" ? 8 : 2))} ") @offer.CounterCurrencyCode</p>
+                                            <p>Min/max: @($"{Math.Round(minVolume, (offer.PaymentMethodId == "BLOCK_CHAINS" ? 8 : 2))} - {Math.Round(volume, (offer.PaymentMethodId == "BLOCK_CHAINS" ? 8 : 2))} ") @offer.CounterCurrencyCode / @(offer.Amount == offer.MinAmount ? $"{offer.Amount.ToMonero()} XMR" : $"{offer.MinAmount.ToMonero()} - {offer.Amount.ToMonero()} XMR")</p>
+                                        }
                                         }
                                     }
-                                    // else
-                                    // {
-                                    //     if (minVolume == volume)
-                                    //     {
-                                    //         <p>Min/max: @(Math.Round(volume, 8) + " ") @offer.BaseCurrencyCode</p>
-                                    //     }
-                                    //     else
-                                    //     {
-                                    //         <p>Min/max: @($"{Math.Round(minVolume, 8)} - {Math.Round(volume, 8)} ") @offer.BaseCurrencyCode</p>
-                                    //     }
-                                    // }
+                            </div>
+                            <div class="deposit-container">
+                                @if (offer.BuyerSecurityDepositPct == 0)
+                                {
+                                    <img class="no-deposit-img" src="icons/coin-slash.svg" />
+                                    <p>No deposit offer</p>
+                                }
+                                else
+                                {
+                                    <p>Deposit XMR: @Math.Round(offer.GetTakerDepositAmount().ToMonero(), 6) (@Math.Round(offer.GetTakerDepositPercent() * 100f)%)</p>
                                 }
                             </div>
                             <p>Min/max: @(offer.Amount == offer.MinAmount ? $"{offer.Amount.ToMonero()} XMR" : $"{offer.MinAmount.ToMonero()} - {offer.Amount.ToMonero()} XMR")</p>
