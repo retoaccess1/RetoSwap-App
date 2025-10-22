@@ -49,7 +49,15 @@ public partial class Offer : ComponentBase, IDisposable
             }
             else
             {
-                field = value; 
+                if (OfferInfo.PaymentMethodId != "BLOCK_CHAINS")
+                {
+                    var roundedFiatAmount = Math.Round(decimal.Parse(OfferInfo.Price) * value);
+                    field = Math.Round(roundedFiatAmount / decimal.Parse(OfferInfo.Price), 4);
+                }
+                else
+                {
+                    field = value;
+                }
             }
 
             _piconeroAmount = field.ToPiconero();
@@ -91,8 +99,15 @@ public partial class Offer : ComponentBase, IDisposable
     {
         get; 
         set
-        { 
-            field = Math.Round(value, (OfferInfo?.PaymentMethodId == "BLOCK_CHAINS" ? 8 : 2)); 
+        {
+            if (OfferInfo?.PaymentMethodId == "BLOCK_CHAINS")
+            {
+                field = Math.Round(value, 8); 
+            }
+            else
+            {
+                field = Math.Round(value);
+            }
         } 
     }
 
@@ -157,8 +172,16 @@ public partial class Offer : ComponentBase, IDisposable
             PaymentAccounts = sameTypePaymentAccounts.ToDictionary(x => x.Id, x => x.AccountName);
 
             AvailableBalance = BalanceSingleton.WalletInfo?.AvailableXMRBalance ?? 0;
-            CounterCurrencyAmount = decimal.Parse(OfferInfo.Price, CultureInfo.InvariantCulture) * MoneroAmount;
-            MoneroAmount = OfferInfo.Amount.ToMonero();
+
+            if (OfferInfo.PaymentMethodId != "BLOCK_CHAINS")
+            {
+                var roundedFiatAmount = Math.Round(decimal.Parse(OfferInfo.Price) * OfferInfo.Amount.ToMonero());
+                MoneroAmount = Math.Round(roundedFiatAmount / decimal.Parse(OfferInfo.Price), 4);
+            }
+            else
+            {
+                MoneroAmount = OfferInfo.Amount.ToMonero();
+            }
 
             BalanceSingleton.OnBalanceFetch += HandleBalanceFetch;
         }
