@@ -15,7 +15,7 @@ namespace Manta.Components.Pages;
 
 public partial class Settings : ComponentBase, IDisposable
 {
-    public bool XMRNodeIsRunning { get; private set; }
+    public bool IsXmrNodeOnline { get; private set; }
 
     public string Version { get; } = AppInfo.Current.VersionString;
     public string Build { get; } = AppInfo.Current.BuildString;
@@ -376,7 +376,7 @@ public partial class Settings : ComponentBase, IDisposable
     private async void HandleDaemonInfoFetch(bool isFetching)
     {
         await InvokeAsync(() => {
-            XMRNodeIsRunning = DaemonInfoSingleton.XMRNodeIsRunning;
+            IsXmrNodeOnline = DaemonInfoSingleton.IsXmrNodeOnline;
             ConnectedMoneroNodeUrl = DaemonInfoSingleton.ConnectedMoneroNodeUrl;
             StateHasChanged();
         });
@@ -420,7 +420,7 @@ public partial class Settings : ComponentBase, IDisposable
 
         HavenoVersion = DaemonConnectionSingleton.Version;
         IsConnected = DaemonConnectionSingleton.IsConnected;
-        XMRNodeIsRunning = DaemonInfoSingleton.XMRNodeIsRunning;
+        IsXmrNodeOnline = DaemonInfoSingleton.IsXmrNodeOnline;
         ConnectedMoneroNodeUrl = DaemonInfoSingleton.ConnectedMoneroNodeUrl;
 
         DaemonInfoSingleton.OnDaemonInfoFetch += HandleDaemonInfoFetch;

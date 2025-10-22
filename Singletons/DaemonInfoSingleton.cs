@@ -7,7 +7,7 @@ public class DaemonInfoSingleton
 {
     private readonly IServiceProvider _serviceProvider;
 
-    public bool XMRNodeIsRunning { get; private set; }
+    public bool IsXmrNodeOnline { get; private set; }
     public string ConnectedMoneroNodeUrl { get; private set; } = string.Empty;
 
     public event Action<bool>? OnDaemonInfoFetch;
@@ -31,7 +31,7 @@ public class DaemonInfoSingleton
                 using var scope = _serviceProvider.CreateScope();
                 var xmrNodeService = _serviceProvider.GetRequiredService<IHavenoXmrNodeService>();
 
-                XMRNodeIsRunning = await xmrNodeService.IsXmrNodeOnlineAsync();
+                IsXmrNodeOnline = await xmrNodeService.IsXmrNodeOnlineAsync();
 
                 var response = await xmrNodeService.GetMoneroNodeAsync();
                 ConnectedMoneroNodeUrl = response.Url;
