@@ -23,7 +23,7 @@
 
 3. Open the AppConstants.cs file in a text editor and change the ApplicationId string so that it matches the one in Manta.csproj
 
-4. TODO - remote Haveno node
+4. Configure remote Haveno node - https://github.com/atsamd21/Haveno-remote-node
 
 #### Updating the app
 
