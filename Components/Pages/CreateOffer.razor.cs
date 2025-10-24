@@ -30,17 +30,17 @@ public partial class CreateOffer : ComponentBase, IDisposable
     public BalanceSingleton BalanceSingleton { get; set; } = default!;
 
     [Parameter]
-    public string Direction 
-    { 
-        get; 
-        set 
+    public string Direction
+    {
+        get;
+        set
         {
             if (field == value)
                 return;
 
             field = value;
             Clear();
-        } 
+        }
     } = string.Empty;
 
     [Parameter]
@@ -50,11 +50,11 @@ public partial class CreateOffer : ComponentBase, IDisposable
 
     // Repeat
     public Dictionary<string, string> CurrencyCodes { get; set; } = [];
-    public string SelectedPaymentAccountId 
-    { 
-        get; 
-        set 
-        { 
+    public string SelectedPaymentAccountId
+    {
+        get;
+        set
+        {
             field = value;
 
             if (!string.IsNullOrEmpty(value))
@@ -76,7 +76,7 @@ public partial class CreateOffer : ComponentBase, IDisposable
             Clear();
 
             StateHasChanged();
-        } 
+        }
     } = string.Empty;
 
     public List<PaymentAccount> ProtoPaymentAccounts { get; set; } = [];
@@ -93,7 +93,7 @@ public partial class CreateOffer : ComponentBase, IDisposable
         set
         {
             field = value;
-            
+
             IsFiat = Enum.TryParse(typeof(Currency), field, out _);
 
             if (NoMarketPrice = !BalanceSingleton.MarketPriceInfoDictionary.TryGetValue(field, out var _))
@@ -111,10 +111,10 @@ public partial class CreateOffer : ComponentBase, IDisposable
 
     // Currently does not respect trade limits, TODO
     public decimal MaxTradeLimit { get; set; }
-    public decimal MoneroAmount 
-    { 
-        get; 
-        set 
+    public decimal MoneroAmount
+    {
+        get;
+        set
         {
             field = value;
 
@@ -165,7 +165,7 @@ public partial class CreateOffer : ComponentBase, IDisposable
             {
                 TradeFeeFiat = Math.Round(TradeFee.ToMonero() * priceForOneXMR, Enum.TryParse(typeof(Helpers.CryptoCurrency), SelectedCurrencyCode, out _) ? 8 : 2);
             }
-        } 
+        }
     }
     public decimal MinimumMoneroAmount { get; set; }
     public decimal MarketPriceMarginPct { get; set; }
@@ -174,8 +174,8 @@ public partial class CreateOffer : ComponentBase, IDisposable
     public bool UseFixedPrice { get; set; }
     public decimal TriggerAmount { get; set; }
     public decimal SecurityDepositPct { get; set; } = 15m;
-    public bool BuyerAsTakerWithoutDeposit 
-    { 
+    public bool BuyerAsTakerWithoutDeposit
+    {
         get;
         set
         {
@@ -261,7 +261,8 @@ public partial class CreateOffer : ComponentBase, IDisposable
 
                         if (IsFiat)
                             FixedPrice = adjustedPrices.AdjustedMktPrice;
-                        else {
+                        else
+                        {
                             FixedPrice = adjustedPrices.AdjustedMktPrice;
                             FiatPrice = Math.Round(FixedPrice * MoneroAmount, 8);
                         }
@@ -296,7 +297,8 @@ public partial class CreateOffer : ComponentBase, IDisposable
                         {
                             if (IsFiat)
                                 FixedPrice = adjustedPrices.AdjustedMktPrice;
-                            else {
+                            else
+                            {
                                 FixedPrice = adjustedPrices.AdjustedMktPrice;
                                 FiatPrice = Math.Round(FixedPrice * MoneroAmount, 8);
                             }
@@ -321,7 +323,14 @@ public partial class CreateOffer : ComponentBase, IDisposable
                     {
                         var percent = value / priceForOneXMR;
 
-                        MarketPriceMarginPct = Math.Round(percent - 1m, 4) * 100m;
+                        if (Direction == "BUY")
+                        {
+                            MarketPriceMarginPct = -(Math.Round(percent - 1m, 4) * 100m);
+                        }
+                        else
+                        {
+                            MarketPriceMarginPct = Math.Round(percent - 1m, 4) * 100m;
+                        }
 
                         if (IsFiat)
                         {
@@ -487,7 +496,7 @@ public partial class CreateOffer : ComponentBase, IDisposable
         var paymentAccounts = await PaymentAccountService.GetPaymentAccountsAsync();
         PaymentAccounts = paymentAccounts.ToDictionary(x => x.Id, x => x.AccountName);
         ProtoPaymentAccounts = [.. paymentAccounts];
-        
+
         if (ProtoPaymentAccounts.Count != 0)
         {
             SelectedPaymentAccountId = PaymentAccounts.Select(x => x.Key).FirstOrDefault() ?? string.Empty;
@@ -543,7 +552,7 @@ public partial class CreateOffer : ComponentBase, IDisposable
                 {
                     request.MarketPriceMarginPct = 0;
                 }
-                else 
+                else
                 {
                     request.MarketPriceMarginPct = (double)MarketPriceMarginPct;
                 }
