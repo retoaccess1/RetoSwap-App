@@ -31,12 +31,17 @@ public class NotificationSingleton
             case NotificationType.ChatMessage:
                 {
                     OnChatMessage?.Invoke(notificationMessage.ChatMessage);
-                    // Dispute chats?
-                    // $"trades/{TradeInfo.TradeId}/chat?disputeTradeId={TradeInfo.TradeId}&title=Trade%20{TradeInfo.ShortId}%20chat&arbitrator={TradeInfo.ArbitratorNodeAddress.Split(".")[0]}&tradePeer={TradeInfo.TradePeerNodeAddress.Split(".")[0]}&myAddress={TradeInfo.Offer.OwnerNodeAddress.Split(".")[0]}"
 
                     if (TradeInfos.TryGetValue(notificationMessage.ChatMessage.TradeId, out var tradeInfo))
                     {
-                        _notificationManagerService.SendNotification($"New message for trade {new string(notificationMessage.ChatMessage.TradeId.Split('-')[0].ToArray())}", notificationMessage.ChatMessage.Message, $"trades/{tradeInfo.TradeId}/chat?tradeId={tradeInfo.TradeId}&title=Trade%20{tradeInfo.ShortId}%20chat&arbitrator={tradeInfo.ArbitratorNodeAddress.Split(".")[0]}&tradePeer={tradeInfo.TradePeerNodeAddress.Split(".")[0]}&myAddress={tradeInfo.Offer.OwnerNodeAddress.Split(".")[0]}");
+                        if (notificationMessage.ChatMessage.Type == SupportType.Arbitration)
+                        {
+                            _notificationManagerService.SendNotification($"New message for trade {new string(notificationMessage.ChatMessage.TradeId.Split('-')[0].ToArray())}", notificationMessage.ChatMessage.Message, $"trades/{tradeInfo.TradeId}/chat?disputeTradeId={tradeInfo.TradeId}&title=Trade%20{tradeInfo.ShortId}%20dispute%20chat&arbitrator={tradeInfo.ArbitratorNodeAddress.Split(".")[0]}&tradePeer={tradeInfo.TradePeerNodeAddress.Split(".")[0]}&myAddress={tradeInfo.Offer.OwnerNodeAddress.Split(".")[0]}");
+                        }
+                        else
+                        {
+                            _notificationManagerService.SendNotification($"New message for trade {new string(notificationMessage.ChatMessage.TradeId.Split('-')[0].ToArray())}", notificationMessage.ChatMessage.Message, $"trades/{tradeInfo.TradeId}/chat?tradeId={tradeInfo.TradeId}&title=Trade%20{tradeInfo.ShortId}%20chat&arbitrator={tradeInfo.ArbitratorNodeAddress.Split(".")[0]}&tradePeer={tradeInfo.TradePeerNodeAddress.Split(".")[0]}&myAddress={tradeInfo.Offer.OwnerNodeAddress.Split(".")[0]}");
+                        }
                     }
                     else
                     {
