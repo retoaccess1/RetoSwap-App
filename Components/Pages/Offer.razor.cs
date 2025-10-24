@@ -67,8 +67,8 @@ public partial class Offer : ComponentBase, IDisposable
                 if (OfferInfo.Direction == "BUY")
                 {
                     ulong transactionFee = 0;
-                    ulong takerFee = (ulong)(OfferInfo.Amount * OfferInfo.TakerFeePct);
-                    ulong depositAmount = (ulong)(OfferInfo.Amount * OfferInfo.SellerSecurityDepositPct);
+                    ulong takerFee = (ulong)(_piconeroAmount * OfferInfo.TakerFeePct);
+                    ulong depositAmount = (ulong)(_piconeroAmount * OfferInfo.SellerSecurityDepositPct);
                     if (depositAmount < 100_000_000_000)
                     {
                         depositAmount = 100_000_000_000;
@@ -79,8 +79,8 @@ public partial class Offer : ComponentBase, IDisposable
                 else
                 {
                     ulong transactionFee = 0;
-                    ulong takerFee = (ulong)(OfferInfo.Amount * OfferInfo.TakerFeePct);
-                    ulong depositAmount = (ulong)(OfferInfo.Amount * OfferInfo.BuyerSecurityDepositPct);
+                    ulong takerFee = (ulong)(_piconeroAmount * OfferInfo.TakerFeePct);
+                    ulong depositAmount = (ulong)(_piconeroAmount * OfferInfo.BuyerSecurityDepositPct);
                     if (depositAmount < 100_000_000_000)
                     {
                         depositAmount = 100_000_000_000;
@@ -182,7 +182,7 @@ public partial class Offer : ComponentBase, IDisposable
             {
                 MoneroAmount = OfferInfo.Amount.ToMonero();
             }
-
+            
             BalanceSingleton.OnBalanceFetch += HandleBalanceFetch;
         }
         catch
