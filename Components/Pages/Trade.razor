@@ -106,6 +106,14 @@
             {
                 case 3:
                     <div class="slider-wrapper">
+                        <div class="payment-instructions">
+                            <p class="bold-p start-payment">Confirm payment receipt</p>
+
+                            <InfoRow Label="Amount to receive" Value="@(TradeInfo.TradeVolume + " " + (IsFiat ? TradeInfo.Offer.CounterCurrencyCode : TradeInfo.Offer.BaseCurrencyCode))"></InfoRow>
+                            @* <InfoRow Label="Your trading account" Value="@(TradeInfo.Offer.IsMyOffer ? TradeInfo.Contract.MakerAccountId : TradeInfo.Contract.TakerAccountId)"></InfoRow> *@
+
+                            <InfoRow IsExpandable=true Label="Peer account data" Value="@((TradeInfo.Offer.PaymentMethodShortName) + " - " + string.Join(", ", (TradeInfo.Offer.IsMyOffer ? TradeInfo.Contract.TakerPaymentAccountPayload.Convert() : TradeInfo.Contract.MakerPaymentAccountPayload.Convert()).Select(x => x.Key + ": " + x.Value)))"></InfoRow>
+                        </div>
                         <Slider OnReachedEnd="async () => await ConfirmPaymentReceivedAsync(TradeInfo.TradeId)" Text="Payment received"/>
                     </div>
                     <Attention />
