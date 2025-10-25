@@ -22,11 +22,11 @@
     <Nullable>enable</Nullable>
 
     <!-- CHANGE THESE -->
-    <ApplicationTitle>Haveno</ApplicationTitle>
-    <ApplicationId>com.haveno</ApplicationId>
+    <ApplicationTitle>RetoSwap</ApplicationTitle>
+    <ApplicationId>com.retoswap</ApplicationId>
     <DaemonUrl>https://github.com/atsamd21/haveno/releases/download/v1.2.2</DaemonUrl>
-    <Network>XMR_STAGENET</Network>
-    <HavenoAppName>haveno-dev</HavenoAppName>
+    <Network>XMR_MAINNET</Network>
+    <HavenoAppName>haveno-reto-mobile</HavenoAppName>
     <!-- CHANGE THESE -->
 
     <!-- Versions -->
