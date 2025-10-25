@@ -23,11 +23,11 @@
     <RuntimeIdentifiers Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">android-arm;android-arm64;android-x86;android-x64</RuntimeIdentifiers>
 
     <!-- CHANGE THESE -->
-    <ApplicationTitle>Haveno</ApplicationTitle>
-    <ApplicationId>com.haveno</ApplicationId>
-    <DaemonUrl>https://github.com/atsamd21/haveno/releases/download/v1.2.3</DaemonUrl>
-    <Network>XMR_STAGENET</Network>
-    <HavenoAppName>haveno-dev</HavenoAppName>
+    <ApplicationTitle>RetoSwap</ApplicationTitle>
+    <ApplicationId>com.retoswap</ApplicationId>
+    <DaemonUrl>https://github.com/retoaccess1/haveno-reto/releases/download/1.2.3-reto</DaemonUrl>
+    <Network>XMR_MAINNET</Network>
+    <HavenoAppName>haveno-reto-mobile</HavenoAppName>
     <!-- CHANGE THESE -->
 
     <!-- Versions -->
