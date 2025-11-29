@@ -24,7 +24,7 @@
     <!-- CHANGE THESE -->
     <ApplicationTitle>RetoSwap</ApplicationTitle>
     <ApplicationId>com.retoswap</ApplicationId>
-    <DaemonUrl>https://github.com/atsamd21/haveno/releases/download/v1.2.2</DaemonUrl>
+    <DaemonUrl>https://github.com/retoaccess1/haveno-reto/releases/tag/1.2.2-reto-app</DaemonUrl>
     <Network>XMR_MAINNET</Network>
     <HavenoAppName>haveno-reto-mobile</HavenoAppName>
     <!-- CHANGE THESE -->
