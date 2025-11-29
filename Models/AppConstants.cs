@@ -8,11 +8,11 @@ public static class AppConstants
     public static readonly string Network;
     public static readonly string HavenoAppName;
 
-    public const string ApplicationId = "com.haveno";
-    public const double MakerFeePctTraditional = 0.0015;
-    public const double TakerFeePctTraditional = 0.0075;
-    public const double MakerFeePctCrypto = 0.0015;
-    public const double TakerFeePctCrypto = 0.0075;
+    public const string ApplicationId = "com.retoswap";
+    public const double MakerFeePctTraditional = 0.001;
+    public const double TakerFeePctTraditional = 0.005;
+    public const double MakerFeePctCrypto = 0.001;
+    public const double TakerFeePctCrypto = 0.01;
     public const double PenaltyFeePct = 0.25;
     public const decimal MinimumTradeAmount = 0.05m;
 
