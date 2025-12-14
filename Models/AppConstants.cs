@@ -9,6 +9,9 @@ public static class AppConstants
     public static readonly string HavenoAppName;
 
     public const string ApplicationId = "com.retoswap";
+    public const double MakerFeePct = 0.0000;
+    public const double TakerFeePct = 0.0000;
+    public const decimal MinimumTradeAmount = 0.05m;
 
     static AppConstants()
     {
