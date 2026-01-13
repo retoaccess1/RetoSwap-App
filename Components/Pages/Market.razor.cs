@@ -115,41 +115,25 @@ public partial class Market : ComponentBase, IDisposable
 
     protected override async Task OnInitializedAsync()
     {
-        while (true)
+        IsFetching = true;
+        StateHasChanged();
+
+        await BalanceSingleton.InitializedTCS.Task;
+
+        PreferredCurrency = AppPreferences.Get<Currency>(AppPreferences.PreferredCurrency).ToString();
+        ShowNotice = !AppPreferences.Get<bool>(AppPreferences.InitialNoticeAcknowledged);
+
+        try
         {
-            try
-            {
-                IsFetching = true;
-                StateHasChanged();
-
-                await BalanceSingleton.InitializedTCS.Task;
-
-                PreferredCurrency = await LocalStorage.GetItemAsStringAsync("preferredCurrency") ?? CurrencyCultureInfo.FallbackCurrency;
-
-                ShowNotice = !AppPreferences.Get<bool>(AppPreferences.InitialNoticeAcknowledged);
-
-                try
-                {
-                    CurrentMarketPrice = BalanceSingleton.MarketPriceInfoDictionary[PreferredCurrency].ToString("0.00");
-                }
-                catch (KeyNotFoundException)
-                {
-                    CurrentMarketPrice = BalanceSingleton.MarketPriceInfoDictionary[CurrencyCultureInfo.FallbackCurrency].ToString("0.00");
-                    PreferredCurrency = CurrencyCultureInfo.FallbackCurrency;
-                }
-
-                break;
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine(e);
-            }
-
-            await Task.Delay(5_000);
+            CurrentMarketPrice = BalanceSingleton.MarketPriceInfoDictionary[PreferredCurrency].ToString("0.00");
+        }
+        catch (KeyNotFoundException)
+        {
+            CurrentMarketPrice = BalanceSingleton.MarketPriceInfoDictionary[CurrencyCultureInfo.FallbackCurrency].ToString("0.00");
+            PreferredCurrency = CurrencyCultureInfo.FallbackCurrency;
         }
 
         TradeStatistics = TradeStatisticsSingleton.TradeStatistics;
-        
         ProcessTradeStatistics();
 
         WalletInfo = BalanceSingleton.WalletInfo;

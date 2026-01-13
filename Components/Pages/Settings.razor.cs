@@ -1,5 +1,4 @@
-﻿using Blazored.LocalStorage;
-using CommunityToolkit.Maui.Storage;
+﻿using CommunityToolkit.Maui.Storage;
 using HavenoSharp.Services;
 using HavenoSharp.Singletons;
 using Manta.Helpers;
@@ -28,8 +27,6 @@ public partial class Settings : ComponentBase, IDisposable
 
     [Inject]
     public DaemonInfoSingleton DaemonInfoSingleton { get; set; } = default!;
-    [Inject]
-    public ILocalStorageService LocalStorage { get; set; } = default!;
     [Inject]
     public DaemonConnectionSingleton DaemonConnectionSingleton { get; set; } = default!;
     [Inject]
@@ -96,8 +93,6 @@ public partial class Settings : ComponentBase, IDisposable
     {
         try
         {
-        // TODO update this to allow onion addresses
-        
             if (field == string.Empty)
             {
                 IsMoneroNodeUrlInvalidReason = null;
@@ -119,13 +114,6 @@ public partial class Settings : ComponentBase, IDisposable
             if (addressAndPort.Length < 2)
             {
                 IsMoneroNodeUrlInvalidReason = null;
-                return;
-            }
-
-            if (!IPAddress.TryParse(addressAndPort[0], out _))
-            {
-                //IsMoneroNodeUrlInvalidReason = "Please use an IP address or onion address and not a hostname.";
-                IsMoneroNodeUrlInvalidReason = "Please use an IP address and not a domain name.";
                 return;
             }
 
@@ -398,11 +386,7 @@ public partial class Settings : ComponentBase, IDisposable
 #if ANDROID
         IsNotificationsToggled = (await Permissions.CheckStatusAsync<NotificationPermission>() == PermissionStatus.Granted) && (await SecureStorageHelper.GetAsync<bool>("notifications-enabled"));
 #endif
-        var preferredCurrency = await LocalStorage.GetItemAsStringAsync("preferredCurrency");
-        if (preferredCurrency is not null)
-        {
-            PreferredCurrency = preferredCurrency;
-        }
+        PreferredCurrency = AppPreferences.Get<Currency>(AppPreferences.PreferredCurrency).ToString();
         
         var host = await SecureStorageHelper.GetAsync<string>("host");
         if (host != "http://127.0.0.1:3201")
@@ -429,12 +413,12 @@ public partial class Settings : ComponentBase, IDisposable
         await base.OnInitializedAsync();
     }
 
-    public async Task HandlePreferredCurrencySubmitAsync(string currencyCode)
+    public void HandlePreferredCurrencySubmitAsync(string currencyCode)
     {
         if (string.IsNullOrEmpty(currencyCode))
             return;
 
-        await LocalStorage.SetItemAsStringAsync("preferredCurrency", currencyCode);
+        AppPreferences.Set(AppPreferences.PreferredCurrency, Enum.Parse<Currency>(currencyCode));
         PreferredCurrency = currencyCode;
     }
 
