@@ -10,9 +10,9 @@ public static class AppConstants
 
     public const string ApplicationId = "com.retoswap";
     public const double MakerFeePctTraditional = 0.001;
-    public const double TakerFeePctTraditional = 0.005;
+    public const double TakerFeePctTraditional = 0.01;
     public const double MakerFeePctCrypto = 0.001;
-    public const double TakerFeePctCrypto = 0.01;
+    public const double TakerFeePctCrypto = 0.005;
     public const double PenaltyFeePct = 0.25;
     public const decimal MinimumTradeAmount = 0.05m;
 
