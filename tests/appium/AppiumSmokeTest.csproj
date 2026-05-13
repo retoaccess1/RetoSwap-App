@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <!-- Appium .NET client -->
+    <PackageReference Include="Appium.WebDriver" Version="5.0.0" />
+    <!-- OpenQA.Selenium for WebDriverWait — pin to 4.21.0 to match Appium.WebDriver 5.0.0 dependency -->
+    <PackageReference Include="Selenium.Support" Version="[4.21.0]" />
+  </ItemGroup>
+
+</Project>

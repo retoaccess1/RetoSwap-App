@@ -1,0 +1,24 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dotnet:*)",
+      "Bash(android-env:*)",
+      "Bash(adb:*)",
+      "Bash(avdmanager:*)",
+      "Bash(emulator:*)",
+      "Bash(gradle:*)",
+      "Bash(gradlew:*)",
+      "Bash(./gradlew:*)",
+      "Bash(kotlin:*)",
+      "Bash(kotlinc:*)",
+      "Bash(node:*)",
+      "Bash(npm:*)",
+      "Bash(appium:*)",
+      "Bash(scripts/setup-dotnet-maui.sh:*)",
+      "Bash(scripts/create-avd.sh:*)",
+      "Bash(scripts/start-emulator.sh:*)",
+      "Bash(scripts/stop-emulator.sh:*)",
+      "Bash(scripts/run-tests.sh:*)"
+    ]
+  }
+}

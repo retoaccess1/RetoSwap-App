@@ -1,0 +1,9 @@
+{
+  "server": {
+    "port": 4723,
+    "base-path": "/",
+    "log-level": "info",
+    "allow-insecure": ["adb_shell"],
+    "relaxed-security": false
+  }
+}

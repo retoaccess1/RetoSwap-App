@@ -1,0 +1,11 @@
+<Project>
+  <!--
+    Exclude Appium test sources from the main MAUI project build.
+    DefaultItemExcludes is checked by the SDK before it adds default Compile
+    globs, so this prevents tests/**/*.cs from being compiled as part of the app.
+    The condition preserves normal compilation for the AppiumSmokeTest project.
+  -->
+  <PropertyGroup Condition="'$(MSBuildProjectName)' != 'AppiumSmokeTest'">
+    <DefaultItemExcludes>$(DefaultItemExcludes);tests/**</DefaultItemExcludes>
+  </PropertyGroup>
+</Project>
