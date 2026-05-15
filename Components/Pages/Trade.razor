@@ -1,5 +1,14 @@
 ﻿@page "/trades/{id}/trade"
 
+<Modal @bind-IsOpen="ShowMoreTradeInfo" Title="Trade info" ModalButtonOptions="ModalButtonOptions.NONE">
+    <InfoRow IsExpandable="true" Label="Arbitrator onion address" Value="@TradeInfo.ArbitratorNodeAddress"></InfoRow>
+    @if (!string.IsNullOrEmpty(TradeInfo.TakerDepositTxId))
+    {
+        <InfoRow IsExpandable="true" Label="Taker deposit transaction ID" Value="@TradeInfo.TakerDepositTxId"></InfoRow>
+    }
+    <InfoRow IsExpandable="true" Label="Maker deposit transaction ID" Value="@TradeInfo.MakerDepositTxId"></InfoRow>
+</Modal>
+
 <Modal @bind-IsOpen="IsFetching" Title="Loading" ModalButtonOptions="ModalButtonOptions.NONE">
     <p class="regular-p-grey">Please wait</p>
 </Modal>
@@ -162,15 +171,12 @@
                     <p>Amount: @TradeInfo.Amount.ToMonero() @(IsFiat ? "XMR" : TradeInfo.Offer.BaseCurrencyCode) / @TradeInfo.TradeVolume @TradeInfo.Offer.CounterCurrencyCode</p>
                     <p>Price: @decimal.Parse(TradeInfo.Price, CultureInfo.InvariantCulture).ToString(TradeInfo.Offer.PaymentMethodId == "BLOCK_CHAINS" ? "0.0000####" : "0.0000") @TradeInfo.Offer.CounterCurrencyCode</p>
                 </div>
+                <br />
+                <button @onclick="() => ShowMoreTradeInfo = true">Show more info</button>
             </div>
             <div class="trade-id">
                 <InfoRow IsExpandable="true" Label="Trade ID" Value="@TradeInfo.TradeId"></InfoRow>
             </div>
-            @if (!string.IsNullOrEmpty(TradeInfo.TakerDepositTxId))
-            {
-                <InfoRow IsExpandable="true" Label="Taker deposit transaction ID" Value="@TradeInfo.TakerDepositTxId"></InfoRow>
-            }
-            <InfoRow IsExpandable="true" Label="Maker deposit transaction ID" Value="@TradeInfo.MakerDepositTxId"></InfoRow>
             <InfoRow Label="Max allowed trade period" Value="@TimeHelper.FormatDuration((long)MaxTradePeriod.TotalMilliseconds)"></InfoRow>
             <InfoRow Label="Expires" Value="@(IsNotCompletedInTime ? "Trade not completed in time" : TradeExpiresDateUTC.ToString())"></InfoRow>
         </div>
