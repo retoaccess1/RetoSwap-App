@@ -15,7 +15,21 @@
     <p class="regular-p-grey">Please wait</p>
 </Modal>
 
-<Modal Title="Backup" ModalButtonOptions="ModalButtonOptions.CANCEL" @bind-IsOpen="IsBackingUp" OnCancelPressed="() => { try{ BackupCts?.Cancel(); } catch{} }" IsCloseable="false">
+<div>
+    <Modal Title="Connect to Monero node" ModalButtonOptions="ModalButtonOptions.OK_CANCEL" @bind-IsOpen="ShowConnectToMoneroNodeModal" OnOkPressed="async () => await ConnectToMoneroNodeAsync(MoneroNodeToConnectTo)" OkButtonText="Connect">
+        <p class="regular-p-grey">Are you sure you want to connect to this Monero node?</p>
+        <a class="external-link">Url: @MoneroNodeToConnectTo</a>
+    </Modal>
+</div>
+
+<div>
+    <Modal Title="Remove Monero node" ModalButtonOptions="ModalButtonOptions.OK_CANCEL" @bind-IsOpen="ShowRemoveMoneroNodeModal" OnOkPressed="async () => await RemoveMoneroNodeAsync(MoneroNodeToRemove)" OkButtonText="Remove">
+        <p class="regular-p-grey">Are you sure you want to remove to this Monero node?</p>
+        <a class="external-link">Url: @MoneroNodeToRemove</a>
+    </Modal>
+</div>
+
+<Modal Title="Backup" ModalButtonOptions="ModalButtonOptions.CANCEL" @bind-IsOpen="IsBackingUp" OnCancelPressed="() => { try { BackupCts?.Cancel(); } catch { } }" IsCloseable="false">
     <p class="regular-p-grey">Please wait</p>
     <p class="regular-p-grey">Note: This can take a long time when using a remote node</p>
 </Modal>
@@ -39,7 +53,7 @@
 <Modal Title="Error" ModalButtonOptions="ModalButtonOptions.OK" IsOpen="@(!string.IsNullOrEmpty(ConnectionError))" IsOpenChanged="(isOpen) => { if (!isOpen) ConnectionError = null; }">
     <p class="regular-p-grey">@ConnectionError</p>
 </Modal>
-<Modal Title="Configure Monero node" ModalButtonOptions="ModalButtonOptions.OK_CANCEL" @bind-IsOpen="ShowConnectToMoneroNodeModal" OnOkPressed="ConnectToMoneroNodeAsync" OkButtonText="Connect">
+<Modal Title="Add Monero node" ModalButtonOptions="ModalButtonOptions.OK_CANCEL" @bind-IsOpen="ShowAddMoneroNodeModal" OnOkPressed="AddMoneroNodeAsync" OkButtonText="Add node">
     <div class="configure">
         <div>
             <label>Url</label>
@@ -47,14 +61,18 @@
             <p class="note">Example: http://192.168.0.1:18081</p>
             <p class="note">@IsMoneroNodeUrlInvalidReason</p>
         </div>
-        <div>
-            <label>Username</label>
-            <input @bind="MoneroNodeUsername" />
-        </div>
-        <div>
-            <label>Password</label>
-            <input @bind="MoneroNodePassword" />
-        </div>
+        <Toggle @bind-IsToggled="AuthenticationRequired" Text="Authentication required"></Toggle>
+        @if (AuthenticationRequired)
+        {
+            <div>
+                <label>Username</label>
+                <input @bind="MoneroNodeUsername" />
+            </div>
+            <div>
+                <label>Password</label>
+                <input @bind="MoneroNodePassword" />
+            </div>            
+        }
     </div>
 </Modal>
 <div class="settings-main">
@@ -90,15 +108,45 @@
             } *@
         </div>
         <br />
-        <p class="bold-p">Monero node</p>
+        <p class="bold-p">Monero network</p>
         @if (DaemonInstallOption == DaemonInstallOptions.RemoteNode)
         {
             // Always false when using standalone?
             <p>Status: @(IsXmrNodeOnline ? "Running" : "Stopped")</p>
         }
-        <p class="url">Url: @(string.IsNullOrEmpty(ConnectedMoneroNodeUrl) ? "Loading..." : ConnectedMoneroNodeUrl)</p>
+        @if (UrlConnections.Count == 0)
+        {
+            <p>No Monero nodes</p>
+        }
+        else
+        {
+            <ul class="url-connections">
+                @foreach (var urlConnection in UrlConnections.Where(x => !x.Url.Contains("127.0.0.1")).OrderByDescending(x => x.Url == ConnectedMoneroNodeUrl).ThenBy(x => x.Priority))
+                {
+                    <li class=@(urlConnection.Url == ConnectedMoneroNodeUrl ? "connection connected" : "connection")>
+                        @switch (urlConnection.OnlineStatus)
+                        {
+                            case OnlineStatus.UNKNOWN:
+                                <div class="online-status unknown"></div>
+                                break;
+                            case OnlineStatus.ONLINE:
+                                <div class="online-status online"></div>
+                                break;
+                            case OnlineStatus.OFFLINE:
+                                <div class="online-status offline"></div>
+                                break;
+                        }
+                        <p>@urlConnection.Url</p>
+                        <i class="bi bi-arrow-right-circle connect-node" @onclick="() => { ShowConnectToMoneroNodeModal = true; MoneroNodeToConnectTo = urlConnection.Url; }" />
+                        <i class="bi bi-x-circle remove-node" @onclick="() => { ShowRemoveMoneroNodeModal = true; MoneroNodeToRemove = urlConnection.Url; }" />
+                    </li>
+                }
+            </ul>
+        }
     </div>
-    <button @onclick="() => ShowConnectToMoneroNodeModal = true">Configure Monero node</button>
+    <button @onclick="() => ShowAddMoneroNodeModal = true">Add Monero node</button>
+    <Toggle OnToggledChanged="SetAutoSwitchAsync" @bind-IsToggled="IsAutoSwitchEnabled" Text="Use any Monero node"></Toggle>
+    <p class="note">Note: disable this to ensure the app only uses the selected node</p>
     <br/>
     <p class="bold-p">Preferences</p>
     <div class="dropdown">
@@ -112,7 +160,7 @@
         <button disabled="@(DaemonInstallOption == DaemonInstallOptions.RemoteNode)" class="backup-btn" @onclick="() => ShowRestoreModal = true">Restore account</button>
     </div>
 
-    <Toggle OnToggledChanged="HandleToggleAsync" @bind-IsToggled="IsNotificationsToggled" Text="Notifications" />
+    <Toggle OnToggledChanged="HandleNotificationsToggleAsync" @bind-IsToggled="IsNotificationsToggled" Text="Notifications" />
     @if (DaemonInstallOption == DaemonInstallOptions.Standalone)
     {
         <Toggle OnToggledChanged="HandleWakeLockToggle" @bind-IsToggled="IsWakeLockToggled" Text="Keep offers open in background" />
@@ -132,6 +180,5 @@
             <p class="note">Note: you need to have Orbot installed</p>
             <button @onclick="ConnectToRemoteNodeAsync">Connect to remote node</button>
         </div>
-        <Toggle Disabled="true" OnToggledChanged="HandleRemoteNodeToggleAsync" @bind-IsToggled="IsRemoteNodeToggled" Text="Use remote node" />        
     }
 </div>

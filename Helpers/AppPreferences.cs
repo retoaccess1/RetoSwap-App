@@ -18,6 +18,7 @@ public static class AppPreferences
     // TODO is this still needed?
     public const string CustomXmrNode = "custom-xmr-node";
     public const string InitialNoticeAcknowledged = "initial-notice-acknowledged";
+    public const string SavedXmrNodes = "saved-xmr-nodes";
 
     public const string RootfsVersion = "rootfs-version";
 

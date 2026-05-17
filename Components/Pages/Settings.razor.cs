@@ -2,6 +2,7 @@
 using AndroidX.Core.Content;
 using CommunityToolkit.Maui.Storage;
 using Grpc.Net.Client.Web;
+using HavenoSharp.Models;
 using HavenoSharp.Services;
 using HavenoSharp.Singletons;
 using Manta.Helpers;
@@ -72,12 +73,32 @@ public partial class Settings : ComponentBase, IDisposable
 
     public bool ShowRestoreModal { get; set; }
 
-    public bool ShowConnectToMoneroNodeModal { get; set; }
+    public bool ShowAddMoneroNodeModal { get; set; }
 
     Timer? ValidateMoneroNodeUrlTimer { get; set; }
 
     public string? IsMoneroNodeUrlInvalidReason { get; set; }
     public bool IsMoneroNodeUrlInvalid { get; set; }
+
+    public bool ShowRemoveMoneroNodeModal { get; set; }
+    public string? MoneroNodeToRemove { get; set; }
+    public bool ShowConnectToMoneroNodeModal { get; set; }
+    public string? MoneroNodeToConnectTo { get; set; }
+
+    public bool IsAutoSwitchEnabled { get; set; }
+
+    public bool AuthenticationRequired 
+    { 
+        get;
+        set
+        {
+            field = value;
+            MoneroNodeUsername = null;
+            MoneroNodePassword = null;
+        }
+    }
+
+    public List<UrlConnection> UrlConnections { get; set; } = [];
 
     public string? MoneroNodePassword { get; set { field = value?.Trim(); } }
     public string? MoneroNodeUrl 
@@ -103,6 +124,9 @@ public partial class Settings : ComponentBase, IDisposable
     {
         try
         {
+            if (field is null)
+                return;
+
             if (field == string.Empty)
             {
                 IsMoneroNodeUrlInvalidReason = null;
@@ -401,23 +425,95 @@ public partial class Settings : ComponentBase, IDisposable
         await current.MainPage.Navigation.PopModalAsync(true);
     }
 
-    public async Task ConnectToMoneroNodeAsync()
+    public async Task SetAutoSwitchAsync(bool value)
     {
-        // Should show error etc
-        if (MoneroNodeUrl is null)
-            return;
+        await HavenoXmrNodeService.SetAutoSwitchAsync(value);
+    }
 
+    public async Task AddMoneroNodeAsync()
+    {
+        if (string.IsNullOrEmpty(MoneroNodeUrl))
+            throw new Exception("Url cannot be empty.");
+
+        MoneroNodeUsername ??= string.Empty;
+        MoneroNodePassword ??= string.Empty;
+
+        await HavenoXmrNodeService.AddConnectionAsync(MoneroNodeUrl, MoneroNodeUsername, MoneroNodePassword, 0);
+
+        // Not ideal but Haveno requires the username/password again when setting the node even if it is saved
+        var savedNodes = AppPreferences.Get<List<MoneroNodeInfo>>(AppPreferences.SavedXmrNodes) ?? [];
+        MoneroNodeInfo? moneroNodeInfo = savedNodes.FirstOrDefault(x => x.Url == MoneroNodeUrl);
+        if (moneroNodeInfo is null)
+        {
+            moneroNodeInfo = new MoneroNodeInfo 
+            { 
+                Url = MoneroNodeUrl,
+                Password = MoneroNodePassword,
+                Username = MoneroNodeUsername
+            };
+
+            savedNodes.Add(moneroNodeInfo);
+        }
+        else
+        {
+            // This shouldn't happen?
+
+            moneroNodeInfo.Password = MoneroNodePassword;
+            moneroNodeInfo.Username = MoneroNodeUsername;
+        }
+
+        AppPreferences.Set(AppPreferences.SavedXmrNodes, savedNodes);
+
+        UrlConnections = await HavenoXmrNodeService.GetConnectionsAsync();
+
+        MoneroNodeUrl = null;
+        MoneroNodeUsername = null;
+        MoneroNodePassword = null;
+
+        AuthenticationRequired = false;
+    }
+
+    public async Task RemoveMoneroNodeAsync(string url)
+    {
+        var connectedNode = await HavenoXmrNodeService.GetMoneroNodeAsync();
+        if (connectedNode.Url == url)
+            throw new Exception("Cannot remove the selected node as it is currently in use.");
+
+        await HavenoXmrNodeService.RemoveConnectionAsync(url);
+     
+        var savedNodes = AppPreferences.Get<List<MoneroNodeInfo>>(AppPreferences.SavedXmrNodes) ?? [];
+        MoneroNodeInfo? moneroNodeInfo = savedNodes.FirstOrDefault(x => x.Url == url);
+        if (moneroNodeInfo is not null)
+        {
+            savedNodes.Remove(moneroNodeInfo);
+            AppPreferences.Set(AppPreferences.SavedXmrNodes, savedNodes);
+        }
+
+        UrlConnections = await HavenoXmrNodeService.GetConnectionsAsync();
+    }
+
+    public async Task ConnectToMoneroNodeAsync(string url)
+    {
         MoneroNodeConnectCancellationTokenSource = new(10_000);
         IsConnectingToMoneroNode = true;
 
         try
         {
-            MoneroNodeUsername ??= string.Empty;
-            MoneroNodePassword ??= string.Empty;
+            var moneroNodeUsername = string.Empty;
+            var moneroNodePassword = string.Empty;
+
+            var savedNodes = AppPreferences.Get<List<MoneroNodeInfo>>(AppPreferences.SavedXmrNodes) ?? [];
+            MoneroNodeInfo? moneroNodeInfo = savedNodes.FirstOrDefault(x => x.Url == url);
+            if (moneroNodeInfo is not null)
+            {
+                moneroNodeUsername = moneroNodeInfo.Username;
+                moneroNodePassword = moneroNodeInfo.Password;
+            }
 
             // Does not throw an exception if fails?
+            IsAutoSwitchEnabled = false;
             await HavenoXmrNodeService.SetAutoSwitchAsync(false);
-            await HavenoXmrNodeService.SetMoneroNodeAsync(MoneroNodeUrl, MoneroNodeUsername, MoneroNodePassword, 0);
+            await HavenoXmrNodeService.SetMoneroNodeAsync(url, moneroNodeUsername, moneroNodePassword, 0);
 
             var response = await HavenoXmrNodeService.GetMoneroNodeAsync();
             ConnectedMoneroNodeUrl = response.Url;
@@ -433,7 +529,7 @@ public partial class Settings : ComponentBase, IDisposable
                     break;
                 }
 
-                if (response.OnlineStatus == HavenoSharp.Models.OnlineStatus.ONLINE)
+                if (response.OnlineStatus == OnlineStatus.ONLINE)
                     break;
 
                 await Task.Delay(500);
@@ -442,27 +538,20 @@ public partial class Settings : ComponentBase, IDisposable
             if (MoneroNodeConnectCancellationTokenSource.IsCancellationRequested)
             {
                 await HavenoXmrNodeService.SetAutoSwitchAsync(true);
-                await HavenoXmrNodeService.RemoveConnectionAsync(MoneroNodeUrl);
+                IsAutoSwitchEnabled = true;
 
-                var moneroNodes = await HavenoXmrNodeService.GetConnectionsAsync();
-                var previousAuthedNode = moneroNodes.FirstOrDefault(x => x.AuthenticationStatus == HavenoSharp.Models.AuthenticationStatus.AUTHENTICATED && x.OnlineStatus == HavenoSharp.Models.OnlineStatus.ONLINE);
-
-                if (previousAuthedNode is not null) // Hope that previous node did not require auth
-                    await HavenoXmrNodeService.SetMoneroNodeAsync(previousAuthedNode.Url, string.Empty, string.Empty, 0);
+                var moneroNode = await HavenoXmrNodeService.GetBestConnectionAsync();
+                await HavenoXmrNodeService.SetMoneroNodeAsync(moneroNode.Url, string.Empty, string.Empty, 0);
 
                 response = await HavenoXmrNodeService.GetMoneroNodeAsync();
                 ConnectedMoneroNodeUrl = response.Url;
 
-                throw new Exception("Failed to connect to node.");
-            }
-            else
-            {
-                AppPreferences.Set(AppPreferences.CustomXmrNode, ConnectedMoneroNodeUrl);
+                throw new Exception("Failed to connect to node. Please check that the node is online and that the login details are correct.");
             }
         }
         finally
         {
-            ShowConnectToMoneroNodeModal = false;
+            ShowAddMoneroNodeModal = false;
             MoneroNodeUrl = string.Empty;
             MoneroNodeUsername = string.Empty;
             MoneroNodePassword = string.Empty;
@@ -470,6 +559,8 @@ public partial class Settings : ComponentBase, IDisposable
             MoneroNodeConnectCancellationTokenSource.Dispose();
             MoneroNodeConnectCancellationTokenSource = null;
             IsConnectingToMoneroNode = false;
+
+            UrlConnections = await HavenoXmrNodeService.GetConnectionsAsync();
         }
     }
 
@@ -528,29 +619,7 @@ public partial class Settings : ComponentBase, IDisposable
         ConnectionError = "Could not connect to remote node. Make sure Orbot is installed and configured.";
     }
 
-    public async Task HandleRemoteNodeToggleAsync(bool isToggled)
-    {
-        // Prompt that account won't be synced and that if running, local daemon, termux etc needs to be stopped
-        if (!isToggled) 
-        {
-            // Theres a small issue if orbot is running at the same time as it listens to the same ports that the Termux tor instance listens on, however users should not be regularly switching hosting modes
-            await SecureStorageHelper.SetAsync("daemon-installation-type", DaemonInstallOptions.Standalone);
-
-            if ((await HavenoDaemonService.GetIsDaemonInstalledAsync()).Item1)
-            {
-                await HavenoDaemonService.TryStartLocalHavenoDaemonAsync(Guid.NewGuid().ToString(), "http://127.0.0.1:3201");
-            }
-            else
-            {
-                NavigationManager.NavigateTo("/");
-            }
-
-            Password = null;
-            Host = null;
-        }
-    }
-
-    public async Task HandleToggleAsync(bool isToggled)
+    public async Task HandleNotificationsToggleAsync(bool isToggled)
     {
 #if ANDROID
         if (isToggled)
@@ -579,16 +648,6 @@ public partial class Settings : ComponentBase, IDisposable
             IsWakeLockToggled = false;
         }
 #endif
-    }
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        if (firstRender)
-        {
-            
-        }
-
-        await base.OnAfterRenderAsync(firstRender);
     }
 
     private async void HandleDaemonInfoFetch(bool isFetching)
@@ -636,6 +695,9 @@ public partial class Settings : ComponentBase, IDisposable
         IsConnected = DaemonConnectionSingleton.IsConnected;
         IsXmrNodeOnline = DaemonInfoSingleton.IsXmrNodeOnline;
         ConnectedMoneroNodeUrl = DaemonInfoSingleton.ConnectedMoneroNodeUrl;
+
+        IsAutoSwitchEnabled = await HavenoXmrNodeService.GetAutoSwitchAsync();
+        UrlConnections = await HavenoXmrNodeService.GetConnectionsAsync();
 
         DaemonInfoSingleton.OnDaemonInfoFetch += HandleDaemonInfoFetch;
         DaemonConnectionSingleton.OnConnectionChanged += HandleDaemonConnectionChanged;

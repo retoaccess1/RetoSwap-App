@@ -59,6 +59,11 @@
     }
 }
 
+/*::deep .configure {
+    max-height: 1000px;
+    transition: height 1s;
+}*/
+
 .configure input {
     background-color: #fff;
     color: #000;
@@ -101,4 +106,58 @@
     font-size: 12px;
     text-decoration: underline;
     color: #000;
+}
+
+.url-connections {
+    max-height: 100px;
+    overflow-y: auto;
+
+    .connection {
+        background-color: #121212;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        padding: 6px 10px 6px;
+        border-radius: 4px;
+
+        .remove-node {
+        }
+
+        .connect-node {
+            margin-left: auto;
+            margin-right: 4px;
+        }
+
+        &:last-child {
+            margin-bottom: 0;
+        }
+
+        p {
+            text-overflow: ellipsis;
+            overflow-x: hidden;
+        }
+
+        .online-status {
+            height: 10px;
+            aspect-ratio: 1;
+            border-radius: 10px;
+            margin-right: 10px;
+        }
+
+        .online {
+            background-color: #0CB952;
+        }
+
+        .offline {
+            background-color: #ff4025;
+        }
+
+        .unknown {
+            background-color: #414141;
+        }
+    }
+
+    .connected {
+        border: 2px solid #0CB952;
+    }
 }
