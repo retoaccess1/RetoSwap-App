@@ -88,3 +88,21 @@
     .buttons {
     }
 }
+
+.trade-info ::deep .inner-container {
+    background-color: #fff !important;
+    color: #000 !important;
+    font-weight: 400 !important;
+
+    img {
+        filter: invert(1) !important;
+    }
+
+    .copied {
+        color: #000 !important;
+    }
+}
+
+.trade-info ::deep .inner-expanded {
+    border: 1px solid #414141 !important;
+}

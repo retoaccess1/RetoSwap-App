@@ -1,13 +1,15 @@
 ﻿@page "/trades/{id}/trade"
 
-<Modal @bind-IsOpen="ShowMoreTradeInfo" Title="Trade info" ModalButtonOptions="ModalButtonOptions.NONE">
-    <InfoRow IsExpandable="true" Label="Arbitrator onion address" Value="@TradeInfo.ArbitratorNodeAddress"></InfoRow>
-    @if (!string.IsNullOrEmpty(TradeInfo.TakerDepositTxId))
-    {
-        <InfoRow IsExpandable="true" Label="Taker deposit transaction ID" Value="@TradeInfo.TakerDepositTxId"></InfoRow>
-    }
-    <InfoRow IsExpandable="true" Label="Maker deposit transaction ID" Value="@TradeInfo.MakerDepositTxId"></InfoRow>
-</Modal>
+<div class="trade-info">
+    <Modal @bind-IsOpen="ShowMoreTradeInfo" Title="Trade info" ModalButtonOptions="ModalButtonOptions.NONE">
+        <InfoRow IsExpandable="true" Label="Arbitrator onion address" Value="@TradeInfo.ArbitratorNodeAddress"></InfoRow>
+        @if (!string.IsNullOrEmpty(TradeInfo.TakerDepositTxId))
+        {
+            <InfoRow IsExpandable="true" Label="Taker deposit transaction ID" Value="@TradeInfo.TakerDepositTxId"></InfoRow>
+        }
+        <InfoRow IsExpandable="true" Label="Maker deposit transaction ID" Value="@TradeInfo.MakerDepositTxId"></InfoRow>
+    </Modal>
+</div>
 
 <Modal @bind-IsOpen="IsFetching" Title="Loading" ModalButtonOptions="ModalButtonOptions.NONE">
     <p class="regular-p-grey">Please wait</p>
