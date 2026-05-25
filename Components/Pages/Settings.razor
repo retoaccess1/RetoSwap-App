@@ -109,19 +109,10 @@
         </div>
         <br />
         <p class="bold-p">Monero network</p>
-        @if (DaemonInstallOption == DaemonInstallOptions.RemoteNode)
-        {
-            // Always false when using standalone?
-            <p>Status: @(IsXmrNodeOnline ? "Running" : "Stopped")</p>
-        }
-        @if (UrlConnections.Count == 0)
-        {
-            <p>No Monero nodes</p>
-        }
-        else
+        @if (UrlConnections.Count != 0)
         {
             <ul class="url-connections">
-                @foreach (var urlConnection in UrlConnections.Where(x => !x.Url.Contains("127.0.0.1")).OrderByDescending(x => x.Url == ConnectedMoneroNodeUrl).ThenBy(x => x.Priority))
+                @foreach (var urlConnection in UrlConnections.Where(x => DaemonInstallOption == DaemonInstallOptions.RemoteNode ? true : !x.Url.Contains("127.0.0.1")).OrderByDescending(x => x.Url == ConnectedMoneroNodeUrl).ThenBy(x => x.Priority))
                 {
                     <li class=@(urlConnection.Url == ConnectedMoneroNodeUrl ? "connection connected" : "connection")>
                         @switch (urlConnection.OnlineStatus)
@@ -144,8 +135,8 @@
             </ul>
         }
     </div>
-    <button @onclick="() => ShowAddMoneroNodeModal = true">Add Monero node</button>
-    <Toggle OnToggledChanged="SetAutoSwitchAsync" @bind-IsToggled="IsAutoSwitchEnabled" Text="Use any Monero node"></Toggle>
+    <button disabled="@(!IsConnected)" @onclick="() => ShowAddMoneroNodeModal = true">Add Monero node</button>
+    <Toggle Disabled=@(!IsConnected) OnToggledChanged="SetAutoSwitchAsync" @bind-IsToggled="IsAutoSwitchEnabled" Text="Use any Monero node"></Toggle>
     <p class="note">Note: disable this to ensure the app only uses the selected node</p>
     <br/>
     <p class="bold-p">Preferences</p>
@@ -173,7 +164,7 @@
         <div class="@(IsRemoteNodeToggled ? "remote-node-section" : "remote-node-section remote-node-disabled")">
             <button @onclick="ScanQRCodeAsync" class="qr-btn">Scan QR code</button>
             <p class="or">Or</p>
-            <label class="bold-p">IP Address</label>
+            <label class="bold-p">Onion Address</label>
             <input @bind="Host" type="text"/>
             <label class="bold-p">Password</label>
             <input @bind="Password" type="password" />

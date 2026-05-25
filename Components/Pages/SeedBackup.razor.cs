@@ -53,7 +53,16 @@ public partial class SeedBackup : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
-        XmrSeed = await HavenoWalletService.GetXmrSeedAsync();
+        try
+        {
+            XmrSeed = await HavenoWalletService.GetXmrSeedAsync();
+        }
+        catch
+        {
+            // TODO - Only happens if remote node is not connected, handle this better
+            return;
+        }
+
         SeedWords = XmrSeed.Split(" ").ToList();
         RemovedSeedWords = SeedWords.Select(x => new SeedWord(x, false)).ToList();
 

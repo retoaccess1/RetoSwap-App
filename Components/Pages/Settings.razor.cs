@@ -696,8 +696,16 @@ public partial class Settings : ComponentBase, IDisposable
         IsXmrNodeOnline = DaemonInfoSingleton.IsXmrNodeOnline;
         ConnectedMoneroNodeUrl = DaemonInfoSingleton.ConnectedMoneroNodeUrl;
 
-        IsAutoSwitchEnabled = await HavenoXmrNodeService.GetAutoSwitchAsync();
-        UrlConnections = await HavenoXmrNodeService.GetConnectionsAsync();
+        try
+        {
+
+            IsAutoSwitchEnabled = await HavenoXmrNodeService.GetAutoSwitchAsync();
+            UrlConnections = await HavenoXmrNodeService.GetConnectionsAsync();
+        }
+        catch
+        {
+
+        }
 
         DaemonInfoSingleton.OnDaemonInfoFetch += HandleDaemonInfoFetch;
         DaemonConnectionSingleton.OnConnectionChanged += HandleDaemonConnectionChanged;
