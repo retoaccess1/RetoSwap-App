@@ -7,6 +7,9 @@ public static class AppConstants
     public static readonly string DaemonUrl;
     public static readonly string Network;
     public static readonly string HavenoAppName;
+    public static readonly string MatrixLink;
+    public static readonly string GitHubLink;
+    public static readonly string MatrixLink;
 
     public const string ApplicationId = "com.retoswap";
     public const double MakerFeePctTraditional = 0.001;
