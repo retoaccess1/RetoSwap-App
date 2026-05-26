@@ -7,6 +7,7 @@ public static class AppConstants
     public static readonly string DaemonUrl;
     public static readonly string Network;
     public static readonly string HavenoAppName;
+    public static readonly string SimplexLink;
     public static readonly string MatrixLink;
     public static readonly string GitHubLink;
 
