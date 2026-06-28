@@ -4,13 +4,13 @@
     <Modal Title="Fee info" IsCloseable="true" ModalButtonOptions="ModalButtonOptions.OK" @bind-IsOpen="ShowFeeInfoModal">
         @if (IsFiat)
         {
-            <p class="regular-p-grey">Maker fee: @AppConstants.MakerFeePctTraditional%</p>
-            <p class="regular-p-grey">Taker fee: @AppConstants.TakerFeePctTraditional%</p>
+            <p class="regular-p-grey">Maker fee: @(AppConstants.MakerFeePctTraditional * 100)%</p>
+            <p class="regular-p-grey">Taker fee: @(AppConstants.TakerFeePctTraditional * 100)%</p>
         }
         else
         {
-            <p class="regular-p-grey">Maker fee (crypto): @AppConstants.MakerFeePctCrypto%</p>
-            <p class="regular-p-grey">Taker fee (crypto): @AppConstants.TakerFeePctCrypto%</p>
+            <p class="regular-p-grey">Maker fee (crypto): @(AppConstants.MakerFeePctCrypto * 100)%</p>
+            <p class="regular-p-grey">Taker fee (crypto): @(AppConstants.TakerFeePctCrypto * 100)%</p>
         }
         @* <p class="regular-p-grey">Penalty fee: @AppConstants.PenaltyFeePct%</p> *@
     </Modal>
