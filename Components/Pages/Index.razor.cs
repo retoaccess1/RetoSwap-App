@@ -10,7 +10,7 @@ using Grpc.Core;
 
 namespace Manta.Components.Pages;
 
-public partial class Index : ComponentBase
+public partial class Index : ComponentBase, IDisposable
 {
     public bool IsInitializing { get; set; }
     public DaemonSetupState DaemonSetupState { get; set; }
@@ -188,6 +188,8 @@ public partial class Index : ComponentBase
 
     protected override async Task OnInitializedAsync()
     {
+        DeviceDisplay.KeepScreenOn = true;
+
         IsInitializing = true;
         StateHasChanged();
 
@@ -296,5 +298,11 @@ public partial class Index : ComponentBase
         IsInitializing = false;
 
         await base.OnInitializedAsync();
+    }
+
+    public void Dispose()
+    {
+        DeviceDisplay.KeepScreenOn = false;
+        GC.SuppressFinalize(this);
     }
 }
