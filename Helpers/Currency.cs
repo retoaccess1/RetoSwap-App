@@ -179,7 +179,8 @@ public enum CryptoCurrency
     DOGE, 
     XRP, 
     SOL, 
-    TRX
+    TRX,
+    ZEC
 }
 
 public static class CryptoCurrencyHelper
@@ -198,7 +199,8 @@ public static class CryptoCurrencyHelper
         { "DOGE", "Dogecoin" },
         { "XRP", "Ripple" },
         { "SOL", "Solana" },
-        { "TRX", "Tron" }
+        { "TRX", "Tron" },
+        { "ZEC", "Zcash" }
     };
 }
 
