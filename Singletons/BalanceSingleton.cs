@@ -91,6 +91,22 @@ public class BalanceSingleton
                 MarketPriceInfos = await priceService.GetMarketPricesAsync();
                 MarketPriceInfoDictionary = MarketPriceInfos.ToDictionary(x => x.CurrencyCode, x => (decimal)x.Price);
 
+                if (MarketPriceInfoDictionary.TryGetValue("DAI", out var dai))
+                {
+                    MarketPriceInfoDictionary.Add("DAI-ERC20", dai);
+                }
+
+                if (MarketPriceInfoDictionary.TryGetValue("USDT", out var usdt))
+                {
+                    MarketPriceInfoDictionary.Add("USDT-ERC20", usdt);
+                    MarketPriceInfoDictionary.Add("USDT-TRC20", usdt);
+                }
+
+                if (MarketPriceInfoDictionary.TryGetValue("USDC", out var usdc))
+                {
+                    MarketPriceInfoDictionary.Add("USDC-ERC20", usdc);
+                }
+
                 Console.WriteLine("Finished fetching prices");
 
                 if (!InitializedTCS.Task.IsCompleted)
