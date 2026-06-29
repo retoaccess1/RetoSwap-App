@@ -142,13 +142,18 @@
   margin-right: 6px;
 }
 
-.create-offer-button {
-  margin-bottom: 10px;
-}
-
 .buttons {
   background-color: #000000;
   padding: 10px 0 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.buttons .create-offer-button {
+  margin-left: 8px;
+  min-width: 39px;
+  width: 39px;
+  font-size: 23px;
 }
 
 .no-deposit-toggle {

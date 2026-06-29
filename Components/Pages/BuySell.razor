@@ -138,8 +138,10 @@
             </ul>
         }
         <div class="buttons">
-            <button class="create-offer-button button-green" @onclick="() => IsCreatingOffer = !IsCreatingOffer">@(Direction == "BUY" ? "Create offer to buy XMR" : "Create offer to sell XMR")</button>
             <button @onclick="NavigateToMyOffers">View my offers</button>
+            <button class="create-offer-button button-green" @onclick="() => IsCreatingOffer = !IsCreatingOffer">
+                <i class="bi bi-plus"></i>
+            </button>
         </div>
     }
 </div>
