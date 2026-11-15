@@ -104,6 +104,10 @@ public partial class Account : ComponentBase
             {
                 CopyFromField = PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == fieldId);
             }
+            else
+            {
+                AccountNameField?.Value = TraditionalPaymentMethodStrings[SelectedPaymentMethodId];
+            }
 
             var acceptedCountriesField = PaymentAccountForm.Fields.FirstOrDefault(x => x.Id == FieldId.ACCEPTED_COUNTRY_CODES);
             if (acceptedCountriesField is not null)
@@ -184,7 +188,6 @@ public partial class Account : ComponentBase
             {
                 PaymentAccounts = await PaymentAccountService.GetPaymentAccountsAsync();
                 TraditionalPaymentMethods = await PaymentAccountService.GetPaymentMethodsAsync();
-                TraditionalPaymentMethods = TraditionalPaymentMethods.Where(x => x.Id != "AMAZON_GIFT_CARD").ToList();
 
                 var filteredPaymentMethodIds = TraditionalPaymentMethods
                     .Select(x => x.Id);

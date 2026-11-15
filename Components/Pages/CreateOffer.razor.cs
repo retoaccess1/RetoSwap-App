@@ -87,6 +87,7 @@ public partial class CreateOffer : ComponentBase, IDisposable
     public bool NoMarketPrice { get; set; }
     public bool IsFiat { get; set; }
     public bool UseMinimumSecurityDeposit { get; set; }
+    public bool ReserveExactAmount { get; set; }
 
     public string SelectedCurrencyCode
     {
@@ -171,7 +172,7 @@ public partial class CreateOffer : ComponentBase, IDisposable
     public decimal FiatPrice { get; set; }
     public decimal FixedPrice { get; set; }
     public bool UseFixedPrice { get; set; }
-    public decimal TriggerAmount { get; set; }
+    public decimal TriggerPrice { get; set; }
     public decimal SecurityDepositPct 
     { 
         get;
@@ -217,7 +218,7 @@ public partial class CreateOffer : ComponentBase, IDisposable
         MoneroAmount = 0m;
         FiatPrice = 0m;
         MarketPriceMarginPct = 0m;
-        TriggerAmount = 0;
+        TriggerPrice = 0;
         FixedPrice = 0;
         SecurityDepositPct = 15m;
         TradeFee = 0;
@@ -549,11 +550,12 @@ public partial class CreateOffer : ComponentBase, IDisposable
                 CurrencyCode = SelectedCurrencyCode,
                 Direction = Direction,
                 SecurityDepositPct = (double)(SecurityDepositPct / 100m),
-                TriggerPrice = TriggerAmount.ToString(),
+                TriggerPrice = TriggerPrice == 0 ? "" : TriggerPrice.ToString(),
                 MarketPriceMarginPct = 0,
                 Price = "",
                 UseMarketBasedPrice = true,
-                BuyerAsTakerWithoutDeposit = BuyerAsTakerWithoutDeposit
+                BuyerAsTakerWithoutDeposit = BuyerAsTakerWithoutDeposit,
+                ReserveExactAmount = ReserveExactAmount
             };
 
             if (!string.IsNullOrEmpty(ExtraInfo))

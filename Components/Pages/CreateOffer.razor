@@ -71,6 +71,10 @@
         <div class="price-toggle">
             <Toggle Disabled="NoMarketPrice" Text="@(UseFixedPrice ? "Using fixed price" : "Using market %")" @bind-IsToggled="UseFixedPrice"></Toggle>
         </div>
+        <div class="price-toggle">
+            <Toggle Text="Reserve exact amount" @bind-IsToggled="ReserveExactAmount"></Toggle>
+            <p class="note">Requires a mining fee and ~20 minutes before your offer goes live</p>
+        </div>
 
         <label>Fixed price in @(SelectedCurrencyCode) for 1 XMR</label>
 
@@ -82,12 +86,11 @@
             <input readonly="@(UseFixedPrice)" type="number" @bind="MarketPriceMarginPct" @onblur="@(() => Calculate(MarketPriceMarginPct, "MarketPriceMarginPct"))" />            
         }
 
-
-@*         if (!UseFixedPrice)
+        if (!UseFixedPrice)
         {
-            <label>Deactive offer if @(Direction == "BUY" ? "above" : "below")</label>
-            <input readonly="@true" type="number" @bind="TriggerAmount" />
-        } *@
+            <label>Deactivate if market price is @(Direction == "BUY" ? "above" : "below")</label>
+            <input type="number" @bind="TriggerPrice" />
+        }
 
         <label>Amount in @(SelectedCurrencyCode) to @(Direction == "BUY" ? "spend" : "receive")</label>
         <input type="number" @bind="FiatPrice" @onblur="@(() => Calculate(FiatPrice, "FiatPrice"))" />

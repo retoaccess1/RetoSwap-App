@@ -4,9 +4,10 @@ namespace Manta.Helpers;
 
 public static class AppPreferences
 {
-    public const string PreferencesInitialized = "preferences-initialized";
+    public const string PreferencesInitialized = "preferences-initialized-2";
     //
     public const string PreferredCurrency = "preferred-currency";
+    public const string UseNativeXmrWallet = "use-native-xmr-wallet";
     public const string SeedBackupDone = "seed-backup-done";
     //
     public const string SelectedCurrencyCode = "selected-currency-code";
@@ -21,6 +22,10 @@ public static class AppPreferences
     public const string SavedXmrNodes = "saved-xmr-nodes";
 
     public const string RootfsVersion = "rootfs-version";
+
+    public const string UseHavenoTor = "use-haveno-tor";
+
+    public const string LastAlertSignature = "last-alert-signature";
 
     /// <summary>
     /// Note: value types will not return a null value.

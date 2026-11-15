@@ -58,8 +58,10 @@ public partial class Settings : ComponentBase, IDisposable
     public string? LinkToOpen { get; set; }
 
     public bool IsNotificationsToggled { get; set; }
+    public bool UseNativeXmrWallet { get; set; }
     public bool IsWakeLockToggled { get; set; }
     public bool IsRemoteNodeToggled { get; set; }
+    public bool UseHavenoTor { get; set; }
 
     public bool IsConnected { get; set; }
     public DaemonInstallOptions DaemonInstallOption { get; set; }
@@ -637,6 +639,16 @@ public partial class Settings : ComponentBase, IDisposable
 #endif
     }
 
+    public void HandleNativeWalletToggle(bool isToggled)
+    {
+        AppPreferences.Set(AppPreferences.UseNativeXmrWallet, isToggled);
+    }
+
+    public void HandleUseHavenoTorToggle(bool isToggled)
+    {
+        AppPreferences.Set(AppPreferences.UseHavenoTor, isToggled);
+    }
+
     public async Task HandleWakeLockToggle(bool isToggled)
     {
         if (!isToggled)
@@ -676,7 +688,9 @@ public partial class Settings : ComponentBase, IDisposable
         IsNotificationsToggled = (await Permissions.CheckStatusAsync<NotificationPermission>() == PermissionStatus.Granted) && (await SecureStorageHelper.GetAsync<bool>("notifications-enabled"));
 #endif
         PreferredCurrency = AppPreferences.Get<Currency>(AppPreferences.PreferredCurrency).ToString();
-        
+        UseNativeXmrWallet = AppPreferences.Get<bool>(AppPreferences.UseNativeXmrWallet);
+        UseHavenoTor = AppPreferences.Get<bool>(AppPreferences.UseHavenoTor);
+
         var host = await SecureStorageHelper.GetAsync<string>("host");
         if (host != "http://127.0.0.1:3201")
         {

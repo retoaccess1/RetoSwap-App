@@ -21,6 +21,7 @@ public partial class Index : ComponentBase, IDisposable
     public bool IsDaemonStartInfoModalOpen { get; set; }
     public string? InstallationErrorMessage { get; set; }
     public string? UpdateErrorMessage { get; set; }
+    public string? StartErrorMessage { get; set; }
 
     [Inject]
     public NavigationManager NavigationManager { get; set; } = default!;
@@ -99,7 +100,16 @@ public partial class Index : ComponentBase, IDisposable
             }
         });
 
-        await HavenoDaemonService.TryStartLocalHavenoDaemonAsync(Guid.NewGuid().ToString(), "http://127.0.0.1:3201", HandleDaemonStartInfoChange);
+        try
+        {
+            await HavenoDaemonService.TryStartLocalHavenoDaemonAsync(Guid.NewGuid().ToString(), "http://127.0.0.1:3201", HandleDaemonStartInfoChange);
+        }
+        catch (Exception e)
+        {
+            InitializingTokenSource.Cancel();
+            StartErrorMessage = e.Message;
+            return;
+        }
 
         while (!await HavenoDaemonService.IsHavenoDaemonRunningAsync(InitializingTokenSource.Token))
         {
@@ -123,6 +133,15 @@ public partial class Index : ComponentBase, IDisposable
         await task;
 
         NavigationManager.NavigateTo("/Market");
+    }
+
+    public async Task HandleUseHavenoTorToggle(bool isToggled)
+    {
+        AppPreferences.Set(AppPreferences.UseHavenoTor, isToggled);
+
+        await HavenoDaemonService.StopHavenoDaemonAsync();
+
+        NavigationManager.NavigateTo("/", forceLoad: true);
     }
 
     public async Task<bool> InstallHavenoDaemonAsync()
@@ -183,6 +202,7 @@ public partial class Index : ComponentBase, IDisposable
             return;
 
         AppPreferences.Set(AppPreferences.PreferredCurrency, Currency.USD);
+        AppPreferences.Set(AppPreferences.UseNativeXmrWallet, true);
         AppPreferences.Set(AppPreferences.PreferencesInitialized, true);
     }
 
@@ -249,9 +269,6 @@ public partial class Index : ComponentBase, IDisposable
                             UpdateErrorMessage = e.Message;
                             return;
                         }
-
-                        // If restoring
-                        NotificationSingleton.TradeInfos.Clear();
 
                         await StartHavenoStandalone();
                     }

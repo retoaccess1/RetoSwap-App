@@ -5,7 +5,6 @@ using Android.Runtime;
 using AndroidX.Core.App;
 using Manta.Helpers;
 using Manta.Models;
-using System.Net.Sockets;
 using System.Text;
 
 namespace Manta.Services;
@@ -21,9 +20,6 @@ public class BackendService : Service
     private CancellationTokenSource? _torCts;
     private CancellationTokenSource? _daemonCts;
     private TaskCompletionSource? _torReadyTCS;
-
-    private Task? _torTask;
-    private Task? _daemonTask;
 
     public BackendService()
     {
@@ -99,6 +95,7 @@ public class BackendService : Service
         switch (intent.Action)
         {
             case "ACTION_STOP_BACKEND":
+                ShowNotification();
                 StopBackend();
                 break;
             case "ACTION_START_BACKEND":
@@ -142,8 +139,6 @@ public class BackendService : Service
 
     private void StartBackend(string password)
     {
-        _torReadyTCS = new();
-
         var serviceProvider = IPlatformApplication.Current?.Services;
         if (serviceProvider is null)
             throw new Exception("serviceProvider was null in StartBackend()");
@@ -151,83 +146,81 @@ public class BackendService : Service
         var havenoDaemonService = serviceProvider.GetRequiredService<IHavenoDaemonService>();
         var daemonPath = havenoDaemonService.GetDaemonPath();
 
-        // Tor does not always connect successfully, need to timeout and give the user the option to restart
-        _torTask = Task.Factory.StartNew(() =>
+        var useHavenoTor = AppPreferences.Get<bool>(AppPreferences.UseHavenoTor);
+        if (!useHavenoTor)
         {
-            _torCts = new();
+            _torReadyTCS = new();
 
-            try
+            Task.Factory.StartNew(() =>
             {
-                // Check if tor running
-                using var tcpClient = new TcpClient("127.0.0.1", 9060);
-                // Try to kill
-                var result = Proot.RunProotUbuntuCommand("pkill", "-f", "-9", "tor");
-            }
-            catch { }
+                _torCts = new();
 
-            try
-            {
-                using var tcpClient = new TcpClient("127.0.0.1", 9061);
-                var result = Proot.RunProotUbuntuCommand("pkill", "-f", "-9", "tor");
-            }
-            catch { }
-
-            try
-            {
-                using var streamReader = Proot.RunProotUbuntuCommand("tor", _torCts.Token);
-
-                string? line;
-                while (!_torCts.IsCancellationRequested && (line = streamReader.ReadLine()) is not null)
+                try
                 {
-#if DEBUG
-                    Console.WriteLine(line);
-#endif
-                    int lastPercentage = 0;
+                    using var streamReader = Proot.RunProotUbuntuCommand("tor", _torCts.Token);
 
-                    for (int i = 0; i < line.Length; i++)
+                    string? lastWarn = null;
+
+                    string? line;
+                    while (!_torCts.IsCancellationRequested && (line = streamReader.ReadLine()) is not null)
                     {
-                        if (line[i] == '%')
+#if DEBUG
+                        Console.WriteLine(line);
+#endif
+                        if (line.Contains("[warn]"))
+                            lastWarn = line;
+
+                        if (line.Contains("[err]"))
+                            throw new Exception($"Tor failed to start with error: {line}. Warning: {lastWarn}");
+
+                        int lastPercentage = 0;
+                            
+                        for (int i = 0; i < line.Length; i++)
                         {
-                            StringBuilder stringBuilder = new();
-                            for (int j = i - 1; j > 0; j--)
+                            if (line[i] == '%')
                             {
-                                if (line[j] > '9' || line[j] < '0')
-                                    break;
-
-                                stringBuilder.Append(line[j]);
-                            }
-
-                            if (stringBuilder.Length > 0)
-                            {
-                                var percentage = int.Parse(stringBuilder.ToString().Reverse().ToArray());
-
-                                if (percentage > lastPercentage)
+                                StringBuilder stringBuilder = new();
+                                for (int j = i - 1; j > 0; j--)
                                 {
-                                    lastPercentage = percentage;
+                                    if (line[j] > '9' || line[j] < '0')
+                                        break;
 
-                                    UpdateProgress($"Tor bootstrapping: {percentage}%");
+                                    stringBuilder.Append(line[j]);
+                                }
 
-                                    if (percentage == 100)
+                                if (stringBuilder.Length > 0)
+                                {
+                                    var percentage = int.Parse(stringBuilder.ToString().Reverse().ToArray());
+
+                                    if (percentage > lastPercentage)
                                     {
-                                        _torReadyTCS.SetResult();
+                                        lastPercentage = percentage;
+
+                                        UpdateProgress($"Tor bootstrapping: {percentage}%");
+
+                                        if (percentage == 100)
+                                        {
+                                            _torReadyTCS.SetResult();
+                                        }
                                     }
                                 }
                             }
                         }
                     }
                 }
-            }
-            catch (Exception e)
-            {
-                StopBackend();
-                UpdateException(e);
-                throw;
-            }
-        }, TaskCreationOptions.LongRunning);
+                catch (Exception e)
+                {
+                    UpdateException(e);
+                    StopBackend();
+                    throw;
+                }
+            }, TaskCreationOptions.LongRunning);
+        }
 
-        _daemonTask = Task.Factory.StartNew(async () =>
+        Task.Factory.StartNew(async () =>
         {
-            await _torReadyTCS.Task;
+            if (_torReadyTCS is not null)
+                await _torReadyTCS.Task;
 
             UpdateProgress("Starting daemon");
 
@@ -259,9 +252,9 @@ public class BackendService : Service
                     $"--apiPassword={password}", 
                     "--apiPort=3201", 
                     "--passwordRequired=true", 
-                    "--useNativeXmrWallet=false", 
-                    "--torControlHost=127.0.0.1", 
-                    "--torControlPort=9061");
+                    useHavenoTor ? "" : "--torControlHost=127.0.0.1",
+                    useHavenoTor ? "" : "--torControlPort=9061",
+                    $"--useNativeXmrWallet={AppPreferences.Get<bool>(AppPreferences.UseNativeXmrWallet).ToString().ToLowerInvariant()}");
 
                 string? line;
                 while (!_daemonCts.IsCancellationRequested && (line = streamReader.ReadLine()) is not null)
@@ -269,26 +262,20 @@ public class BackendService : Service
 #if DEBUG
                     Console.WriteLine(line);
 #endif
-                    if (line.Contains("Init wallet") || line.Contains("Interactive login required"))
+                    if (line.Contains("fatal error:") || line.Contains("proot error:"))
+                    {
+                        throw new Exception(line);
+                    }
+                    else if (line.Contains("Init wallet") || line.Contains("Interactive login required"))
                     {
                         UpdateProgress("Initializing wallet", true);
                     }
-                    /*
-                    else if (line.Contains("All connections lost"))
-                    {
-
-                    }
-                    else if (line.Contains("Established a new connection from/to"))
-                    {
-
-                    }
-                    */
                 }
             }
             catch (Exception e)
             {
-                StopBackend();
                 UpdateException(e);
+                StopBackend();
                 throw;
             }
         }, TaskCreationOptions.LongRunning);
@@ -297,11 +284,9 @@ public class BackendService : Service
     private void StopBackend()
     {
         _daemonCts?.Cancel();
-        _daemonTask?.Wait();
         _daemonCts?.Dispose();
 
         _torCts?.Cancel();
-        _torTask?.Wait();
         _torCts?.Dispose();
 
         SendBroadcast(new Intent($"{AppConstants.ApplicationId}.BACKEND_EXIT").SetPackage(Android.App.Application.Context.PackageName));
